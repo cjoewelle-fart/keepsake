@@ -18,6 +18,8 @@ export const copy = {
     choose: 'Choose recovery folder',
     browserNote: 'Keepsake works best in Chrome or Edge on a computer. You can still scan your folder in this browser.',
     stopped: 'Scan stopped. Nothing was changed, and you can start again any time.',
+    samples: 'Try with example files',
+    samplesNote: 'No recovery folder handy? The example files come from a test memory card that was wiped and then recovered.',
   },
 
   scanning: {

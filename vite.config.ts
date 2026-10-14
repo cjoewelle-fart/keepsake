@@ -25,8 +25,14 @@ const csp = (): Plugin => ({
     html.replace('<head>', `<head>\n    <meta http-equiv="Content-Security-Policy" content="${CSP}" />`),
 })
 
-export default defineConfig({
+// `vite build --mode artifact` makes the shareable preview: everything inlined into one
+// page (fonts included), and the example-files button on. The preview host applies its
+// own network lock, so this build skips the meta CSP.
+export default defineConfig(({ mode }) => ({
   base: './',
-  plugins: [react(), csp()],
+  plugins: mode === 'artifact' ? [react()] : [react(), csp()],
   worker: { format: 'es' },
-})
+  build: mode === 'artifact'
+    ? { outDir: 'dist-artifact', assetsInlineLimit: 100_000_000, cssCodeSplit: false, modulePreload: false }
+    : {},
+}))

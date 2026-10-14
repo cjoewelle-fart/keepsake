@@ -6,6 +6,9 @@ import type { SetAsideGroup } from './engine/summary';
 import { effectiveGroup } from './engine/summary';
 import { PHOTO_KINDS, VIDEO_KINDS } from './engine/sniff';
 import type { ScanApi } from './worker/scan.worker';
+// Bundled into the page itself, so the app is a single self-contained file set.
+import ScanWorker from './worker/scan.worker.ts?worker&inline';
+import { SAMPLES_ENABLED, loadSamples } from './sample';
 import { Header } from './ui/Header';
 import { Results } from './ui/Results';
 import { copy, n } from './ui/copy';
@@ -35,7 +38,7 @@ export default function App() {
 
   const getWorker = () => {
     if (!workerRef.current) {
-      const raw = new Worker(new URL('./worker/scan.worker.ts', import.meta.url), { type: 'module' });
+      const raw = new ScanWorker();
       workerRef.current = { raw, api: Comlink.wrap<ScanApi>(raw) };
     }
     return workerRef.current.api;
@@ -55,11 +58,24 @@ export default function App() {
       setScreen({ name: 'start', note: `${copy.empty.noFiles} ${copy.empty.noFilesBody}` });
       return;
     }
+    await scan(list, list.map(pathOf));
+  }
+
+  async function trySamples() {
+    try {
+      const { files: list, paths } = await loadSamples();
+      await scan(list, paths);
+    } catch {
+      setScreen({ name: 'error' });
+    }
+  }
+
+  async function scan(list: File[], paths: string[]) {
     setFiles(list);
     setMovedBack(new Set());
     setScreen({ name: 'scanning', progress: { stage: 'checking', done: 0, total: list.length } });
     try {
-      const result = await getWorker().scan(list, list.map(pathOf), Comlink.proxy((p: Progress) => setScreen({ name: 'scanning', progress: p })));
+      const result = await getWorker().scan(list, paths, Comlink.proxy((p: Progress) => setScreen({ name: 'scanning', progress: p })));
       if (!result) {
         setScreen({ name: 'start', note: copy.start.stopped });
         return;
@@ -85,7 +101,7 @@ export default function App() {
       <a className="skip" href="#main">Skip to content</a>
       <Header current={step} />
       <div id="main" ref={headingRef}>
-        {screen.name === 'start' && <Start note={screen.note} onChoose={chooseFolder} />}
+        {screen.name === 'start' && <Start note={screen.note} onChoose={chooseFolder} onSamples={SAMPLES_ENABLED ? trySamples : undefined} />}
         {screen.name === 'scanning' && <Scanning progress={screen.progress} onStop={() => getWorker().cancel()} />}
         {screen.name === 'results' && (
           <Results
@@ -110,7 +126,7 @@ export default function App() {
   );
 }
 
-function Start({ note, onChoose }: { note?: string; onChoose: () => void }) {
+function Start({ note, onChoose, onSamples }: { note?: string; onChoose: () => void; onSamples?: () => void }) {
   const fullSupport = typeof window !== 'undefined' && 'showDirectoryPicker' in window;
   return (
     <main className="page narrow">
@@ -119,7 +135,11 @@ function Start({ note, onChoose }: { note?: string; onChoose: () => void }) {
       <p className="lede">{copy.start.body}</p>
       <p className="sub">{copy.start.hint}</p>
       {note && <p className="callout callout-info" role="status">{note}</p>}
-      <div><button type="button" className="btn btn-primary btn-lg" onClick={onChoose}>{copy.start.choose}</button></div>
+      <div className="actions">
+        <button type="button" className="btn btn-primary btn-lg" onClick={onChoose}>{copy.start.choose}</button>
+        {onSamples && <button type="button" className="btn btn-secondary btn-lg" onClick={onSamples}>{copy.start.samples}</button>}
+      </div>
+      {onSamples && <p className="sub">{copy.start.samplesNote}</p>}
       {!fullSupport && <p className="sub">{copy.start.browserNote}</p>}
       <p className="privacy">{copy.privacy}</p>
     </main>
