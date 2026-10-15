@@ -1,28 +1,80 @@
-import { useEffect, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import { PREVIEWABLE } from '../engine/sniff';
+import type { Kind } from '../engine/sniff';
 import type { FileRecord } from '../engine/types';
 import { copy } from './copy';
+import { HEIC_PREVIEW_MAX_BYTES, heicPreview } from './heicPreview';
 
-/** A small square preview made from the local file. Nothing is uploaded: the URL points at the file on this computer. */
+/** Formats some browsers show natively and others don't: try the browser first. */
+const MAYBE_NATIVE: ReadonlySet<Kind> = new Set(['heic', 'avif']);
+/** Formats we can decode ourselves when the browser can't (libheif has no AV1 decoder here). */
+const DECODABLE: ReadonlySet<Kind> = new Set(['heic']);
+
+type Stage = 'native' | 'decode' | 'none';
+
+/**
+ * A small square preview made from the local file. Nothing is uploaded: the URL points at the file
+ * on this computer. HEIC photos are shown natively where the browser can (Safari); elsewhere a small
+ * copy is decoded in a background worker, only once the tile is on screen.
+ */
 export function Preview({ file, record, size = 'md' }: { file: File; record: FileRecord; size?: 'md' | 'sm' }) {
+  const usable = record.size > 0;
+  const initial: Stage = usable && (PREVIEWABLE.has(record.kind) || MAYBE_NATIVE.has(record.kind)) ? 'native' : 'none';
+  const [stage, setStage] = useState<Stage>(initial);
   const [url, setUrl] = useState<string>();
-  const [failed, setFailed] = useState(false);
-  const canShow = PREVIEWABLE.has(record.kind) && record.size > 0;
+  const tile = useRef<HTMLDivElement>(null);
 
+  // Native: point an <img> at the file itself.
   useEffect(() => {
-    if (!canShow) return;
+    if (stage !== 'native') return;
     const u = URL.createObjectURL(file);
     setUrl(u);
     return () => URL.revokeObjectURL(u);
-  }, [file, canShow]);
+  }, [file, stage]);
+
+  // Decode: wait until the tile is on screen, then ask the worker for a small JPEG.
+  useEffect(() => {
+    if (stage !== 'decode' || !tile.current) return;
+    let alive = true;
+    let visible = false;
+    let started = false;
+    let made: string | undefined;
+    const observer = new IntersectionObserver(([entry]) => {
+      visible = entry.isIntersecting;
+      if (!visible || started) return;
+      started = true;
+      heicPreview(file, () => alive && visible)
+        .then((jpeg) => {
+          if (!alive) return;
+          made = URL.createObjectURL(jpeg);
+          setUrl(made);
+        })
+        .catch(() => {
+          if (!alive) return;
+          if (visible) setStage('none');
+          else started = false; // skipped because it scrolled away: try again when it's back
+        });
+    }, { rootMargin: '200px' });
+    observer.observe(tile.current);
+    return () => {
+      alive = false;
+      observer.disconnect();
+      if (made) URL.revokeObjectURL(made);
+    };
+  }, [file, stage]);
+
+  const onError = () => {
+    setUrl(undefined);
+    setStage(DECODABLE.has(record.kind) && record.size <= HEIC_PREVIEW_MAX_BYTES ? 'decode' : 'none');
+  };
 
   const ext = record.path.split('.').pop()?.toUpperCase() ?? '';
   return (
-    <div className={`tile tile-${size}`}>
-      {canShow && url && !failed ? (
-        <img src={url} alt="" loading="lazy" decoding="async" onError={() => setFailed(true)} />
+    <div className={`tile tile-${size}`} ref={tile}>
+      {stage !== 'none' && url ? (
+        <img src={url} alt="" loading="lazy" decoding="async" onError={stage === 'native' ? onError : () => setStage('none')} />
       ) : (
-        <span className="tile-label" title={copy.results.previewUnavailable}>{ext || '—'}</span>
+        <span className="tile-label" title={stage === 'decode' ? undefined : copy.results.previewUnavailable}>{ext || '—'}</span>
       )}
     </div>
   );

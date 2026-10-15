@@ -73,6 +73,13 @@ for i, d in enumerate(cam[:15]):
     os.makedirs(os.path.dirname(p), exist_ok=True)
     open(p, "wb").write(d)  # exact copy: one of the two should be set aside as a copy
 
+# iPhone photos (only when the fixture was made with pillow-heif)
+if "dated iPhone HEIC" in by_note:
+    for i, d in enumerate(take("dated iPhone HEIC", 12) + take("undated HEIC, no camera info", 3)):
+        put(f"DCIM/100APPLE/IMG_{4000 + i}.HEIC", d, "keep", "iPhone HEIC")
+    for i, d in enumerate(take("HEIC thumbnail", 10)):
+        put(f"Android/data/com.gallery/cache/heic_thumb_{i}.heic", d, "small", "HEIC thumbnail")
+
 for i, d in enumerate(take("text", 15) + take("database", 8) + take("xml", 8)):
     put(f"Android/data/com.app/files/data_{i}.bin", d, "system", "app data")
 

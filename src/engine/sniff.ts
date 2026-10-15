@@ -1,3 +1,5 @@
+import { heifSize } from './heif';
+
 // Identify a file by its first bytes, never by its extension:
 // PhotoRec guesses extensions, and recovered files can be mislabelled.
 
@@ -106,6 +108,9 @@ export function imageSize(kind: Kind, b: Uint8Array): SizeResult {
     case 'bmp':
       if (b.length < 26) return 'invalid';
       return { width: Math.abs(new DataView(b.buffer, b.byteOffset).getInt32(18, true)), height: Math.abs(new DataView(b.buffer, b.byteOffset).getInt32(22, true)) };
+    case 'heic':
+    case 'avif':
+      return heifSize(b);
     default:
       return 'unknown';
   }

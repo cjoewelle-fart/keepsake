@@ -33,6 +33,9 @@ export default defineConfig(({ mode }) => ({
   plugins: mode === 'artifact' ? [react()] : [react(), csp()],
   worker: { format: 'es' },
   build: mode === 'artifact'
-    ? { outDir: 'dist-artifact', assetsInlineLimit: 100_000_000, cssCodeSplit: false, modulePreload: false }
+    ? {
+        outDir: 'dist-artifact', assetsInlineLimit: 100_000_000, cssCodeSplit: false, modulePreload: false,
+        rolldownOptions: { output: { codeSplitting: false } }, // one script (the HEIC decoder is loaded lazily otherwise)
+      }
     : {},
 }))

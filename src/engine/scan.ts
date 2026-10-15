@@ -1,17 +1,21 @@
 import exifr from 'exifr';
-import { PHOTO_KINDS, VIDEO_KINDS, endsCleanly, imageSize, sniff } from './sniff';
+import { exifTiff, heifLayout, type Range } from './heif';
+import { PHOTO_KINDS, VIDEO_KINDS, endsCleanly, imageSize, sniff, type Kind, type SizeResult } from './sniff';
 import type { FileRecord, FileSource, Progress, Rules } from './types';
 import { DEFAULT_RULES } from './types';
 
 const HEAD_BYTES = 256 * 1024; // enough for photo details and the JPEG frame header
 const TAIL_BYTES = 64 * 1024; // room for phone trailers and padding after the end of the picture
 const FULL_HASH_LIMIT = 64 * 1024 * 1024; // bigger files get a sampled fingerprint
+const EXIF_MAX = 1024 * 1024; // a HEIF Exif block bigger than this is ignored (real ones are a few KB)
+const HEIF_KINDS: ReadonlySet<Kind> = new Set(['heic', 'avif']);
 
 type Meta = { camera?: string; takenAt?: string };
 
-async function readMeta(head: Uint8Array): Promise<Meta> {
+/** Photo details from a JPEG/PNG/WebP/TIFF start of file, or from a bare TIFF-structured Exif block. */
+async function readMeta(bytes: Uint8Array): Promise<Meta> {
   try {
-    const t = await exifr.parse(head, {
+    const t = await exifr.parse(bytes, {
       pick: ['Make', 'Model', 'DateTimeOriginal', 'CreateDate'],
       reviveValues: false, // keep the camera's own date text; no time zone guessing
     });
@@ -23,6 +27,24 @@ async function readMeta(head: Uint8Array): Promise<Meta> {
   } catch {
     return {};
   }
+}
+
+/**
+ * HEIF keeps its Exif block wherever 'iloc' says, often after the picture data, so read
+ * exactly those bytes (from the head if they're there) instead of hoping they're near the start.
+ */
+async function readHeifMeta(src: FileSource, head: Uint8Array, exif: Range[] | undefined): Promise<Meta> {
+  if (!exif) return {};
+  const total = exif.reduce((n, r) => n + (r.end - r.start), 0);
+  if (total > EXIF_MAX || exif.some((r) => r.end > src.size)) return {};
+  const item = new Uint8Array(total);
+  let at = 0;
+  for (const r of exif) {
+    item.set(r.end <= head.length ? head.subarray(r.start, r.end) : await src.read(r.start, r.end), at);
+    at += r.end - r.start;
+  }
+  const tiff = exifTiff(item);
+  return tiff ? readMeta(tiff) : {};
 }
 
 /** '2023:03:11 12:45:20' -> '2023-03-11T12:45:20'; rejects zeroed or impossible dates. */
@@ -51,15 +73,25 @@ export async function inspect(src: FileSource, index: number, rules: Rules = DEF
   }
   if (!PHOTO_KINDS.has(kind)) return { ...base, kind, group: 'system', reason: 'not-media' };
 
-  const size = imageSize(kind, head);
-  if (size === 'invalid') return { ...base, kind, group: 'damaged', reason: 'unreadable' };
-  // We read the whole file and never found where the picture starts: its structure is broken.
-  if (size === 'beyond' && head.length >= src.size) return { ...base, kind, group: 'damaged', reason: 'unreadable' };
-  const tailStart = Math.max(0, src.size - TAIL_BYTES);
-  const tail = await src.read(tailStart, src.size);
-  if (!endsCleanly(kind, tail, { tailStart, head })) return { ...base, kind, group: 'damaged', reason: 'cut-off' };
-
-  const meta = await readMeta(head);
+  let size: SizeResult;
+  let meta: Meta;
+  if (HEIF_KINDS.has(kind)) {
+    // HEIC/AVIF: the box structure says how long everything is, so no need to read the tail.
+    const layout = await heifLayout((s, e) => src.read(s, e), src.size, head);
+    if (layout.cutOff) return { ...base, kind, group: 'damaged', reason: 'cut-off' };
+    if (layout.size === 'invalid') return { ...base, kind, group: 'damaged', reason: 'unreadable' };
+    size = layout.size;
+    meta = await readHeifMeta(src, head, layout.exif);
+  } else {
+    size = imageSize(kind, head);
+    if (size === 'invalid') return { ...base, kind, group: 'damaged', reason: 'unreadable' };
+    // We read the whole file and never found where the picture starts: its structure is broken.
+    if (size === 'beyond' && head.length >= src.size) return { ...base, kind, group: 'damaged', reason: 'unreadable' };
+    const tailStart = Math.max(0, src.size - TAIL_BYTES);
+    const tail = await src.read(tailStart, src.size);
+    if (!endsCleanly(kind, tail, { tailStart, head })) return { ...base, kind, group: 'damaged', reason: 'cut-off' };
+    meta = await readMeta(head);
+  }
   const dims = typeof size === 'object' ? size : undefined;
   const rec: FileRecord = { ...base, kind, ...dims, ...meta, group: 'keep', reason: 'photo' };
 

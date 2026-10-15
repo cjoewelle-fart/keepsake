@@ -16,6 +16,14 @@ import sys
 
 from PIL import Image, ImageFilter
 
+try:  # HEIC files (iPhone photos) are added only when pillow-heif is installed
+    import pillow_heif
+
+    pillow_heif.register_heif_opener()
+    pillow_heif.options.GRID_TILE_SIZE = 512  # tiled like iPhone photos
+except ImportError:
+    pillow_heif = None
+
 SEED = 42
 rng = random.Random(SEED)
 
@@ -36,14 +44,17 @@ def photo_bytes(w, h, date=None, camera=None, quality=85, fmt="JPEG"):
     detail = Image.effect_noise((w, h), 18).convert("RGB")
     img = Image.blend(img, detail, 0.12)
     buf = io.BytesIO()
-    if fmt == "JPEG":
+    if fmt in ("JPEG", "HEIF"):
         exif = Image.Exif()
         if camera:
             exif[0x010F], exif[0x0110] = camera
         if date:
             exif[0x0132] = date
             exif.get_ifd(0x8769)[0x9003] = date
-        img.save(buf, "JPEG", quality=quality, exif=exif.tobytes() if (camera or date) else b"")
+        extra = {"thumbnails": [320]} if fmt == "HEIF" and min(w, h) > 400 else {}
+        if camera or date:
+            extra["exif"] = exif.tobytes()
+        img.save(buf, fmt, quality=quality, **extra)
     else:
         img.save(buf, fmt)
     return buf.getvalue()
@@ -117,6 +128,26 @@ for _ in range(30 * n):
     add("gz", b"\x1f\x8b\x08\x00" + rng.randbytes(rng.randint(2_000, 40_000)), "system", "archive")
 for _ in range(20 * n):
     add("html", b"<!doctype html><html><body>cache</body></html>", "system", "web cache")
+
+# iPhone-style HEIC photos (needs pillow-heif): kept, previews, copies and cut-off files
+if pillow_heif:
+    heic_keepers = []
+    for _ in range(30 * n):
+        w, h = rng.choice([(2016, 1512), (1512, 2016)])
+        d = photo_bytes(w, h, rand_date(), ("Apple", rng.choice(["iPhone 11", "iPhone 13", "iPhone 15 Pro"])), quality=30, fmt="HEIF")
+        heic_keepers.append(d)
+        add("heic", d, "keep", "dated iPhone HEIC")
+    for _ in range(10 * n):
+        add("heic", photo_bytes(1512, 2016, None, None, quality=30, fmt="HEIF"), "keep", "undated HEIC, no camera info")
+    for _ in range(40 * n):
+        add("heic", photo_bytes(rng.choice([256, 320]), rng.choice([192, 240]), None, None, quality=50, fmt="HEIF"), "small", "HEIC thumbnail")
+    for _ in range(8 * n):
+        add("heic", rng.choice(heic_keepers), "duplicate", "exact copy")
+    for _ in range(15 * n):
+        d = photo_bytes(2016, 1512, rand_date(), ("Apple", "iPhone 13"), quality=30, fmt="HEIF")
+        add("heic", d[: rng.randint(len(d) // 5, len(d) * 4 // 5)], "damaged", "truncated HEIC")
+else:
+    print("pillow-heif not installed: no HEIC files in this fixture (pip install pillow-heif)")
 
 rng.shuffle(items)
 
