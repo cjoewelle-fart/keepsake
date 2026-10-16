@@ -13,13 +13,17 @@ const HEIF_KINDS: ReadonlySet<Kind> = new Set(['heic', 'avif']);
 
 type Meta = { camera?: string; takenAt?: string };
 
+// One shared options object: exifr caches parsed options in a module-level Map keyed by the
+// object itself and never clears it, so a fresh literal per call leaked ~6 KB per photo (T27).
+const EXIFR_OPTIONS = {
+  pick: ['Make', 'Model', 'DateTimeOriginal', 'CreateDate'],
+  reviveValues: false, // keep the camera's own date text; no time zone guessing
+};
+
 /** Photo details from a JPEG/PNG/WebP/TIFF start of file, or from a bare TIFF-structured Exif block. */
 async function readMeta(bytes: Uint8Array): Promise<Meta> {
   try {
-    const t = await exifr.parse(bytes, {
-      pick: ['Make', 'Model', 'DateTimeOriginal', 'CreateDate'],
-      reviveValues: false, // keep the camera's own date text; no time zone guessing
-    });
+    const t = await exifr.parse(bytes, EXIFR_OPTIONS);
     if (!t) return {};
     const make = typeof t.Make === 'string' ? t.Make.trim() : '';
     const model = typeof t.Model === 'string' ? t.Model.trim() : '';
