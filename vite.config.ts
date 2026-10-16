@@ -11,8 +11,8 @@ const TEST_BUILD = 'testbuild'
 // The app's name in one place (a rename is pending): install name and home-screen label.
 const APP_NAME = 'Keepsake'
 const APP_SHORT_NAME = 'Keepsake'
-const THEME = '#0D615D'
-const BACKGROUND = '#F3F5F4'
+const THEME = '#23596B'
+const BACKGROUND = '#ECF1F0'
 
 // The privacy lock-down: the built app may only load its own files and may not
 // send data to any other address. Added at build time only, because the dev

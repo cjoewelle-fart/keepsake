@@ -73,7 +73,7 @@ HEIC camera details and dates are read from the Exif item wherever the file's 'i
 
 - HEIC is tested on files encoded by libheif in an iPhone-like layout (tiles, thumbnail, Exif item) and on real PhotoRec 7.1 output of those files, but not yet on photos taken by an iPhone.
 - AVIF previews rely on the browser (all current browsers show AVIF). CR3 and other RAW formats are recognised but untested on real files, and have no preview.
-- Video dates aren't read yet, so videos aren't placed on the timeline.
+- Video recording dates are read (T19), but the results screen's month groups show photos only until the review timeline is built.
 - Files over 64 MB are compared for copies by sampling the start and end, which could rarely mark two different videos as copies.
 - Stopping a scan waits for the file currently being read.
 
