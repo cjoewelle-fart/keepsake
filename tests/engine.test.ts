@@ -4,7 +4,7 @@ import { exifTiff, heifLayout, heifSize, parseHeifMeta, readBoxHeader } from '..
 import { endsCleanly, jpegSize, sniff } from '../src/engine/sniff';
 import { inspect, normalizeDate, scanAll } from '../src/engine/scan';
 import { summarize } from '../src/engine/summary';
-import type { FileSource } from '../src/engine/types';
+import type { FileRecord, FileSource } from '../src/engine/types';
 
 const bytes = (...xs: (number | string)[]) =>
   new Uint8Array(xs.flatMap((x) => (typeof x === 'string' ? [...x].map((c) => c.charCodeAt(0)) : [x])));
@@ -163,6 +163,13 @@ describe('summary', () => {
     expect([before.keep, before.setAside, before.groups.small]).toEqual([1, 2, 1]);
     const after = summarize(recs, new Set(['small']));
     expect([after.keep, after.setAside, after.total]).toEqual([2, 1, 3]);
+  });
+
+  it('year range counts photos only, matching the Review-by-year rows', () => {
+    const rec = (index: number, kind: FileRecord['kind'], takenAt?: string) =>
+      ({ index, path: `f${index}`, size: 1, kind, takenAt, group: 'keep', reason: 'photo' }) as FileRecord;
+    const s = summarize([rec(0, 'jpeg', '2018-05-01T10:00:00'), rec(1, 'jpeg', '2021-01-02T10:00:00'), rec(2, 'mp4', '2024-03-03T10:00:00')]);
+    expect([s.firstYear, s.lastYear, s.photos, s.videos]).toEqual([2018, 2021, 2, 1]);
   });
 });
 

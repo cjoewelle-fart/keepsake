@@ -32,7 +32,9 @@ export function summarize(records: FileRecord[], movedBack: ReadonlySet<SetAside
     if (PHOTO_KINDS.has(r.kind)) photos++;
     else if (VIDEO_KINDS.has(r.kind)) videos++;
     else others++;
-    if (r.takenAt) {
+    // Year range counts photos only, matching the Review-by-year rows (videos have their own row
+    // there until the review timeline places them by date).
+    if (r.takenAt && PHOTO_KINDS.has(r.kind)) {
       const y = Number(r.takenAt.slice(0, 4));
       firstYear = firstYear === undefined ? y : Math.min(firstYear, y);
       lastYear = lastYear === undefined ? y : Math.max(lastYear, y);
