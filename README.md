@@ -9,7 +9,7 @@ PhotoRec recovers files well but loses their names and folders, leaving thousand
 - No server: the app is static files. Your photos are read in your browser and never uploaded.
 - The production build carries a Content Security Policy (`connect-src 'self'`, see `vite.config.ts`), so the page can't send data to other sites.
 - Fonts are bundled; no analytics or third-party scripts.
-- iPhone (HEIC) previews in Chrome, Edge and Firefox are decoded on your computer by libheif compiled to WebAssembly and bundled with the app (nothing is downloaded at runtime). Safari shows HEIC itself.
+- iPhone (HEIC) previews in Chrome, Edge and Firefox are decoded on your computer by libheif compiled to WebAssembly and bundled with the app (nothing is downloaded at runtime). Safari shows HEIC itself. A decode that takes over 15 seconds is abandoned (its worker is replaced) and the tile shows the file type instead; at most 200 decoded previews are kept in memory.
 - The recovery folder is opened read-only.
 
 ## Status: phase 1 (prototype the engine)
@@ -49,9 +49,11 @@ Checks run cheapest first; the first match decides. Every decision records a rea
 | Damaged or incomplete | Empty, broken structure, or the picture data never reaches its end marker. HEIC/AVIF: the file ends before its table of contents ('meta' box) is complete, or before data that table points to (picture tiles, Exif). HEIF image sequences without a 'meta' box are kept |
 | Small preview copies | No camera details and no date taken, and shorter side under 400 px (or under 20 KB when the size is unknown). HEIC/AVIF pixel size comes from the main picture's 'ispe' property, not its thumbnail |
 | Exact copies | Same SHA-256 as another kept file (only same-size files are compared); the copy with the most details is kept |
-| Keep | Everything else, including files that couldn't be read at all |
+| Keep | Everything else, including files that couldn't be read at all, and HEIC/AVIF files we can't fully check (a 'meta' box over 4 MB, or picture data stored in another file) |
 
 Photos with extra data after the picture (Samsung trailers, Motion Photos, zero padding) are recognised as whole. So are HEIC files with leftover bytes after their last box.
+
+HEIC and AVIF are recognised by the 'ftyp' box: its main brand, or, when that brand is unknown, a HEIF still-image brand in its compatible list (unless the list also names a video brand such as isom, iso2, avc1 or mp41).
 
 HEIC camera details and dates are read from the Exif item wherever the file's 'iloc' table says it is, so they're found even when the Exif block sits after megabytes of picture data.
 
@@ -71,4 +73,4 @@ Role definitions for AI assistants working on this project are in `.claude/agent
 
 GPL-3.0 (planned; add the LICENSE file before publishing).
 
-Third-party code shipped in the app: libheif-js 1.23.2 (libheif and libde265, LGPL-3.0), used unmodified for HEIC previews.
+Third-party code shipped in the app: libheif-js 1.23.2 (libheif and libde265, LGPL-3.0), used unmodified for HEIC previews, plus React, Comlink, exifr, browser-fs-access and the two bundled fonts. Their full licence texts (including zlib's) are in [`public/THIRD_PARTY_NOTICES.txt`](public/THIRD_PARTY_NOTICES.txt), which the build copies to `dist/THIRD_PARTY_NOTICES.txt`. Regenerate it with `npm run notices` after changing runtime dependencies (a test fails if it's out of date). libde265 and zlib texts come from upstream and are kept in `licenses/`.

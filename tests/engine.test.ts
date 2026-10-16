@@ -188,18 +188,24 @@ const fullBox = (type: string, version: number, flags: number, ...body: Uint8Arr
   box(type, bytes(version, 0, 0, flags), ...body);
 
 /** Build a minimal HEIF: item 1 = picture (with a decoy 160x120 'ispe' listed first), item 2 = Exif. */
-function synthHeif(o: { w: number; h: number; exif?: Uint8Array; pad?: number; mdatFirst?: boolean; ilocVersion?: 0 | 1; pixels?: number }) {
+function synthHeif(o: {
+  w: number; h: number; exif?: Uint8Array; pad?: number; mdatFirst?: boolean; ilocVersion?: 0 | 1; pixels?: number;
+  /** iloc data_reference_index for the picture, and the 'dref' entry flags it points at (1 = this file). */
+  dataRef?: number; drefFlags?: number; picShift?: number;
+}) {
   const pixels = new Uint8Array(o.pixels ?? 2000).fill(0x42);
   const exif = o.exif ?? new Uint8Array();
   const ftyp = box('ftyp', bytes('heic', 0, 0, 0, 0, 'mif1heic'));
   const meta = (picAt: number, exifAt: number) => {
     const v = o.ilocVersion ?? 0;
-    const item = (id: number, at: number, len: number) =>
-      bytes(...be16(id), ...(v === 1 ? be16(0) : []), ...be16(0), ...be16(1), ...be32(at), ...be32(len));
-    const items = [item(1, picAt, pixels.length), ...(exif.length ? [item(2, exifAt, exif.length)] : [])];
+    const item = (id: number, at: number, len: number, ref = 0) =>
+      bytes(...be16(id), ...(v === 1 ? be16(0) : []), ...be16(ref), ...be16(1), ...be32(at), ...be32(len));
+    const items = [item(1, picAt + (o.picShift ?? 0), pixels.length, o.dataRef), ...(exif.length ? [item(2, exifAt, exif.length)] : [])];
+    const dinf = o.dataRef ? [box('dinf', fullBox('dref', 0, 0, bytes(...be32(1)), fullBox('url ', 0, o.drefFlags ?? 0)))] : [];
     return fullBox('meta', 0, 0,
       fullBox('hdlr', 0, 0, bytes(0, 0, 0, 0, 'pict', ...new Array(13).fill(0))),
       fullBox('pitm', 0, 0, bytes(...be16(1))),
+      ...dinf,
       fullBox('iinf', 0, 0, bytes(...be16(2)),
         fullBox('infe', 2, 0, bytes(...be16(1), 0, 0, 'hvc1', 0)),
         fullBox('infe', 2, 0, bytes(...be16(2), 0, 0, 'Exif', 0))),
@@ -303,5 +309,67 @@ describe('HEIC photos', () => {
     f.set([...'avif'].map((c) => c.charCodeAt(0)), 8);
     const r = await inspect(mem('a.avif', f), 0);
     expect([r.kind, r.group, r.width]).toEqual(['avif', 'keep', 1920]);
+  });
+});
+
+// ---- HEIC follow-ups from QA (T41) ----
+describe('HEIF recognised by compatible brands', () => {
+  const ftypFile = (major: string, ...compat: string[]) => {
+    const f = box('ftyp', bytes(major, 0, 0, 2, 0, ...compat));
+    return concat(f, new Uint8Array(64));
+  };
+  it('treats an unknown major brand with a HEIC/HEIF compatible brand as HEIC', () => {
+    for (const c of ['heic', 'heix', 'heim', 'heis', 'hevc', 'hevx', 'mif1', 'msf1']) {
+      expect([c, sniff(ftypFile('MiHE', 'miaf', c))]).toEqual([c, 'heic']);
+    }
+    expect(sniff(ftypFile('miaf', 'MiHB', 'mif1', 'heic', 'iso8'))).toBe('heic');
+  });
+  it('treats an unknown major brand with avif/avis compatible as AVIF', () => {
+    expect(sniff(ftypFile('MA1B', 'mif1', 'avif'))).toBe('avif');
+    expect(sniff(ftypFile('MA1A', 'msf1', 'avis'))).toBe('avif');
+  });
+  it('keeps real MP4s as video even when a HEIF brand is also listed', () => {
+    expect(sniff(ftypFile('isom', 'isom', 'iso2', 'avc1', 'mp41'))).toBe('mp4');
+    expect(sniff(ftypFile('XAVC', 'isom', 'iso2', 'avc1', 'mp41'))).toBe('mp4');
+    expect(sniff(ftypFile('XAVC', 'mp42', 'hevc', 'mif1'))).toBe('mp4');
+    expect(sniff(ftypFile('abcd', 'iso2', 'heic'))).toBe('mp4');
+    expect(sniff(ftypFile('abcd', '3gp4', 'mif1'))).toBe('mp4');
+  });
+  it('only reads compatible brands inside the ftyp box', () => {
+    const f = box('ftyp', bytes('MiHE', 0, 0, 0, 0, 'miaf'));
+    expect(sniff(concat(f, bytes(0, 0, 0, 16, 'heic', 0, 0, 0, 0)))).toBe('mp4');
+  });
+  it('a file sniffed as HEIC through its compatible brands is scanned as a photo', async () => {
+    const f = synthHeif({ w: 4032, h: 3024 });
+    f.set([...'MiHE'].map((c) => c.charCodeAt(0)), 8); // compat list stays 'mif1heic'
+    const r = await inspect(mem('IMG.heic', f), 0);
+    expect([r.kind, r.group, r.width]).toEqual(['heic', 'keep', 4032]);
+  });
+});
+
+describe('HEIC files we cannot fully check are kept', () => {
+  it('keeps a HEIC whose meta box is over 4 MB', async () => {
+    const ftyp = box('ftyp', bytes('heic', 0, 0, 0, 0, 'mif1heic'));
+    const meta = fullBox('meta', 0, 0, fullBox('hdlr', 0, 0, bytes(0, 0, 0, 0, 'pict', ...new Array(13).fill(0))), box('free', new Uint8Array(4 * 1024 * 1024 + 10)));
+    const f = concat(ftyp, meta, box('mdat', new Uint8Array(50_000).fill(7)));
+    const r = await inspect(mem('big.heic', f), 0);
+    expect([r.kind, r.group, r.reason]).toEqual(['heic', 'keep', 'not-checked']);
+  });
+  it('keeps a HEIC whose picture data is in another file (external data reference)', async () => {
+    // Points past the end of this file: without the external reference it would count as cut off.
+    const f = synthHeif({ w: 4032, h: 3024, dataRef: 1, drefFlags: 0, picShift: 10_000_000 });
+    expect(parseHeifMeta(f.subarray(24, readBoxHeader(f, 24, 0, f.length)!.end), 24).external).toBe(true);
+    const r = await inspect(mem('ext.heic', f), 0);
+    expect([r.group, r.reason, r.width]).toEqual(['keep', 'not-checked', 4032]);
+  });
+  it('keeps a small-looking HEIC with external data instead of setting it aside', async () => {
+    const f = synthHeif({ w: 160, h: 120, dataRef: 1, drefFlags: 0 });
+    expect((await inspect(mem('ext.heic', f), 0)).group).toBe('keep');
+  });
+  it('still checks data whose reference says "this file" (self-contained flag)', async () => {
+    const whole = synthHeif({ w: 4032, h: 3024, dataRef: 1, drefFlags: 1 });
+    expect((await inspect(mem('self.heic', whole), 0)).reason).toBe('photo');
+    const cut = synthHeif({ w: 4032, h: 3024, dataRef: 1, drefFlags: 1, picShift: 10_000_000 });
+    expect((await inspect(mem('self.heic', cut), 0)).reason).toBe('cut-off');
   });
 });

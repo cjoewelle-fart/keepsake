@@ -27,6 +27,19 @@ const NOT_VIDEO_BRANDS = new Set(['M4A ', 'M4B ', 'M4P ', 'F4A ', 'F4B ', 'dash'
 /** QuickTime files that start with a box other than ftyp (older cameras). */
 const QT_FIRST_BOXES = new Set(['moov', 'wide', 'mdat', 'free', 'skip', 'pnot']);
 
+/** Brands that mark an MP4/QuickTime/3GP video (plain MP4s list e.g. isom, iso2, avc1, mp41). */
+const isVideoBrand = (c: string) =>
+  ['isom', 'iso2', 'avc1', 'mp41', 'mp42', 'mp71', 'M4V ', 'M4VH', 'M4VP', 'qt  ', 'f4v '].includes(c) || c.startsWith('3g');
+
+/** The compatible brands listed in the leading 'ftyp' box (only the part within `b`). */
+function compatibleBrands(b: Uint8Array): string[] {
+  const size = ((b[0] << 24) >>> 0) + (b[1] << 16) + (b[2] << 8) + b[3];
+  const end = Math.min(size >= 16 ? size : 16, b.length, 16 + 4 * 64);
+  const out: string[] = [];
+  for (let i = 16; i + 4 <= end; i += 4) out.push(ascii(b, i, 4));
+  return out;
+}
+
 export function sniff(b: Uint8Array): Kind {
   if (b.length === 0) return 'empty';
   if (b[0] === 0xff && b[1] === 0xd8 && b[2] === 0xff) return 'jpeg';
@@ -48,6 +61,13 @@ export function sniff(b: Uint8Array): Kind {
     if (NOT_VIDEO_BRANDS.has(brand)) return 'other';
     if (brand === 'qt  ') return 'mov';
     if (brand.startsWith('3g')) return '3gp';
+    // Unknown major brand: the compatible brands can still say it's a HEIF still image
+    // (e.g. major 'MiHE' or 'miaf' with 'heic'/'mif1' listed). A video brand in the list wins.
+    const compat = compatibleBrands(b);
+    if (!compat.some(isVideoBrand)) {
+      if (compat.includes('avif') || compat.includes('avis')) return 'avif';
+      if (compat.some((c) => HEIC_BRANDS.has(c))) return 'heic';
+    }
     return 'mp4'; // unknown brands are treated as video: keeping too much beats losing a memory
   }
   if (QT_FIRST_BOXES.has(ascii(b, 4, 4))) return 'mov';

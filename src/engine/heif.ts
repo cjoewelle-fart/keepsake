@@ -71,6 +71,8 @@ export type HeifMeta = {
   exif?: Range[];
   /** Every file range that 'iloc' says holds item data. */
   extents: Range[];
+  /** Some item's data lives in another file ('iloc' data_reference_index pointing outside this file). */
+  external?: boolean;
 };
 
 /**
@@ -106,6 +108,14 @@ export function parseHeifMeta(meta: Uint8Array, metaStart = 0): HeifMeta {
     }
   }
 
+  // Data references: 'iloc' data_reference_index n (1-based) names entry n of 'dinf' > 'dref'.
+  // 0, or an entry flagged self-contained (flags & 1), means this file; anything else is another file.
+  const selfContained: boolean[] = [];
+  const dinf = find('dinf');
+  const dref = dinf ? children(meta, dinf.body, dinf.end).find((k) => k.type === 'dref') : undefined;
+  if (dref) for (const e of children(meta, dref.body + 8, dref.end)) selfContained.push((meta[e.body + 3] & 1) === 1);
+  let external = false;
+
   // Item locations
   const idat = find('idat');
   const idatStart = idat ? metaStart + idat.body : undefined;
@@ -127,7 +137,8 @@ export function parseHeifMeta(meta: Uint8Array, metaStart = 0): HeifMeta {
       p += v < 2 ? 2 : 4;
       let method = 0;
       if (v === 1 || v === 2) { method = u16(meta, p) & 15; p += 2; }
-      p += 2; // data_reference_index
+      const dataRef = u16(meta, p);
+      p += 2;
       const baseOffset = uint(meta, p, baseSize);
       p += baseSize;
       const extentCount = u16(meta, p);
@@ -141,6 +152,7 @@ export function parseHeifMeta(meta: Uint8Array, metaStart = 0): HeifMeta {
         p += lenSize;
         if (p > iloc.end) throw new Error('iloc overrun');
         if (len === 0) continue; // "the whole file": nothing useful to check
+        if (method === 0 && dataRef !== 0 && !selfContained[dataRef - 1]) { external = true; continue; } // in another file
         const start = method === 0 ? baseOffset + off : method === 1 && idatStart !== undefined ? idatStart + baseOffset + off : NaN;
         if (Number.isFinite(start)) ranges.push({ start, end: start + len });
       }
@@ -187,7 +199,7 @@ export function parseHeifMeta(meta: Uint8Array, metaStart = 0): HeifMeta {
       }
     }
   }
-  return { size, exif, extents };
+  return { size, exif, extents, ...(external ? { external } : {}) };
 }
 
 /** Largest 'meta' box we'll hold in memory. Real ones are a few KB. */
@@ -199,6 +211,11 @@ export type HeifLayout = {
   /** The file ends before data it says it contains. */
   cutOff: boolean;
   exif?: Range[];
+  /**
+   * The file couldn't be fully checked, so it must be kept as it is: its table of contents is
+   * bigger than we'll read, or some of its data lives in another file.
+   */
+  unchecked?: 'meta-too-large' | 'external-data';
 };
 
 type Read = (start: number, end: number) => Promise<Uint8Array>;
@@ -227,7 +244,7 @@ export async function heifLayout(read: Read, fileSize: number, head: Uint8Array)
     if (h.type === 'moov') sawMoov = true;
     if (h.type === 'meta' && !meta) {
       if (h.end > fileSize) return { size: 'unknown', cutOff: true };
-      if (h.end - at > META_MAX) return { size: 'invalid', cutOff: false };
+      if (h.end - at > META_MAX) return { size: 'unknown', cutOff: false, unchecked: 'meta-too-large' };
       try {
         meta = parseHeifMeta(await bytesAt(at, h.end), at);
       } catch {
@@ -243,6 +260,8 @@ export async function heifLayout(read: Read, fileSize: number, head: Uint8Array)
   // HEIF image sequences (bursts, animations) may describe their pictures in 'moov' instead.
   // We don't read those; keep rather than call a real file damaged.
   if (!meta) return { size: sawMoov ? 'unknown' : 'invalid', cutOff: false };
+  // Data in another file: we can't tell whether that part is complete, so don't judge it.
+  if (meta.external) return { size: meta.size ?? 'unknown', cutOff: false, exif: meta.exif, unchecked: 'external-data' };
   // Without item locations, fall back to the declared length of the picture data box.
   const cutOff = meta.extents.length ? meta.extents.some((r) => r.end > fileSize) : mdatPastEnd;
   return { size: meta.size ?? 'unknown', cutOff, exif: meta.exif };

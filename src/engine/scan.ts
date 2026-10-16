@@ -98,6 +98,11 @@ export async function inspect(src: FileSource, index: number, rules: Rules = DEF
   if (HEIF_KINDS.has(kind)) {
     // HEIC/AVIF: the box structure says how long everything is, so no need to read the tail.
     const layout = await heifLayout((s, e) => src.read(s, e), src.size, head);
+    // Couldn't check it fully (huge table of contents, or data stored in another file): keep it.
+    if (layout.unchecked) {
+      const dims = typeof layout.size === 'object' ? layout.size : undefined;
+      return { ...base, kind, ...dims, ...(await readHeifMeta(src, head, layout.exif)), group: 'keep', reason: 'not-checked' };
+    }
     if (layout.cutOff) return { ...base, kind, group: 'damaged', reason: 'cut-off' };
     if (layout.size === 'invalid') return { ...base, kind, group: 'damaged', reason: 'unreadable' };
     size = layout.size;

@@ -4,6 +4,7 @@ import type { Kind } from '../engine/sniff';
 import type { FileRecord } from '../engine/types';
 import { copy } from './copy';
 import { HEIC_PREVIEW_MAX_BYTES, heicPreview } from './heicPreview';
+import type { Lease } from './previewQueue';
 
 /** Formats some browsers show natively and others don't: try the browser first. */
 const MAYBE_NATIVE: ReadonlySet<Kind> = new Set(['heic', 'avif']);
@@ -38,16 +39,16 @@ export function Preview({ file, record, size = 'md' }: { file: File; record: Fil
     let alive = true;
     let visible = false;
     let started = false;
-    let made: string | undefined;
+    let lease: Lease | undefined;
     const observer = new IntersectionObserver(([entry]) => {
       visible = entry.isIntersecting;
       if (!visible || started) return;
       started = true;
       heicPreview(file, () => alive && visible)
-        .then((jpeg) => {
-          if (!alive) return;
-          made = URL.createObjectURL(jpeg);
-          setUrl(made);
+        .then((l) => {
+          if (!alive) return l.release();
+          lease = l;
+          setUrl(l.url);
         })
         .catch(() => {
           if (!alive) return;
@@ -59,7 +60,7 @@ export function Preview({ file, record, size = 'md' }: { file: File; record: Fil
     return () => {
       alive = false;
       observer.disconnect();
-      if (made) URL.revokeObjectURL(made);
+      lease?.release(); // the shared cache revokes the URL once it's evicted
     };
   }, [file, stage]);
 
