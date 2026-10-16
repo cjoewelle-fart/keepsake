@@ -17,6 +17,8 @@ const add = (name) => {
   for (const d of Object.keys(meta(name).dependencies ?? {})) add(d);
 };
 for (const d of Object.keys(pkg.dependencies)) add(d);
+// Workbox is a build-time package, but its code is bundled into the offline service worker (sw.js).
+for (const d of ['workbox-core', 'workbox-precaching', 'workbox-routing', 'workbox-strategies']) add(d);
 
 const RULE = '='.repeat(78);
 const sections = [];
