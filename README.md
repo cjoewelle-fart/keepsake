@@ -11,19 +11,23 @@ PhotoRec recovers files well but loses their names and folders, leaving thousand
 - Fonts are bundled; no analytics or third-party scripts.
 - iPhone (HEIC) previews in Chrome, Edge and Firefox are decoded on your computer by libheif compiled to WebAssembly and bundled with the app (nothing is downloaded at runtime). Safari shows HEIC itself. A decode that takes over 15 seconds is abandoned (its worker is replaced) and the tile shows the file type instead; at most 200 decoded previews are kept in memory.
 - The recovery folder is opened read-only.
+- Works offline: after the first visit a service worker keeps a copy of the app's own files (never your photos), so you can turn off your Wi-Fi and it still works. It only stores files that are part of the app and never contacts any other site.
 
 ## Status: phase 1 (prototype the engine)
 
-Done: folder picking, scanning in a background worker, cleanup rules, the cleanup results screen, a basic by-year view.
-Next (phase 2): full review timeline with selection, export, PhotoRec guide, offline install, privacy page.
+Done: folder picking, scanning in a background worker, cleanup rules, the cleanup results screen, a basic by-year view, offline install.
+Next (phase 2): full review timeline with selection, export, PhotoRec guide, privacy page.
 
 ## Run it
 
 ```bash
 npm install
 npm run dev        # http://localhost:5173
-npm run build      # production build in dist/ (with the privacy lock-down)
+npm run build      # production build in dist/ (with the privacy lock-down and offline support)
+npm run preview    # serve the production build at http://localhost:4173
 ```
+
+Offline use: open the production build once (it must be served over https or from localhost), then it can be installed ("Install app" in Chrome or Edge's address bar, or "Add to Home Screen") and works with the network off. A new version is picked up in the background and takes over on the visit after it was downloaded. The development server (`npm run dev`) doesn't work offline. The install name lives in `APP_NAME` in `vite.config.ts`; install icons are made from `public/favicon.svg` by `node scripts/make-icons.mjs <path-to-chromium>`.
 
 Use Chrome or Edge for the best experience. Other browsers fall back to a folder upload dialog (still local).
 
@@ -35,6 +39,7 @@ npm run fixture    # make a synthetic PhotoRec-style folder in fixtures/ (needs 
 npm run eval       # score the engine against the fixture's answer key
 python3 scripts/make_heic_samples.py tests/heic   # remake the HEIC test files (needs pillow-heif)
 npm run build && node scripts/e2e.mjs <path-to-chromium>   # full flow in a real browser
+npm run build && npm run offline-check -- <path-to-chromium>   # installs the app, cuts the network, then scans the fixture offline
 ```
 
 The fixture is synthetic, so a perfect eval score proves the rules behave as designed, not that they work on real recoveries. **The phase 1 gate (under 1% of real photos wrongly set aside) still needs real recovered SD cards and phones.**
@@ -73,4 +78,4 @@ Role definitions for AI assistants working on this project are in `.claude/agent
 
 GPL-3.0 (planned; add the LICENSE file before publishing).
 
-Third-party code shipped in the app: libheif-js 1.23.2 (libheif and libde265, LGPL-3.0), used unmodified for HEIC previews, plus React, Comlink, exifr, browser-fs-access and the two bundled fonts. Their full licence texts (including zlib's) are in [`public/THIRD_PARTY_NOTICES.txt`](public/THIRD_PARTY_NOTICES.txt), which the build copies to `dist/THIRD_PARTY_NOTICES.txt`. Regenerate it with `npm run notices` after changing runtime dependencies (a test fails if it's out of date). libde265 and zlib texts come from upstream and are kept in `licenses/`.
+Third-party code shipped in the app: libheif-js 1.23.2 (libheif and libde265, LGPL-3.0), used unmodified for HEIC previews, plus React, Comlink, exifr, browser-fs-access and the two bundled fonts. Their full licence texts (including zlib's) are in [`public/THIRD_PARTY_NOTICES.txt`](public/THIRD_PARTY_NOTICES.txt), which the build copies to `dist/THIRD_PARTY_NOTICES.txt`. Regenerate it with `npm run notices` after changing runtime dependencies (a test fails if it's out of date). libde265 and zlib texts come from upstream and are kept in `licenses/`. The offline service worker also bundles Workbox 7.4 (MIT), added at build time by vite-plugin-pwa 2.0.0 (MIT).

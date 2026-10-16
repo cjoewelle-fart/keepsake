@@ -1,6 +1,13 @@
 import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
 import type { Plugin } from 'vite'
+import { VitePWA } from 'vite-plugin-pwa'
+
+// The app's name in one place (a rename is pending): install name and home-screen label.
+const APP_NAME = 'Keepsake'
+const APP_SHORT_NAME = 'Keepsake'
+const THEME = '#0D615D'
+const BACKGROUND = '#F3F5F4'
 
 // The privacy lock-down: the built app may only load its own files and may not
 // send data to any other address. Added at build time only, because the dev
@@ -25,12 +32,61 @@ const csp = (): Plugin => ({
     html.replace('<head>', `<head>\n    <meta http-equiv="Content-Security-Policy" content="${CSP}" />`),
 })
 
+// Home-screen icon and theme colour for the installed app (not in the artifact build).
+const installTags = (): Plugin => ({
+  name: 'keepsake-install-tags',
+  apply: 'build',
+  transformIndexHtml: (html) =>
+    html.replace(
+      '</head>',
+      `  <meta name="theme-color" content="${THEME}" />\n    <link rel="apple-touch-icon" href="./icons/apple-touch-icon.png" />\n  </head>`,
+    ),
+})
+
+// Offline install: a web app manifest and a service worker (Workbox, generated at build time)
+// that precaches the app's own built files, so after the first visit the app opens and
+// scans with the network off. It has no runtime caching rules: it never fetches or stores
+// anything except the files listed in its precache manifest (all same-origin), and user
+// files never pass through it (they're read with the File API, not fetched).
+// Updates: skipWaiting + clientsClaim, so a new deploy takes over on the next visit.
+const offline = () =>
+  VitePWA({
+    registerType: 'autoUpdate',
+    includeManifestIcons: false, // already matched by globPatterns below
+    injectRegister: 'script', // an external registerSW.js file, allowed by script-src 'self'
+    manifest: {
+      name: APP_NAME,
+      short_name: APP_SHORT_NAME,
+      description: 'Sort photos recovered by PhotoRec into a clean, dated library. Works entirely on your computer.',
+      theme_color: THEME,
+      background_color: BACKGROUND,
+      display: 'standalone',
+      start_url: './',
+      scope: './',
+      icons: [
+        { src: 'icons/icon-192.png', sizes: '192x192', type: 'image/png' },
+        { src: 'icons/icon-512.png', sizes: '512x512', type: 'image/png' },
+        { src: 'icons/icon-maskable-512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+      ],
+    },
+    workbox: {
+      globPatterns: ['**/*.{html,js,css,woff,woff2,wasm,svg,png}'], // public/ files included; the manifest is added by the plugin,
+      maximumFileSizeToCacheInBytes: 8 * 1024 * 1024, // the HEIC decoder worker is ~2 MB
+      navigateFallback: 'index.html',
+      cleanupOutdatedCaches: true,
+      skipWaiting: true,
+      clientsClaim: true,
+      inlineWorkboxRuntime: true, // one sw.js file, no separate Workbox chunk
+      sourcemap: false,
+    },
+  })
+
 // `vite build --mode artifact` makes the shareable preview: everything inlined into one
 // page (fonts included), and the example-files button on. The preview host applies its
-// own network lock, so this build skips the meta CSP.
+// own network lock, so this build skips the meta CSP. It also has no service worker.
 export default defineConfig(({ mode }) => ({
   base: './',
-  plugins: mode === 'artifact' ? [react()] : [react(), csp()],
+  plugins: mode === 'artifact' ? [react()] : [react(), csp(), offline(), installTags()],
   worker: { format: 'es' },
   build: mode === 'artifact'
     ? {
