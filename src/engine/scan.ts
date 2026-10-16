@@ -2,6 +2,7 @@ import exifr from 'exifr';
 import { exifTiff, heifLayout, type Range } from './heif';
 import { PHOTO_KINDS, VIDEO_KINDS, endsCleanly, imageSize, sniff, type Kind, type SizeResult } from './sniff';
 import type { FileRecord, FileSource, Progress, Rules } from './types';
+import { videoDate } from './video';
 import { DEFAULT_RULES } from './types';
 
 const HEAD_BYTES = 256 * 1024; // enough for photo details and the JPEG frame header
@@ -47,6 +48,21 @@ async function readHeifMeta(src: FileSource, head: Uint8Array, exif: Range[] | u
   return tiff ? readMeta(tiff) : {};
 }
 
+/** Videos built from MP4/QuickTime boxes, where the capture date lives in 'moov'. */
+const BOX_VIDEO_KINDS: ReadonlySet<Kind> = new Set(['mp4', 'mov', '3gp']);
+
+/**
+ * A video's date only adds detail: any failure (odd structure, read error) means "no date",
+ * never a different group, so a video is kept exactly as it was before dates were read.
+ */
+async function readVideoDate(src: FileSource, head: Uint8Array): Promise<string | undefined> {
+  try {
+    return await videoDate((s, e) => src.read(s, e), src.size, head);
+  } catch {
+    return undefined;
+  }
+}
+
 /** '2023:03:11 12:45:20' -> '2023-03-11T12:45:20'; rejects zeroed or impossible dates. */
 export function normalizeDate(v: unknown): string | undefined {
   if (typeof v !== 'string') return undefined;
@@ -67,9 +83,9 @@ export async function inspect(src: FileSource, index: number, rules: Rules = DEF
   const kind = sniff(head);
 
   if (VIDEO_KINDS.has(kind)) {
-    return src.size < rules.smallBytes
-      ? { ...base, kind, group: 'damaged', reason: 'cut-off' }
-      : { ...base, kind, group: 'keep', reason: 'video' };
+    if (src.size < rules.smallBytes) return { ...base, kind, group: 'damaged', reason: 'cut-off' };
+    const takenAt = BOX_VIDEO_KINDS.has(kind) ? await readVideoDate(src, head) : undefined;
+    return { ...base, kind, ...(takenAt ? { takenAt } : {}), group: 'keep', reason: 'video' };
   }
   if (!PHOTO_KINDS.has(kind)) return { ...base, kind, group: 'system', reason: 'not-media' };
 

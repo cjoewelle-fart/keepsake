@@ -23,7 +23,11 @@ export type FileRecord = {
   height?: number;
   /** Camera make and model from the photo's own details, if any. */
   camera?: string;
-  /** When the photo was taken, as 'YYYY-MM-DDTHH:mm:ss' (camera local time). */
+  /**
+   * When the photo or video was taken, as 'YYYY-MM-DDTHH:mm:ss'. Photos: camera local time.
+   * Videos: local time from QuickTime's creationdate when present, otherwise the container's
+   * creation time, which is meant to be UTC (some cameras write local time there instead).
+   */
   takenAt?: string;
   group: Group;
   reason: Reason;
