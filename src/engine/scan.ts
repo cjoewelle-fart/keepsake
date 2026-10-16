@@ -133,12 +133,14 @@ export async function inspect(src: FileSource, index: number, rules: Rules = DEF
 
 const hex = (buf: ArrayBuffer) => Array.from(new Uint8Array(buf), (x) => x.toString(16).padStart(2, '0')).join('');
 
-async function fingerprint(src: FileSource): Promise<string> {
+/** Returns null if the scan was cancelled between reads. */
+async function fingerprint(src: FileSource, isCancelled?: () => boolean): Promise<string | null> {
   if (src.size <= FULL_HASH_LIMIT) {
     return hex(await crypto.subtle.digest('SHA-256', await src.read(0, src.size) as BufferSource));
   }
   const part = 4 * 1024 * 1024;
   const a = await src.read(0, part);
+  if (isCancelled?.()) return null;
   const z = await src.read(src.size - part, src.size);
   const both = new Uint8Array(a.length + z.length);
   both.set(a);
@@ -152,12 +154,18 @@ const richness = (r: FileRecord) => (r.takenAt ? 2 : 0) + (r.camera ? 1 : 0);
 /**
  * Among files still in Keep, mark exact copies. Only files that share a byte size
  * with another file are fingerprinted, which skips most of the expensive reading.
+ *
+ * Up to `concurrency` files are fingerprinted at once (each holds at most one whole file
+ * of up to 64 MB in memory while it's hashed). Fingerprints are collected first and the
+ * copies are decided afterwards in file order, so the result never depends on which read
+ * finished first. Cancelling stops new reads at once and marks nothing.
  */
 export async function markCopies(
   records: FileRecord[],
   sources: FileSource[],
   onProgress?: (p: Progress) => void,
   isCancelled?: () => boolean,
+  concurrency = 4,
 ): Promise<void> {
   const bySize = new Map<number, FileRecord[]>();
   for (const r of records) {
@@ -166,27 +174,45 @@ export async function markCopies(
     if (list) list.push(r); else bySize.set(r.size, [r]);
   }
   const suspects = [...bySize.values()].filter((l) => l.length > 1);
-  const total = suspects.reduce((n, l) => n + l.length, 0);
+  const queue = suspects.flat();
+  const total = queue.length;
+  // Fingerprint per queue position; undefined = couldn't read it (stays in Keep).
+  const prints: (string | undefined)[] = new Array(total);
+  let next = 0;
   let done = 0;
   let lastReport = 0;
-  for (const list of suspects) {
-    const byPrint = new Map<string, FileRecord[]>();
-    for (const r of list) {
-      if (isCancelled?.()) return;
-      done++;
-      let fp: string;
+  let stopped = false;
+  const worker = async () => {
+    while (next < total) {
+      if (isCancelled?.()) { stopped = true; return; }
+      const i = next++;
       try {
-        fp = await fingerprint(sources[r.index]);
+        const fp = await fingerprint(sources[queue[i].index], isCancelled);
+        if (fp === null) { stopped = true; return; }
+        prints[i] = fp;
       } catch {
-        continue; // couldn't read it in full: leave it in Keep rather than lose the scan
+        // couldn't read it in full: leave it in Keep rather than lose the scan
       }
-      const same = byPrint.get(fp);
-      if (same) same.push(r); else byPrint.set(fp, [r]);
+      done++;
       const now = Date.now();
       if (now - lastReport > 100 || done === total) {
         lastReport = now;
         onProgress?.({ stage: 'copies', done, total });
       }
+    }
+  };
+  const width = Math.max(1, Math.min(Math.floor(concurrency) || 1, total));
+  await Promise.all(Array.from({ length: total ? width : 0 }, worker));
+  if (stopped || isCancelled?.()) return;
+
+  let at = 0;
+  for (const list of suspects) {
+    const byPrint = new Map<string, FileRecord[]>();
+    for (const r of list) {
+      const fp = prints[at++];
+      if (fp === undefined) continue;
+      const same = byPrint.get(fp);
+      if (same) same.push(r); else byPrint.set(fp, [r]);
     }
     for (const same of byPrint.values()) {
       if (same.length < 2) continue;
@@ -205,12 +231,15 @@ export type ScanOptions = {
   rules?: Rules;
   onProgress?: (p: Progress) => void;
   isCancelled?: () => boolean;
+  /** Files inspected at once (only the start and end of each file are read). */
   concurrency?: number;
+  /** Copy suspects fingerprinted at once; each may hold a whole file (up to 64 MB) in memory. */
+  copyConcurrency?: number;
 };
 
 /** Scan every file. Returns null if cancelled. Never writes anything. */
 export async function scanAll(sources: FileSource[], opts: ScanOptions = {}): Promise<FileRecord[] | null> {
-  const { rules = DEFAULT_RULES, onProgress, isCancelled, concurrency = 6 } = opts;
+  const { rules = DEFAULT_RULES, onProgress, isCancelled, concurrency = 6, copyConcurrency = 4 } = opts;
   const records: FileRecord[] = new Array(sources.length);
   let next = 0;
   let done = 0;
@@ -243,7 +272,7 @@ export async function scanAll(sources: FileSource[], opts: ScanOptions = {}): Pr
   await Promise.all(Array.from({ length: Math.min(concurrency, sources.length) }, worker));
   if (isCancelled?.()) return null;
   report(true);
-  await markCopies(records, sources, onProgress, isCancelled);
+  await markCopies(records, sources, onProgress, isCancelled, copyConcurrency);
   if (isCancelled?.()) return null;
   return records;
 }
