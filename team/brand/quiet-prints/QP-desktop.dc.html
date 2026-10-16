@@ -1,0 +1,176 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Quiet Prints: cleanup results</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&amp;family=Bricolage+Grotesque:opsz,wght@12..96,500..800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#ECF1F0}
+a{color:#23596B}a:hover{color:#173E4B}
+button:focus-visible,a:focus-visible{outline:3px solid #23596B;outline-offset:2px}
+.ph{display:flex;flex-direction:column;overflow:hidden}
+.ph i{display:block}
+.p1 i:nth-child(1){flex:48;background:#9DBFD3}.p1 i:nth-child(2){flex:14;background:#D9C9A3}.p1 i:nth-child(3){flex:38;background:#5E7F6B}
+.p2 i:nth-child(1){flex:40;background:#E9D6C4}.p2 i:nth-child(2){flex:30;background:#B98A6E}.p2 i:nth-child(3){flex:30;background:#6E4F45}
+.p3 i:nth-child(1){flex:30;background:#F2E3B6}.p3 i:nth-child(2){flex:25;background:#E39B5D}.p3 i:nth-child(3){flex:45;background:#7A4B3A}
+.p4 i:nth-child(1){flex:55;background:#C9D9E4}.p4 i:nth-child(2){flex:15;background:#8EA9B8}.p4 i:nth-child(3){flex:30;background:#3F5C6B}
+.p5 i:nth-child(1){flex:45;background:#D7E3C8}.p5 i:nth-child(2){flex:30;background:#89A96E}.p5 i:nth-child(3){flex:25;background:#4C6640}
+.p6 i:nth-child(1){flex:50;background:#2E3550}.p6 i:nth-child(2){flex:6;background:#E3A86A}.p6 i:nth-child(3){flex:44;background:#1D2236}
+.p7 i:nth-child(1){flex:50;background:#F4D8D2}.p7 i:nth-child(2){flex:30;background:#D49A92}.p7 i:nth-child(3){flex:20;background:#8C5852}
+.p8 i:nth-child(1){flex:35;background:#E8E4DC}.p8 i:nth-child(2){flex:30;background:#A9A196}.p8 i:nth-child(3){flex:35;background:#5D574F}
+.pn i:nth-child(1){flex:40;background:#DCE3E1}.pn i:nth-child(2){flex:30;background:#BFCAC7}.pn i:nth-child(3){flex:30;background:#9AA8A4}
+.tile{margin:0;position:relative;border-radius:12px;overflow:hidden;box-shadow:0 1px 2px rgba(31,36,39,0.12),0 6px 16px rgba(31,36,39,0.08)}
+.tag{position:absolute;left:8px;bottom:8px;margin:0;padding:2px 9px;border-radius:999px;background:#FFFFFF;font-size:13px;font-weight:700;color:#8A4B08}
+.tag-n{color:#45504D}
+.envelope{position:sticky;top:24px}
+@media (max-width:960px),(max-height:720px){.envelope{position:static}}
+</style>
+</helmet>
+<div style="min-height: 100%; background: #ECF1F0; color: #1F2427; font-family: 'Atkinson Hyperlegible', system-ui, sans-serif; font-size: 17px; line-height: 1.6">
+
+<header style="max-width: 1180px; margin: 0 auto; padding: 22px 24px; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px 24px">
+<div style="display: flex; align-items: center; gap: 10px">
+<svg width="28" height="28" viewBox="0 0 28 28" fill="none" aria-hidden="true"><rect x="2" y="2" width="24" height="24" rx="6" fill="#FFFFFF" stroke="#23596B" stroke-width="1.8"></rect><path d="M6.5 15.5c2.5-2.2 5-2.2 7.5 0s5 2.2 7.5 0" stroke="#23596B" stroke-width="1.8" stroke-linecap="round"></path><path d="M6.5 21h8" stroke="#8A4B08" stroke-width="1.8" stroke-linecap="round"></path></svg>
+<span style="font-family: 'Bricolage Grotesque', sans-serif; font-variation-settings: 'opsz' 36; font-weight: 800; font-size: 21px; letter-spacing: -0.01em">Keepsake</span>
+</div>
+<p style="margin: 0; font-size: 15px; color: #545B5F">Step 3 of 5 · Clean up</p>
+</header>
+
+<main style="max-width: 1180px; margin: 0 auto; padding: 24px 24px 72px; display: flex; flex-wrap: wrap; gap: 56px; align-items: flex-start">
+
+<aside aria-labelledby="found-h" class="envelope" style="flex: 1 1 360px; max-width: 420px; min-width: 0; display: flex; flex-direction: column; gap: 22px">
+<h1 id="found-h" style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 34px; line-height: 1.12; letter-spacing: -0.02em; font-variation-settings: 'opsz' 60">We found <span style="display: block; font-weight: 800; font-size: 76px; line-height: 0.95; letter-spacing: -0.035em; font-variation-settings: 'opsz' 96; color: #23596B; margin: 4px 0">2,236</span>photos and videos worth keeping.</h1>
+<p style="margin: 0; font-size: 18px; color: #545B5F">They're sorted by the date each one was taken.</p>
+
+<dl aria-label="Your files, added up" style="margin: 0; font-variant-numeric: tabular-nums; font-size: 16px">
+<div style="display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; border-top: 1px solid #CBD8D4"><dt>Files checked</dt><dd style="margin: 0; font-weight: 700">38,412</dd></div>
+<div style="display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; border-top: 1px solid #CBD8D4"><dt>Kept, sorted by date</dt><dd style="margin: 0; font-weight: 700">2,236</dd></div>
+<div style="display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; border-top: 1px solid #CBD8D4; border-bottom: 2px solid #1F2427"><dt>Set aside, kept safe below</dt><dd style="margin: 0; font-weight: 700">36,176</dd></div>
+<div style="display: flex; justify-content: space-between; gap: 12px; padding: 10px 14px; margin-top: 10px; border-radius: 12px; background: #DDEAEA; color: #1D4D5D; font-weight: 700"><dt>Deleted · Uploaded</dt><dd style="margin: 0">0 · 0</dd></div>
+</dl>
+<p style="margin: -8px 0 0; font-size: 15px; color: #545B5F">Your recovery folder is exactly as it was.</p>
+
+<div style="display: flex; flex-direction: column; gap: 10px; align-items: flex-start">
+<button type="button" style="min-height: 54px; padding: 0 28px; border-radius: 999px; border: 0; background: #23596B; color: #FFFFFF; font: inherit; font-weight: 700; cursor: pointer">Review my 2,236 photos and videos</button>
+<span style="font-size: 15px; color: #545B5F">Take your time. Nothing changes until you choose.</span>
+</div>
+</aside>
+
+<div style="flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column; gap: 52px">
+
+<section aria-label="Your photos by date" style="display: flex; flex-direction: column; gap: 22px">
+<nav aria-label="Jump to a year" style="display: flex; flex-wrap: wrap; gap: 8px; align-items: center">
+<a href="#" style="display: inline-flex; align-items: center; min-height: 44px; padding: 0 18px; border-radius: 999px; background: #23596B; color: #FFFFFF; text-decoration: none; font-weight: 700" aria-current="true">2024</a>
+<a href="#" style="display: inline-flex; align-items: center; min-height: 44px; padding: 0 18px; border-radius: 999px; background: #FFFFFF; color: #1F2427; text-decoration: none; font-weight: 700">2023</a>
+<a href="#" style="display: inline-flex; align-items: center; min-height: 44px; padding: 0 18px; border-radius: 999px; background: #FFFFFF; color: #1F2427; text-decoration: none; font-weight: 700">2022</a>
+<a href="#" style="display: inline-flex; align-items: center; min-height: 44px; padding: 0 18px; border-radius: 999px; background: #FFFFFF; color: #1F2427; text-decoration: none; font-weight: 700">2021</a>
+<a href="#" style="display: inline-flex; align-items: center; min-height: 44px; padding: 0 18px; border-radius: 999px; background: #FFFFFF; color: #1F2427; text-decoration: none; font-weight: 700">2020</a>
+<a href="#" style="display: inline-flex; align-items: center; min-height: 44px; padding: 0 18px; border-radius: 999px; background: #FFFFFF; color: #1F2427; text-decoration: none; font-weight: 700">2019</a>
+<a href="#" style="display: inline-flex; align-items: center; min-height: 44px; padding: 0 18px; border-radius: 999px; background: #FFFFFF; color: #1F2427; text-decoration: none; font-weight: 700">No date · 312</a>
+</nav>
+
+<div style="display: flex; flex-direction: column; gap: 12px">
+<h2 style="margin: 0; display: flex; align-items: baseline; gap: 10px; font-family: 'Bricolage Grotesque', sans-serif; font-variation-settings: 'opsz' 36; font-weight: 800; font-size: 22px; letter-spacing: -0.01em"><span>June 2024</span><span style="font-family: 'Atkinson Hyperlegible', sans-serif; font-weight: 400; font-size: 15px; color: #545B5F; letter-spacing: 0">148 photos and videos</span></h2>
+<div style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px">
+<figure class="tile" style="grid-column: span 2; grid-row: span 2"><div class="ph p6" style="aspect-ratio: 1"><i></i><i></i><i></i></div><figcaption class="tag">28 June</figcaption></figure>
+<figure class="tile"><div class="ph p1" style="aspect-ratio: 1"><i></i><i></i><i></i></div><figcaption class="tag">2 June</figcaption></figure>
+<figure class="tile"><div class="ph p5" style="aspect-ratio: 1"><i></i><i></i><i></i></div><figcaption class="tag">2 June</figcaption></figure>
+<figure class="tile"><div class="ph p3" style="aspect-ratio: 1"><i></i><i></i><i></i></div><figcaption class="tag">9 June</figcaption></figure>
+<figure class="tile"><div class="ph p7" style="aspect-ratio: 1"><i></i><i></i><i></i></div><figcaption class="tag">15 June</figcaption></figure>
+<figure class="tile"><div class="ph p2" style="aspect-ratio: 1"><i></i><i></i><i></i></div><figcaption class="tag">21 June</figcaption></figure>
+<figure class="tile"><div class="ph p8" style="aspect-ratio: 1"><i></i><i></i><i></i></div><figcaption class="tag">24 June</figcaption></figure>
+</div>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 12px">
+<h2 style="margin: 0; display: flex; align-items: baseline; gap: 10px; font-family: 'Bricolage Grotesque', sans-serif; font-variation-settings: 'opsz' 36; font-weight: 800; font-size: 22px; letter-spacing: -0.01em"><span>March 2019</span><span style="font-family: 'Atkinson Hyperlegible', sans-serif; font-weight: 400; font-size: 15px; color: #545B5F; letter-spacing: 0">62 photos and videos</span></h2>
+<div style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px">
+<figure class="tile"><div class="ph p4" style="aspect-ratio: 1"><i></i><i></i><i></i></div><figcaption class="tag">14 March</figcaption></figure>
+<figure class="tile"><div class="ph p1" style="aspect-ratio: 1"><i></i><i></i><i></i></div><figcaption class="tag">17 March</figcaption></figure>
+<figure class="tile"><div class="ph p5" style="aspect-ratio: 1"><i></i><i></i><i></i></div><figcaption class="tag">23 March</figcaption></figure>
+<figure class="tile"><div class="ph p3" style="aspect-ratio: 1"><i></i><i></i><i></i></div><figcaption class="tag">30 March</figcaption></figure>
+<a href="#" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-height: 44px; aspect-ratio: 1; border-radius: 12px; background: #FFFFFF; color: #23596B; text-decoration: none; text-align: center; padding: 8px"><b style="font-size: 20px">+1,913</b><span style="font-size: 14px">See every month</span></a>
+</div>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 12px">
+<h2 style="margin: 0; display: flex; align-items: baseline; gap: 10px; font-family: 'Bricolage Grotesque', sans-serif; font-variation-settings: 'opsz' 36; font-weight: 800; font-size: 22px; letter-spacing: -0.01em"><span>No date</span><span style="font-family: 'Atkinson Hyperlegible', sans-serif; font-weight: 400; font-size: 15px; color: #545B5F; letter-spacing: 0">312 photos, kept together so none get lost</span></h2>
+<div style="display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px">
+<figure class="tile"><div class="ph p8" style="aspect-ratio: 1"><i></i><i></i><i></i></div><figcaption class="tag tag-n">No date</figcaption></figure>
+<figure class="tile"><div class="ph p2" style="aspect-ratio: 1"><i></i><i></i><i></i></div><figcaption class="tag tag-n">No date</figcaption></figure>
+<figure class="tile"><div class="ph p7" style="aspect-ratio: 1"><i></i><i></i><i></i></div><figcaption class="tag tag-n">No date</figcaption></figure>
+<figure class="tile"><div class="ph p4" style="aspect-ratio: 1"><i></i><i></i><i></i></div><figcaption class="tag tag-n">No date</figcaption></figure>
+<a href="#" style="display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-height: 44px; aspect-ratio: 1; border-radius: 12px; background: #FFFFFF; color: #23596B; text-decoration: none; text-align: center; padding: 8px"><b style="font-size: 20px">+308</b><span style="font-size: 14px">See them all</span></a>
+</div>
+</div>
+</section>
+
+<section aria-labelledby="aside-h" style="background: #FAFCFB; border: 1px solid #D9E3E0; border-radius: 20px; padding: 26px 26px 14px; display: flex; flex-direction: column; gap: 14px">
+<div style="display: flex; flex-direction: column; gap: 6px">
+<h2 id="aside-h" style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-variation-settings: 'opsz' 36; font-weight: 800; font-size: 22px; letter-spacing: -0.01em">Set aside, kept safe</h2>
+<p style="margin: 0; color: #545B5F; font-size: 16px">We set aside 36,176 files that look like leftovers from the recovery. You can keep any of these.</p>
+</div>
+<div aria-hidden="true" style="display: flex; height: 12px; border-radius: 999px; overflow: hidden; gap: 2px">
+<div style="flex: 21904; background: #B8C9C5"></div><div style="flex: 8315; background: #93AAA5"></div><div style="flex: 3602; background: #6F8A85"></div><div style="flex: 2355; background: #4F6965"></div>
+</div>
+<ul style="list-style: none; margin: 0; padding: 0">
+<sc-for list="{{groups}}" as="g" hint-placeholder-count="4">
+<li style="border-top: 1px solid #DCE6E3">
+<button type="button" onClick="{{g.toggle}}" aria-expanded="{{g.expanded}}" aria-controls="{{g.panel}}" aria-label="{{g.label}}" style="width: 100%; min-height: 64px; display: flex; align-items: center; gap: 14px; padding: 10px 0; background: transparent; border: 0; color: #1F2427; font: inherit; text-align: left; cursor: pointer">
+<span aria-hidden="true" style="display: inline-block; width: 12px; height: 12px; border-radius: 3px; flex: none; background: {{g.swatch}}"></span>
+<span aria-hidden="true" style="display: flex; gap: 4px; flex: none"><span class="ph pn" style="width: 34px; height: 34px; border-radius: 6px"><i></i><i></i><i></i></span><span class="ph pn" style="width: 34px; height: 34px; border-radius: 6px"><i></i><i></i><i></i></span><span class="ph pn" style="width: 34px; height: 34px; border-radius: 6px"><i></i><i></i><i></i></span></span>
+<span style="flex: 1; min-width: 0">{{g.title}}</span>
+<span style="color: #545B5F; font-variant-numeric: tabular-nums">{{g.count}}</span>
+<span style="color: #23596B; font-weight: 700; font-size: 15px; min-width: 40px; text-align: right">{{g.action}}</span>
+</button>
+<sc-if value="{{g.open}}" hint-placeholder-val="{{false}}">
+<div id="{{g.panel}}" style="padding: 0 0 16px 26px; display: flex; flex-direction: column; gap: 10px; color: #45504D; font-size: 16px">
+<p style="margin: 0">{{g.why}}</p>
+<button type="button" style="align-self: flex-start; min-height: 44px; padding: 0 18px; border-radius: 999px; border: 1px solid #8FA19D; background: #FFFFFF; color: #1F2427; font: inherit; font-size: 15px; font-weight: 700; cursor: pointer">Keep these files</button>
+</div>
+</sc-if>
+</li>
+</sc-for>
+</ul>
+</section>
+
+</div>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":1500}}'>
+class Component extends DCLogic {
+  constructor(props) {
+    super(props);
+    this.state = { open: 'small' };
+  }
+  renderVals() {
+    const data = [
+      { id: 'small', title: 'Small preview copies', count: '21,904', swatch: '#B8C9C5', why: 'Phones and apps save small preview copies of photos. These are tiny or blurry and have no camera details, so they are usually copies of photos you already have.' },
+      { id: 'copies', title: 'Exact copies', count: '8,315', swatch: '#93AAA5', why: 'Each of these is exactly the same as a photo or video you are keeping. You still have one of each.' },
+      { id: 'damaged', title: 'Damaged or incomplete files', count: '3,602', swatch: '#6F8A85', why: 'Part of each file is missing, so it may not open. Some still show part of a picture, so look through them in case one matters to you.' },
+      { id: 'system', title: 'App and system files', count: '2,355', swatch: '#4F6965', why: 'These are not photos or videos. They are leftover files from apps and from the phone or camera itself.' }
+    ];
+    const open = this.state.open;
+    return {
+      groups: data.map((g) => ({
+        ...g,
+        open: open === g.id,
+        expanded: open === g.id ? 'true' : 'false',
+        panel: 'aside-' + g.id,
+        action: open === g.id ? 'Hide' : 'Show',
+        label: (open === g.id ? 'Hide ' : 'Show ') + g.title.toLowerCase() + ', ' + g.count + ' files',
+        toggle: () => this.setState({ open: open === g.id ? null : g.id })
+      }))
+    };
+  }
+}
+</script>
+</body>
+</html>
