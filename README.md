@@ -25,7 +25,10 @@ npm install
 npm run dev        # http://localhost:5173
 npm run build      # production build in dist/ (with the privacy lock-down and offline support)
 npm run preview    # serve the production build at http://localhost:4173
+npm run build:test # test build for usability sessions in dist-test/
 ```
+
+The test build (`npm run build:test`) is the production build (same privacy lock-down and offline install) with two differences: the "Try with example files" button is always off, even if `VITE_SAMPLES=1` is set (the build fails if the example-files code gets in), and the page title reads "Keepsake (test)" so session recordings can be told apart. Serve it with `npx vite preview --outDir dist-test`.
 
 Offline use: open the production build once (it must be served over https or from localhost), then it can be installed ("Install app" in Chrome or Edge's address bar, or "Add to Home Screen") and works with the network off. A new version is picked up in the background and takes over on the visit after it was downloaded. The development server (`npm run dev`) doesn't work offline. The install name lives in `APP_NAME` in `vite.config.ts`; install icons are made from `public/favicon.svg` by `node scripts/make-icons.mjs <path-to-chromium>`.
 
@@ -40,7 +43,11 @@ npm run eval       # score the engine against the fixture's answer key
 python3 scripts/make_heic_samples.py tests/heic   # remake the HEIC test files (needs pillow-heif)
 npm run build && node scripts/e2e.mjs <path-to-chromium>   # full flow in a real browser
 npm run build && npm run offline-check -- <path-to-chromium>   # installs the app, cuts the network, then scans the fixture offline
+node scripts/bench_copies.mjs --files 40000 --concurrency 1,4   # times a 40,000-file scan (12 GB in a temp dir, deleted after)
+node scripts/bench_copies_browser.mjs <path-to-chromium> <folder>   # the same in a Chromium worker (make <folder> with bench_copies.mjs --dir)
 ```
+
+The exact-copy check fingerprints 4 files at a time (`copyConcurrency` in `scanAll`), so at most 4 whole files (each up to 64 MB) are in memory at once.
 
 The fixture is synthetic, so a perfect eval score proves the rules behave as designed, not that they work on real recoveries. **The phase 1 gate (under 1% of real photos wrongly set aside) still needs real recovered SD cards and phones.**
 

@@ -3,6 +3,11 @@ import { defineConfig } from 'vite'
 import type { Plugin } from 'vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
+// `npm run build:test` (vite build --mode testbuild): the production build for usability
+// sessions, in dist-test/. Same privacy lock-down and offline install, but the example-files
+// button is forced off and the page title says "(test)" so sessions can be told apart.
+const TEST_BUILD = 'testbuild'
+
 // The app's name in one place (a rename is pending): install name and home-screen label.
 const APP_NAME = 'Keepsake'
 const APP_SHORT_NAME = 'Keepsake'
@@ -30,6 +35,23 @@ const csp = (): Plugin => ({
   apply: 'build',
   transformIndexHtml: (html) =>
     html.replace('<head>', `<head>\n    <meta http-equiv="Content-Security-Policy" content="${CSP}" />`),
+})
+
+// Test build only: mark the page title, and refuse to finish if the example-files code
+// (which fetches ./sample-pack.wasm) made it into the bundle.
+const testBuild = (): Plugin => ({
+  name: 'keepsake-test-build',
+  apply: 'build',
+  transformIndexHtml: (html) => {
+    if (!html.includes(`<title>${APP_NAME}</title>`)) throw new Error('test build: <title> not found in index.html')
+    return html.replace(`<title>${APP_NAME}</title>`, `<title>${APP_NAME} (test)</title>`)
+  },
+  generateBundle(_, bundle) {
+    for (const [name, chunk] of Object.entries(bundle)) {
+      const text = chunk.type === 'chunk' ? chunk.code : typeof chunk.source === 'string' ? chunk.source : ''
+      if (text.includes('sample-pack')) throw new Error(`test build: example files code found in ${name}`)
+    }
+  },
 })
 
 // Home-screen icon and theme colour for the installed app (not in the artifact build).
@@ -86,12 +108,16 @@ const offline = () =>
 // own network lock, so this build skips the meta CSP. It also has no service worker.
 export default defineConfig(({ mode }) => ({
   base: './',
-  plugins: mode === 'artifact' ? [react()] : [react(), csp(), offline(), installTags()],
+  plugins: mode === 'artifact' ? [react()]
+    : mode === TEST_BUILD ? [react(), csp(), offline(), installTags(), testBuild()]
+    : [react(), csp(), offline(), installTags()],
+  // The test build never shows the example-files button, whatever the environment says.
+  define: mode === TEST_BUILD ? { 'import.meta.env.VITE_SAMPLES': JSON.stringify('0') } : {},
   worker: { format: 'es' },
   build: mode === 'artifact'
     ? {
         outDir: 'dist-artifact', assetsInlineLimit: 100_000_000, cssCodeSplit: false, modulePreload: false,
         rolldownOptions: { output: { codeSplitting: false } }, // one script (the HEIC decoder is loaded lazily otherwise)
       }
-    : {},
+    : mode === TEST_BUILD ? { outDir: 'dist-test' } : {},
 }))

@@ -28,3 +28,4 @@ fixtures/
 e2e-shots/
 __pycache__/
 dist-artifact/
+dist-test/
