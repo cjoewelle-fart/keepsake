@@ -1,0 +1,138 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<title>Quiet Prints: review timeline</title>
+<script src="./support.js"></script>
+</head>
+<body>
+<x-dc>
+<helmet>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link href="https://fonts.googleapis.com/css2?family=Atkinson+Hyperlegible:wght@400;700&amp;family=Bricolage+Grotesque:opsz,wght@12..96,500..800&amp;display=swap" rel="stylesheet">
+<style>
+body{margin:0;background:#ECF1F0}
+a{color:#23596B}a:hover{color:#173E4B}
+button:focus-visible,a:focus-visible,input:focus-visible+span{outline:3px solid #23596B;outline-offset:2px}
+.ph{display:flex;flex-direction:column;overflow:hidden}
+.ph i{display:block}
+.p1 i:nth-child(1){flex:48;background:#9DBFD3}.p1 i:nth-child(2){flex:14;background:#D9C9A3}.p1 i:nth-child(3){flex:38;background:#5E7F6B}
+.p2 i:nth-child(1){flex:40;background:#E9D6C4}.p2 i:nth-child(2){flex:30;background:#B98A6E}.p2 i:nth-child(3){flex:30;background:#6E4F45}
+.p3 i:nth-child(1){flex:30;background:#F2E3B6}.p3 i:nth-child(2){flex:25;background:#E39B5D}.p3 i:nth-child(3){flex:45;background:#7A4B3A}
+.p4 i:nth-child(1){flex:55;background:#C9D9E4}.p4 i:nth-child(2){flex:15;background:#8EA9B8}.p4 i:nth-child(3){flex:30;background:#3F5C6B}
+.p5 i:nth-child(1){flex:45;background:#D7E3C8}.p5 i:nth-child(2){flex:30;background:#89A96E}.p5 i:nth-child(3){flex:25;background:#4C6640}
+.p6 i:nth-child(1){flex:50;background:#2E3550}.p6 i:nth-child(2){flex:6;background:#E3A86A}.p6 i:nth-child(3){flex:44;background:#1D2236}
+.p7 i:nth-child(1){flex:50;background:#F4D8D2}.p7 i:nth-child(2){flex:30;background:#D49A92}.p7 i:nth-child(3){flex:20;background:#8C5852}
+.p8 i:nth-child(1){flex:35;background:#E8E4DC}.p8 i:nth-child(2){flex:30;background:#A9A196}.p8 i:nth-child(3){flex:35;background:#5D574F}
+.disp{font-family:'Bricolage Grotesque',sans-serif;font-weight:800;letter-spacing:-0.01em;font-variation-settings:'opsz' 36}
+.tile{position:relative;margin:0;border-radius:12px;overflow:hidden;box-shadow:0 1px 2px rgba(31,36,39,0.12),0 6px 16px rgba(31,36,39,0.08)}
+.tile.off{box-shadow:none;outline:2px dashed #8FA19D;outline-offset:-2px}
+.tile.off .ph{opacity:0.55}
+.tag{position:absolute;left:8px;bottom:8px;margin:0;padding:2px 9px;border-radius:999px;background:#FFFFFF;font-size:13px;font-weight:700;color:#8A4B08}
+.vid{position:absolute;right:8px;bottom:8px;display:flex;align-items:center;gap:4px;padding:2px 9px;border-radius:999px;background:#FFFFFF;font-size:13px;font-weight:700;color:#1F2427}
+.chk{position:absolute;top:0;right:0;width:44px;height:44px;display:flex;align-items:center;justify-content:center;cursor:pointer}
+.chk input{position:absolute;opacity:0;width:44px;height:44px;margin:0;cursor:pointer}
+.dot{width:26px;height:26px;border-radius:50%;display:flex;align-items:center;justify-content:center;background:#23596B;box-shadow:0 0 0 2px #FFFFFF}
+.dot.no{background:#FFFFFF;box-shadow:inset 0 0 0 2px #545B5F,0 0 0 2px #FFFFFF}
+.pill{display:inline-flex;align-items:center;min-height:44px;padding:0 18px;border-radius:999px;background:#FFFFFF;color:#1F2427;text-decoration:none;font-weight:700;font-size:15px;border:0;font-family:inherit;cursor:pointer}
+.pill.on{background:#23596B;color:#FFFFFF}
+.sec{min-height:44px;padding:0 18px;border-radius:999px;border:1px solid #8FA19D;background:#FFFFFF;color:#1F2427;font:inherit;font-size:15px;font-weight:700;cursor:pointer}
+.envelope{position:sticky;top:24px}
+@media (max-width:960px),(max-height:720px){.envelope{position:static}}
+</style>
+</helmet>
+<div style="min-height: 100%; background: #ECF1F0; color: #1F2427; font-family: 'Atkinson Hyperlegible', system-ui, sans-serif; font-size: 17px; line-height: 1.6">
+
+<header style="max-width: 1180px; margin: 0 auto; padding: 22px 24px; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px 24px">
+<div style="display: flex; align-items: center; gap: 10px">
+<svg width="28" height="28" viewBox="0 0 28 28" fill="none" aria-hidden="true"><rect x="2" y="2" width="24" height="24" rx="6" fill="#FFFFFF" stroke="#23596B" stroke-width="1.8"></rect><path d="M6.5 15.5c2.5-2.2 5-2.2 7.5 0s5 2.2 7.5 0" stroke="#23596B" stroke-width="1.8" stroke-linecap="round"></path><path d="M6.5 21h8" stroke="#8A4B08" stroke-width="1.8" stroke-linecap="round"></path></svg>
+<span class="disp" style="font-size: 21px">Keepsake</span>
+</div>
+<p style="margin: 0; font-size: 15px; color: #545B5F">Step 4 of 5 · Review</p>
+</header>
+
+<main style="max-width: 1180px; margin: 0 auto; padding: 24px 24px 72px; display: flex; flex-wrap: wrap; gap: 56px; align-items: flex-start">
+
+<aside aria-labelledby="choose-h" class="envelope" style="flex: 1 1 340px; max-width: 400px; min-width: 0; display: flex; flex-direction: column; gap: 20px">
+<h1 id="choose-h" style="margin: 0; font-family: 'Bricolage Grotesque', sans-serif; font-weight: 700; font-size: 34px; line-height: 1.12; letter-spacing: -0.02em; font-variation-settings: 'opsz' 60">Choose what to save <span style="display: block; font-weight: 800; font-size: 72px; line-height: 0.95; letter-spacing: -0.035em; font-variation-settings: 'opsz' 96; color: #23596B; margin-top: 8px">2,224</span><span style="display: block; font-size: 22px; font-weight: 700; color: #23596B">selected</span></h1>
+<p style="margin: 0; font-size: 17px; color: #545B5F">Everything starts selected, because saving it all is the safe choice. Untick anything you don't want.</p>
+<dl aria-label="Your photos, added up" style="margin: 0; font-variant-numeric: tabular-nums; font-size: 16px">
+<div style="display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; border-top: 1px solid #CBD8D4"><dt>Kept photos and videos</dt><dd style="margin: 0; font-weight: 700">2,236</dd></div>
+<div style="display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; border-top: 1px solid #CBD8D4"><dt>Selected to save</dt><dd style="margin: 0; font-weight: 700">2,224</dd></div>
+<div style="display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; border-top: 1px solid #CBD8D4; border-bottom: 2px solid #1F2427"><dt>Not selected</dt><dd style="margin: 0; font-weight: 700">12</dd></div>
+<div style="display: flex; justify-content: space-between; gap: 12px; padding: 10px 0"><dt>Still set aside, kept safe</dt><dd style="margin: 0; font-weight: 700">36,176</dd></div>
+<div style="display: flex; justify-content: space-between; gap: 12px; padding: 10px 14px; margin-top: 6px; border-radius: 12px; background: #DDEAEA; color: #1D4D5D; font-weight: 700"><dt>Deleted · Uploaded</dt><dd style="margin: 0">0 · 0</dd></div>
+</dl>
+<p role="status" style="margin: -6px 0 0; font-size: 15px; color: #545B5F">Not selected means not saved. Nothing is deleted.</p>
+<div style="display: flex; flex-direction: column; gap: 10px; align-items: flex-start">
+<button type="button" style="min-height: 54px; padding: 0 28px; border-radius: 999px; border: 0; background: #23596B; color: #FFFFFF; font: inherit; font-weight: 700; cursor: pointer">Save 2,224 photos and videos</button>
+<div style="display: flex; gap: 18px; font-size: 15px"><button type="button" style="min-height: 44px; padding: 0; border: 0; background: none; color: #23596B; font: inherit; font-weight: 700; text-decoration: underline; text-underline-offset: 3px; cursor: pointer">Select everything</button><button type="button" style="min-height: 44px; padding: 0; border: 0; background: none; color: #23596B; font: inherit; font-weight: 700; text-decoration: underline; text-underline-offset: 3px; cursor: pointer">Select none</button></div>
+</div>
+</aside>
+
+<div style="flex: 999 1 560px; min-width: 0; display: flex; flex-direction: column; gap: 40px">
+
+<div style="position: sticky; top: 0; z-index: 2; background: #ECF1F0; padding: 12px 0; display: flex; flex-direction: column; gap: 10px">
+<nav aria-label="Jump to a year" style="display: flex; flex-wrap: wrap; gap: 8px">
+<a href="#" class="pill on" aria-current="true">2024</a><a href="#" class="pill">2023</a><a href="#" class="pill">2022</a><a href="#" class="pill">2021</a><a href="#" class="pill">2020</a><a href="#" class="pill">2019</a><a href="#" class="pill">No date · 312</a>
+</nav>
+<div style="display: flex; flex-wrap: wrap; justify-content: space-between; gap: 10px; align-items: center">
+<nav aria-label="Jump to a month in 2024" style="display: flex; flex-wrap: wrap; gap: 6px; font-size: 14px">
+<a href="#" class="pill" style="min-height: 36px; padding: 0 12px; font-size: 14px; background: #DDEAEA; color: #1D4D5D">June</a><a href="#" class="pill" style="min-height: 36px; padding: 0 12px; font-size: 14px">May</a><a href="#" class="pill" style="min-height: 36px; padding: 0 12px; font-size: 14px">April</a><a href="#" class="pill" style="min-height: 36px; padding: 0 12px; font-size: 14px">February</a><a href="#" class="pill" style="min-height: 36px; padding: 0 12px; font-size: 14px">January</a>
+</nav>
+<div role="radiogroup" aria-label="Show" style="display: flex; gap: 4px; padding: 4px; border-radius: 999px; background: #FFFFFF">
+<button type="button" role="radio" aria-checked="true" class="pill on" style="min-height: 36px; padding: 0 14px; font-size: 14px">All</button>
+<button type="button" role="radio" aria-checked="false" class="pill" style="min-height: 36px; padding: 0 14px; font-size: 14px">Photos</button>
+<button type="button" role="radio" aria-checked="false" class="pill" style="min-height: 36px; padding: 0 14px; font-size: 14px">Videos</button>
+<button type="button" role="radio" aria-checked="false" class="pill" style="min-height: 36px; padding: 0 14px; font-size: 14px">Screenshots</button>
+</div>
+</div>
+</div>
+
+<section aria-labelledby="june-h" style="display: flex; flex-direction: column; gap: 18px">
+<div style="display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px">
+<h2 id="june-h" class="disp" style="margin: 0; font-size: 22px; display: flex; align-items: baseline; gap: 10px">June 2024 <span style="font-family: 'Atkinson Hyperlegible', sans-serif; font-weight: 400; font-size: 15px; color: #545B5F; letter-spacing: 0">136 of 148 selected</span></h2>
+<button type="button" class="sec">Select all of June</button>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 10px">
+<label style="display: flex; align-items: center; gap: 10px; min-height: 44px; font-weight: 700; cursor: pointer"><input type="checkbox" aria-checked="mixed" style="width: 20px; height: 20px; accent-color: #23596B"> Friday 28 June <span style="font-weight: 400; color: #545B5F; font-size: 15px">4 of 6 selected</span></label>
+<div style="display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 12px">
+<figure class="tile"><div class="ph p6" style="aspect-ratio: 1"><i></i><i></i><i></i></div><label class="chk"><input type="checkbox" checked aria-label="28 June 2024, 09:12, photo"><span class="dot"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M3 7.2l2.6 2.6L11 4.4" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg></span></label><figcaption class="tag">09:12</figcaption></figure>
+<figure class="tile"><div class="ph p1" style="aspect-ratio: 1"><i></i><i></i><i></i></div><label class="chk"><input type="checkbox" checked aria-label="28 June 2024, 09:14, photo"><span class="dot"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M3 7.2l2.6 2.6L11 4.4" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg></span></label><figcaption class="tag">09:14</figcaption></figure>
+<figure class="tile off"><div class="ph p8" style="aspect-ratio: 1"><i></i><i></i><i></i></div><label class="chk"><input type="checkbox" aria-label="28 June 2024, 09:14, photo"><span class="dot no"></span></label><figcaption class="tag">09:14</figcaption></figure>
+<figure class="tile"><div class="ph p5" style="aspect-ratio: 1"><i></i><i></i><i></i></div><label class="chk"><input type="checkbox" checked aria-label="28 June 2024, 11:40, video, 0:42"><span class="dot"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M3 7.2l2.6 2.6L11 4.4" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg></span></label><figcaption class="tag">11:40</figcaption><span class="vid" aria-hidden="true"><svg width="10" height="10" viewBox="0 0 10 10" aria-hidden="true"><path d="M2 1l7 4-7 4z" fill="#1F2427"></path></svg>0:42</span></figure>
+<figure class="tile off"><div class="ph p2" style="aspect-ratio: 1"><i></i><i></i><i></i></div><label class="chk"><input type="checkbox" aria-label="28 June 2024, 14:31, photo"><span class="dot no"></span></label><figcaption class="tag">14:31</figcaption></figure>
+<figure class="tile"><div class="ph p3" style="aspect-ratio: 1"><i></i><i></i><i></i></div><label class="chk"><input type="checkbox" checked aria-label="28 June 2024, 14:32, photo"><span class="dot"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M3 7.2l2.6 2.6L11 4.4" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg></span></label><figcaption class="tag">14:32</figcaption></figure>
+</div>
+</div>
+
+<div style="display: flex; flex-direction: column; gap: 10px">
+<label style="display: flex; align-items: center; gap: 10px; min-height: 44px; font-weight: 700; cursor: pointer"><input type="checkbox" checked style="width: 20px; height: 20px; accent-color: #23596B"> Sunday 23 June <span style="font-weight: 400; color: #545B5F; font-size: 15px">all 6 selected</span></label>
+<div style="display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 12px">
+<figure class="tile"><div class="ph p4" style="aspect-ratio: 1"><i></i><i></i><i></i></div><label class="chk"><input type="checkbox" checked aria-label="23 June 2024, 08:02, photo"><span class="dot"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M3 7.2l2.6 2.6L11 4.4" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg></span></label><figcaption class="tag">08:02</figcaption></figure>
+<figure class="tile"><div class="ph p7" style="aspect-ratio: 1"><i></i><i></i><i></i></div><label class="chk"><input type="checkbox" checked aria-label="23 June 2024, 08:05, photo"><span class="dot"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M3 7.2l2.6 2.6L11 4.4" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg></span></label><figcaption class="tag">08:05</figcaption></figure>
+<figure class="tile"><div class="ph p1" style="aspect-ratio: 1"><i></i><i></i><i></i></div><label class="chk"><input type="checkbox" checked aria-label="23 June 2024, 10:20, photo"><span class="dot"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M3 7.2l2.6 2.6L11 4.4" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg></span></label><figcaption class="tag">10:20</figcaption></figure>
+<figure class="tile"><div class="ph p3" style="aspect-ratio: 1"><i></i><i></i><i></i></div><label class="chk"><input type="checkbox" checked aria-label="23 June 2024, 10:21, photo"><span class="dot"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M3 7.2l2.6 2.6L11 4.4" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg></span></label><figcaption class="tag">10:21</figcaption></figure>
+<figure class="tile"><div class="ph p5" style="aspect-ratio: 1"><i></i><i></i><i></i></div><label class="chk"><input type="checkbox" checked aria-label="23 June 2024, 17:48, photo"><span class="dot"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M3 7.2l2.6 2.6L11 4.4" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg></span></label><figcaption class="tag">17:48</figcaption></figure>
+<figure class="tile"><div class="ph p6" style="aspect-ratio: 1"><i></i><i></i><i></i></div><label class="chk"><input type="checkbox" checked aria-label="23 June 2024, 19:03, photo"><span class="dot"><svg width="14" height="14" viewBox="0 0 14 14" fill="none" aria-hidden="true"><path d="M3 7.2l2.6 2.6L11 4.4" stroke="#FFFFFF" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"></path></svg></span></label><figcaption class="tag">19:03</figcaption></figure>
+</div>
+</div>
+</section>
+
+<section aria-labelledby="aside2-h" style="background: #FAFCFB; border: 1px solid #D9E3E0; border-radius: 20px; padding: 18px 22px; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px">
+<p id="aside2-h" style="margin: 0; font-size: 16px; color: #45504D">36,176 files set aside, kept safe. You can look through them on the Clean up step.</p>
+<button type="button" class="sec">Go back to Clean up</button>
+</section>
+
+</div>
+</main>
+</div>
+</x-dc>
+<script type="text/x-dc" data-dc-script data-props='{"$preview":{"width":1280,"height":1320}}'>
+class Component extends DCLogic {
+  renderVals() { return {}; }
+}
+</script>
+</body>
+</html>
