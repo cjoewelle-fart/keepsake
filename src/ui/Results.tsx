@@ -1,10 +1,11 @@
-import { useMemo, useState } from 'react';
+import { useEffect, useMemo, useRef, useState } from 'react';
 import { PHOTO_KINDS } from '../engine/sniff';
 import { effectiveGroup, summarize } from '../engine/summary';
 import type { SetAsideGroup } from '../engine/summary';
 import type { FileRecord } from '../engine/types';
 import { SET_ASIDE_GROUPS } from '../engine/types';
-import { copy, n } from './copy';
+import { buildSheet, spread } from './contactSheet';
+import { copy, dayMonth, monthYear, n } from './copy';
 import { Preview } from './Preview';
 
 type Props = {
@@ -16,132 +17,194 @@ type Props = {
   onStartOver: () => void;
 };
 
-const SEGMENT_SHADES: Record<SetAsideGroup, string> = { small: '#C9D2CF', duplicate: '#B3BEBA', damaged: '#9DAAA6', system: '#8A9894' };
+/** Decorative shades for the set-aside strip and row swatches (never the only way a group is named). */
+const SHADES: Record<SetAsideGroup, string> = { small: '#B8C9C5', duplicate: '#93AAA5', damaged: '#6F8A85', system: '#4F6965' };
 
-/** Pick k items spread evenly through a list (so previews span the whole date range). */
-const spread = <T,>(xs: T[], k: number) =>
-  xs.length <= k ? xs : Array.from({ length: k }, (_, i) => xs[Math.floor((i * xs.length) / k)]);
-
-const ShieldIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true" className="icon">
-    <path d="M10 2l6 2.5v5c0 4-2.6 6.8-6 8.5-3.4-1.7-6-4.5-6-8.5v-5L10 2z" stroke="#0D615D" strokeWidth="1.8" strokeLinejoin="round" />
-  </svg>
-);
-
+/**
+ * "Contact sheet with a ledger": the numbers that add up on the left, the photos themselves on the
+ * right, and everything that was set aside below them, each group with its reason and an undo.
+ */
 export function Results({ records, files, movedBack, onToggleGroup, onReview, onStartOver }: Props) {
   const s = useMemo(() => summarize(records, movedBack), [records, movedBack]);
   const [open, setOpen] = useState<SetAsideGroup | null>(null);
+  const [year, setYear] = useState<string>();
 
-  const keepers = useMemo(() => {
-    const k = records.filter((r) => effectiveGroup(r, movedBack) === 'keep' && PHOTO_KINDS.has(r.kind));
-    return k.sort((a, b) => (a.takenAt ?? '9999').localeCompare(b.takenAt ?? '9999'));
-  }, [records, movedBack]);
-  const previews = spread(keepers, 11);
+  const photos = useMemo(
+    () => records.filter((r) => effectiveGroup(r, movedBack) === 'keep' && PHOTO_KINDS.has(r.kind)),
+    [records, movedBack],
+  );
+  const sheet = useMemo(() => buildSheet(photos, year), [photos, year]);
+  const chosenYear = sheet.groups[0]?.month.slice(0, 4);
 
   const byGroup = useMemo(() => {
     const m = { small: [], duplicate: [], damaged: [], system: [] } as Record<SetAsideGroup, FileRecord[]>;
     for (const r of records) if (r.group !== 'keep') m[r.group].push(r);
     return m;
   }, [records]);
-
   const visibleGroups = SET_ASIDE_GROUPS.filter((g) => s.groups[g] > 0);
-  const pct = (x: number) => (s.total ? Math.max(x > 0 ? 0.6 : 0, (100 * x) / s.total) : 0);
-  const years = s.firstYear === undefined ? copy.results.noDates : s.firstYear === s.lastYear ? String(s.firstYear) : `${s.firstYear}–${s.lastYear}`;
+  const stripGroups = visibleGroups.filter((g) => !movedBack.has(g));
+
+  // Tell screen-reader users when the ledger changes (not on first render).
+  const [announce, setAnnounce] = useState('');
+  const last = useRef(`${s.keep}/${s.setAside}`);
+  useEffect(() => {
+    const key = `${s.keep}/${s.setAside}`;
+    if (key === last.current) return;
+    last.current = key;
+    setAnnounce(copy.results.ledgerChanged(s.keep, s.setAside));
+  }, [s.keep, s.setAside]);
+
+  const jumpToUndated = () => {
+    const h = document.getElementById('no-date-h');
+    h?.scrollIntoView({ block: 'start' });
+    h?.focus({ preventScroll: true });
+  };
+
+  const allUndated = s.photos > 0 && s.undated === s.photos;
+  const r = copy.results;
 
   return (
-    <main className="page">
-      <section className="hero">
-        <p className="eyebrow">{copy.results.eyebrow(s.total)}</p>
+    <main className="page results">
+      <section className="envelope" aria-labelledby="found-h">
         {s.keep > 0 ? (
-          <h1 tabIndex={-1}>
-            {copy.results.titleBefore}
-            <span className="accent">{n(s.keep)}</span>
-            {copy.results.titleAfter(s.keep)}
+          <h1 id="found-h" tabIndex={-1}>
+            {r.titleBefore}
+            <span className="bignum">{n(s.keep)}</span>
+            {r.titleAfter(s.keep)}
           </h1>
         ) : (
-          <h1 tabIndex={-1}>{copy.empty.noKeepers}</h1>
+          <h1 id="found-h" tabIndex={-1}>{copy.empty.noKeepers}</h1>
         )}
-        <p className="lede">{s.keep > 0 ? copy.results.body(s.setAside) : copy.empty.noKeepersBody}</p>
+        <p className="lede">{s.keep > 0 ? (allUndated ? r.noDatesLine : r.sortedLine) : copy.empty.noKeepersBody}</p>
+
+        <dl className="ledger" aria-label={r.ledgerLabel}>
+          <div><dt>{r.ledgerChecked}</dt><dd>{n(s.total)}</dd></div>
+          <div><dt>{r.ledgerKept}</dt><dd>{n(s.keep)}</dd></div>
+          <div className="ledger-total"><dt>{r.ledgerAside}</dt><dd>{n(s.setAside)}</dd></div>
+          <div className="ledger-safe">
+            <dt><span aria-hidden="true">{r.ledgerSafe}</span><span className="sr-only">{r.ledgerSafeSr}</span></dt>
+            <dd><span aria-hidden="true">{r.ledgerSafeValue}</span><span className="sr-only">{r.ledgerSafeValueSr}</span></dd>
+          </div>
+        </dl>
+        <p className="sub-sm untouched">{r.untouched}</p>
+        <p className="sr-only" role="status" aria-live="polite">{announce}</p>
+
+        <div className="cta">
+          {s.keep > 0 && (
+            <>
+              <button type="button" className="btn btn-primary btn-lg" onClick={onReview}>{r.review(s.keep, s.others === 0)}</button>
+              <span className="sub-sm">{r.takeYourTime}</span>
+            </>
+          )}
+          <button type="button" className="btn btn-link" onClick={onStartOver}>{r.startOver}</button>
+        </div>
       </section>
 
-      <section className="card breakdown" aria-label="Breakdown of recovered files">
-        <div className="bar" role="img" aria-label={`${n(s.keep)} files kept, ${n(s.setAside)} set aside`}>
-          <div style={{ width: `${pct(s.keep)}%`, background: '#0D615D' }} />
-          {SET_ASIDE_GROUPS.filter((g) => !movedBack.has(g)).map((g) => (
-            <div key={g} style={{ width: `${pct(s.groups[g])}%`, background: SEGMENT_SHADES[g] }} />
-          ))}
-        </div>
-        <div className="legend">
-          <span className="legend-item"><span className="swatch" style={{ background: '#0D615D' }} /><strong>{copy.results.keepingLegend(s.keep)}</strong></span>
-          <span className="legend-item"><span className="swatch" style={{ background: '#9DAAA6' }} />{copy.results.asideLegend(s.setAside)}</span>
-          {s.keep > 0 && <span className="muted">{copy.results.ratio(s.total, s.keep)}</span>}
-        </div>
-      </section>
+      <div className="sheet-col">
+        {photos.length > 0 && (
+          <section className="sheet" aria-label={r.photosByDate}>
+            {(sheet.years.length > 1 || (sheet.years.length > 0 && sheet.undated.count > 0)) && (
+              <div className="chips" role="group" aria-label={r.jumpLabel}>
+                {sheet.years.map(({ year: y }) => (
+                  <button key={y} type="button" className="chip" aria-pressed={y === chosenYear} aria-controls="dated-groups" onClick={() => setYear(y)}>{y}</button>
+                ))}
+                {sheet.undated.count > 0 && (
+                  <button type="button" className="chip" onClick={jumpToUndated}>{r.undatedChip(sheet.undated.count)}</button>
+                )}
+              </div>
+            )}
 
-      <div className="columns">
-        <section className="card keep-card" aria-labelledby="keep-h">
-          <div>
-            <h2 id="keep-h">{copy.results.readyTitle}</h2>
-            <p className="sub">{copy.results.readySub}</p>
-          </div>
-          <div className="stats">
-            <div className="stat"><div className="stat-num">{n(s.photos)}</div><div className="stat-label">{copy.results.photos}</div></div>
-            <div className="stat"><div className="stat-num">{n(s.videos)}</div><div className="stat-label">{copy.results.videos}</div></div>
-            <div className="stat"><div className="stat-num">{years}</div><div className="stat-label">{copy.results.dateRange}</div></div>
-          </div>
-          {s.others > 0 && <p className="sub">{copy.results.otherFiles}: {n(s.others)}</p>}
-          {previews.length > 0 && (
-            <div className="grid-previews">
-              {previews.map((r) => <Preview key={r.index} file={files[r.index]} record={r} />)}
-              {keepers.length > previews.length && (
-                <div className="tile tile-md tile-more" aria-label={`${n(keepers.length - previews.length)} more photos`}>
-                  {copy.results.morePreviews(keepers.length - previews.length)}
+            <div id="dated-groups" className="months">
+              {sheet.groups.map((g, gi) => (
+                <div key={g.month} className="month">
+                  <h2 className="month-h">
+                    <span>{monthYear(g.month)}</span>
+                    <span className="month-count">{r.monthCount(g.count)}</span>
+                  </h2>
+                  <div className="prints">
+                    {g.tiles.map((t, ti) => (
+                      <figure key={t.index} className={`print${g.big && ti === 0 ? ' print-big' : ''}`}>
+                        <Preview file={files[t.index]} record={t} size="fill" />
+                        <figcaption className="tag">{dayMonth(t.takenAt!)}</figcaption>
+                      </figure>
+                    ))}
+                    {gi === sheet.groups.length - 1 && sheet.moreDated > 0 && (
+                      <button type="button" className="print print-more" onClick={onReview}>
+                        <b>+{n(sheet.moreDated)}</b><span>{r.seeEveryMonth}</span>
+                      </button>
+                    )}
+                  </div>
                 </div>
-              )}
+              ))}
             </div>
-          )}
-          {s.undated > 0 && (
-            <div className="callout">
-              <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true" className="icon">
-                <circle cx="10" cy="10" r="8" stroke="#8A4B08" strokeWidth="1.8" />
-                <path d="M10 6v4.5l3 1.8" stroke="#8A4B08" strokeWidth="1.8" strokeLinecap="round" />
-              </svg>
-              <p><strong>{copy.results.undated(s.undated)}</strong> {copy.results.undatedMore}</p>
-            </div>
-          )}
-        </section>
+
+            {sheet.undated.count > 0 && (
+              <div className="month">
+                <h2 className="month-h" id="no-date-h" tabIndex={-1}>
+                  <span>{r.noDateTitle}</span>
+                  <span className="month-count">{r.noDateCount(sheet.undated.count)}</span>
+                </h2>
+                <div className="prints">
+                  {sheet.undated.tiles.map((t) => (
+                    <figure key={t.index} className="print">
+                      <Preview file={files[t.index]} record={t} size="fill" />
+                      <figcaption className="tag tag-n">{r.noDateTag}</figcaption>
+                    </figure>
+                  ))}
+                  {sheet.undated.more > 0 && (
+                    <button type="button" className="print print-more" onClick={onReview}>
+                      <b>+{n(sheet.undated.more)}</b><span>{r.seeThemAll}</span>
+                    </button>
+                  )}
+                </div>
+              </div>
+            )}
+          </section>
+        )}
 
         {visibleGroups.length > 0 && (
-          <section className="card aside-card" aria-labelledby="aside-h">
-            <div>
-              <h2 id="aside-h">{copy.results.asideTitle}</h2>
-              <p className="sub">{copy.results.asideSub}</p>
+          <section className="aside" aria-labelledby="aside-h">
+            <div className="aside-intro">
+              <h2 id="aside-h">{r.asideSafeTitle}</h2>
+              <p className="sub">{r.asideIntro(s.setAside)}</p>
             </div>
+            {stripGroups.length > 0 && (
+              <div className="strip" aria-hidden="true">
+                {stripGroups.map((g) => <div key={g} style={{ flex: s.groups[g], background: SHADES[g] }} />)}
+              </div>
+            )}
             <ul className="groups">
               {visibleGroups.map((g) => {
                 const isOpen = open === g;
                 const moved = movedBack.has(g);
-                const panelId = `group-${g}`;
+                const panelId = `aside-${g}`;
                 return (
-                  <li key={g} className={`group ${moved ? 'moved' : ''}`}>
-                    <button type="button" className="group-head" aria-expanded={isOpen} aria-controls={panelId} onClick={() => setOpen(isOpen ? null : g)}>
-                      <span className="group-text">
-                        <strong>{copy.groups[g].title}</strong>
-                        <span className="sub-sm">{copy.results.files(s.groups[g])}{moved ? ` · ${copy.results.movedBack}` : ''}</span>
+                  <li key={g} className={`group${moved ? ' moved' : ''}`}>
+                    <button
+                      type="button"
+                      className="group-head"
+                      aria-expanded={isOpen}
+                      aria-controls={panelId}
+                      aria-label={r.groupLabel(isOpen, copy.groups[g].title, s.groups[g], moved)}
+                      onClick={() => setOpen(isOpen ? null : g)}
+                    >
+                      <span className="swatch" aria-hidden="true" style={{ background: SHADES[g] }} />
+                      <span className="samples" aria-hidden="true">
+                        {spread(byGroup[g], 3).map((x) => <Preview key={x.index} file={files[x.index]} record={x} size="xs" />)}
                       </span>
-                      <span className="group-toggle">{isOpen ? copy.results.hide : copy.results.peek}</span>
+                      <span className="group-text">
+                        <span>{copy.groups[g].title}</span>
+                        {moved && <span className="kept-note">{r.movedBack}</span>}
+                      </span>
+                      <span className="group-count">{n(s.groups[g])}</span>
+                      <span className="group-toggle">{isOpen ? r.hide : r.peek}</span>
                     </button>
-                    {isOpen && (
-                      <div className="group-body" id={panelId}>
-                        <p>{copy.groups[g].why}</p>
-                        <div className="peek-row">
-                          {byGroup[g].slice(0, 6).map((r) => <Preview key={r.index} file={files[r.index]} record={r} size="sm" />)}
-                        </div>
-                        <button type="button" className="btn btn-secondary btn-sm" onClick={() => onToggleGroup(g)}>
-                          {moved ? copy.results.undo : copy.results.moveBack}
-                        </button>
-                      </div>
-                    )}
+                    <div className="group-body" id={panelId} hidden={!isOpen}>
+                      <p>{copy.groups[g].why}</p>
+                      <button type="button" className="btn btn-secondary btn-sm" onClick={() => onToggleGroup(g)}>
+                        {moved ? r.undo : r.moveBack}
+                      </button>
+                    </div>
                   </li>
                 );
               })}
@@ -149,14 +212,6 @@ export function Results({ records, files, movedBack, onToggleGroup, onReview, on
           </section>
         )}
       </div>
-
-      <section className="footer-bar">
-        <p className="privacy"><ShieldIcon />{copy.privacy}</p>
-        <div className="actions">
-          <button type="button" className="btn btn-ghost" onClick={onStartOver}>{copy.results.startOver}</button>
-          {s.keep > 0 && <button type="button" className="btn btn-primary" onClick={onReview}>{copy.results.review(s.keep, s.others === 0)} →</button>}
-        </div>
-      </section>
     </main>
   );
 }

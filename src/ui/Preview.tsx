@@ -18,7 +18,7 @@ type Stage = 'native' | 'decode' | 'none';
  * on this computer. HEIC photos are shown natively where the browser can (Safari); elsewhere a small
  * copy is decoded in a background worker, only once the tile is on screen.
  */
-export function Preview({ file, record, size = 'md' }: { file: File; record: FileRecord; size?: 'md' | 'sm' }) {
+export function Preview({ file, record, size = 'md' }: { file: File; record: FileRecord; size?: 'md' | 'sm' | 'xs' | 'fill' }) {
   const usable = record.size > 0;
   const initial: Stage = usable && (PREVIEWABLE.has(record.kind) || MAYBE_NATIVE.has(record.kind)) ? 'native' : 'none';
   const [stage, setStage] = useState<Stage>(initial);

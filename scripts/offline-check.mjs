@@ -102,7 +102,7 @@ try {
   const [chooser] = await Promise.all([page.waitForEvent('filechooser'), page.getByRole('button', { name: 'Choose recovery folder' }).click()]);
   const t0 = Date.now();
   await chooser.setFiles(join(folder, 'recovery'));
-  await page.getByText('Ready to review').waitFor({ timeout: 120_000 });
+  await page.getByText('Files checked').waitFor({ timeout: 120_000 });
   check(true, `scan of ${fileCount} files finished offline in ${((Date.now() - t0) / 1000).toFixed(1)}s: "${await page.locator('h1').innerText()}"`);
 
   // The results screen previews the HEIC photo, which needs the HEIC decoder worker

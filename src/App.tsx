@@ -98,7 +98,7 @@ export default function App() {
 
   return (
     <div className="app">
-      <a className="skip" href="#main">Skip to content</a>
+      <a className="skip" href="#main">{copy.skip}</a>
       <Header current={step} />
       <div id="main" ref={headingRef}>
         {screen.name === 'start' && <Start note={screen.note} onChoose={chooseFolder} onSamples={SAMPLES_ENABLED ? trySamples : undefined} />}
@@ -129,20 +129,31 @@ export default function App() {
 function Start({ note, onChoose, onSamples }: { note?: string; onChoose: () => void; onSamples?: () => void }) {
   const fullSupport = typeof window !== 'undefined' && 'showDirectoryPicker' in window;
   return (
-    <main className="page narrow">
-      <p className="eyebrow">{copy.start.eyebrow}</p>
+    <main className="page narrow start">
+      <Prints />
       <h1 tabIndex={-1}>{copy.start.title}</h1>
       <p className="lede">{copy.start.body}</p>
       <p className="sub">{copy.start.hint}</p>
-      {note && <p className="callout callout-info" role="status">{note}</p>}
+      {note && <p className="note-box" role="status">{note}</p>}
       <div className="actions">
         <button type="button" className="btn btn-primary btn-lg" onClick={onChoose}>{copy.start.choose}</button>
         {onSamples && <button type="button" className="btn btn-secondary btn-lg" onClick={onSamples}>{copy.start.samples}</button>}
       </div>
-      {onSamples && <p className="sub">{copy.start.samplesNote}</p>}
-      {!fullSupport && <p className="sub">{copy.start.browserNote}</p>}
-      <p className="privacy">{copy.privacy}</p>
+      {onSamples && <p className="sub-sm">{copy.start.samplesNote}</p>}
+      {!fullSupport && <p className="sub-sm">{copy.start.browserNote}</p>}
+      <p className="sub-sm privacy">{copy.privacy}</p>
     </main>
+  );
+}
+
+/** Three blank prints, fanned out. Purely decorative. */
+function Prints() {
+  return (
+    <div className="fan" aria-hidden="true">
+      <div className="fan-print fan-l"><div className="ph ph-a"><i /><i /><i /></div></div>
+      <div className="fan-print fan-r"><div className="ph ph-b"><i /><i /><i /></div></div>
+      <div className="fan-print fan-c"><div className="ph ph-c"><i /><i /><i /></div></div>
+    </div>
   );
 }
 
@@ -153,21 +164,44 @@ function Scanning({ progress, onStop }: { progress: Progress; onStop: () => void
   const label = stage === 'checking' ? copy.scanning.progress(done, total) : copy.scanning.copiesProgress(done, total);
   // Announce progress to screen readers only every 10%, not on every update.
   const announced = useMemo(() => `${stage === 'checking' ? copy.scanning.title : copy.scanning.copiesTitle} ${Math.floor(pct / 10) * 10}%`, [stage, pct]);
+  const current = stage === 'checking' ? 0 : 1;
   return (
-    <main className="page narrow">
+    <main className="page narrow scanning">
+      <Prints />
       <h1 tabIndex={-1}>{stage === 'checking' ? copy.scanning.title : copy.scanning.copiesTitle}</h1>
       <div className="progress-wrap">
         <progress max={total || 1} value={done} aria-label={label} />
-        <p className="progress-text" aria-hidden="true">{label} · {pct}%</p>
+        <p className="progress-text" aria-hidden="true"><span>{label}</span><span>{pct}%</span></p>
         <p className="sr-only" role="status">{announced}</p>
       </div>
-      <p className="sub">{copy.scanning.reassure}</p>
-      <div>
-        <button type="button" className="btn btn-secondary" disabled={stopping} aria-disabled={stopping} onClick={() => { setStopping(true); onStop(); }}>
+      <ol className="stages" aria-label={copy.scanning.stagesLabel}>
+        {copy.scanning.stages.map((name, i) =>
+          i < current ? (
+            <li key={name} className="stage done"><StageIcon state="done" /><span>{name} <span className="sr-only">{copy.scanning.stageDone}</span></span></li>
+          ) : i === current ? (
+            <li key={name} className="stage current" aria-current="step"><StageIcon state="current" />{name}</li>
+          ) : (
+            <li key={name} className="stage"><StageIcon state="todo" />{name}</li>
+          ),
+        )}
+      </ol>
+      <div className="scan-foot">
+        <p className="safe-box"><span>{copy.scanning.reassure}</span><b>{copy.scanning.deleted}</b></p>
+        <button type="button" className="btn btn-secondary btn-lg btn-block" disabled={stopping} aria-disabled={stopping} onClick={() => { setStopping(true); onStop(); }}>
           {stopping ? copy.scanning.stopping : copy.scanning.stop}
         </button>
       </div>
     </main>
+  );
+}
+
+function StageIcon({ state }: { state: 'done' | 'current' | 'todo' }) {
+  return (
+    <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true" className="icon">
+      {state === 'done' && <><circle cx="9" cy="9" r="8" fill="#23596B" /><path d="M5.4 9.2l2.3 2.3 4.8-4.8" stroke="#FFFFFF" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" /></>}
+      {state === 'current' && <><circle cx="9" cy="9" r="7.2" stroke="#23596B" strokeWidth="1.8" /><circle cx="9" cy="9" r="3" fill="#23596B" /></>}
+      {state === 'todo' && <circle cx="9" cy="9" r="7.2" stroke="#767D80" strokeWidth="1.6" />}
+    </svg>
   );
 }
 

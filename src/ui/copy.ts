@@ -5,9 +5,18 @@ const nf = new Intl.NumberFormat('en');
 export const n = (x: number) => nf.format(x);
 const plural = (x: number, one: string, many: string) => (x === 1 ? one : many);
 
+// Dates are the camera's own local time ('YYYY-MM-DD…'), so format the fields as written, never via a time zone.
+const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 'August', 'September', 'October', 'November', 'December'];
+/** '2024-06-28T…' → '28 June' */
+export const dayMonth = (takenAt: string) => `${Number(takenAt.slice(8, 10))} ${MONTHS[Number(takenAt.slice(5, 7)) - 1]}`;
+/** '2024-06' → 'June 2024' */
+export const monthYear = (ym: string) => `${MONTHS[Number(ym.slice(5, 7)) - 1]} ${ym.slice(0, 4)}`;
+
 export const copy = {
   appName: 'Keepsake',
   steps: ['Recover', 'Scan', 'Clean up', 'Review', 'Export'],
+  stepOf: (i: number, total: number, name: string) => `Step ${i + 1} of ${total} · ${name}`,
+  skip: 'Skip to content',
   privacy: 'Your files never leave this computer, and your recovery folder is never changed.',
 
   start: {
@@ -27,12 +36,47 @@ export const copy = {
     copiesTitle: 'Looking for exact copies…',
     progress: (done: number, total: number) => `Checked ${n(done)} of ${n(total)} files`,
     copiesProgress: (done: number, total: number) => `Compared ${n(done)} of ${n(total)} possible copies`,
-    reassure: 'This happens on your computer. Your files aren’t uploaded anywhere.',
+    reassure: 'This happens on your computer. Nothing is uploaded, and you can stop any time.',
+    deleted: 'Deleted: 0',
+    stagesLabel: 'Scan stages',
+    stages: ['Check every file', 'Spot exact copies', 'Sort them by date'],
+    stageDone: '(done)',
     stop: 'Stop scanning',
     stopping: 'Stopping…',
   },
 
   results: {
+    // Quiet Prints results screen (T38).
+    sortedLine: 'They’re sorted by the date each one was taken.',
+    noDatesLine: 'We couldn’t find a date on any of them, so they’re kept together.',
+    ledgerLabel: 'Your files, added up',
+    ledgerChecked: 'Files checked',
+    ledgerKept: 'Kept, sorted by date',
+    ledgerAside: 'Set aside, kept safe below',
+    ledgerSafe: 'Deleted · Uploaded',
+    ledgerSafeValue: '0 · 0',
+    ledgerSafeSr: 'Files deleted and uploaded',
+    ledgerSafeValueSr: 'None deleted, none uploaded',
+    ledgerChanged: (keep: number, aside: number) => `Now keeping ${n(keep)} ${plural(keep, 'file', 'files')}. ${n(aside)} set aside.`,
+    untouched: 'Your recovery folder is exactly as it was.',
+    takeYourTime: 'Take your time. Nothing changes until you choose.',
+    photosByDate: 'Your photos by date',
+    jumpLabel: 'Jump to a year',
+    undatedChip: (x: number) => `No date · ${n(x)}`,
+    monthCount: (x: number) => `${n(x)} ${plural(x, 'photo', 'photos')}`,
+    noDateTitle: 'No date',
+    noDateCount: (x: number) => `${n(x)} ${plural(x, 'photo', 'photos')}, kept together so none get lost`,
+    noDateTag: 'No date',
+    seeEveryMonth: 'See every month',
+    seeThemAll: 'See them all',
+    asideSafeTitle: 'Set aside, kept safe',
+    asideIntro: (x: number) =>
+      x === 0
+        ? 'You’re keeping all of these files. You can set any group aside again.'
+        : `We set aside ${n(x)} ${plural(x, 'file that looks', 'files that look')} like leftovers from the recovery. You can keep any of these.`,
+    groupLabel: (open: boolean, title: string, count: number, kept: boolean) =>
+      `${open ? 'Hide' : 'Show'} ${title.toLowerCase()}, ${n(count)} ${plural(count, 'file', 'files')}${kept ? ', keeping these' : ''}`,
+    // Not shown since the Quiet Prints layout (T38); kept for the UX writer.
     eyebrow: (total: number) => `Scan finished · ${n(total)} files checked`,
     titleBefore: 'We found ',
     titleAfter: (keep: number) => ` ${plural(keep, 'photo or video', 'photos and videos')} worth keeping.`,
