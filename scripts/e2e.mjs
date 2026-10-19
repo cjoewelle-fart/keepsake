@@ -25,6 +25,90 @@ async function checkNoSideScroll(page, label, where) {
   if (sw > cw) problems.push(`[${label}] horizontal scroll on ${where}: ${sw}px > ${cw}px`);
 }
 
+/** Timeline ledger: selected + not selected = kept, and kept matches the Clean up screen. */
+async function timelineLedger(page, label, when, expectTotal) {
+  const get = async (k) => num(await page.locator(`dl.ledger dd[data-k=${k}]`).innerText());
+  const [total, selected, unselected] = [await get('total'), await get('selected'), await get('unselected')];
+  const ok = selected + unselected === total && (expectTotal === undefined || total === expectTotal);
+  console.log(`[${label}] timeline ledger (${when}): ${selected} selected + ${unselected} not selected = ${total} kept ${ok ? 'OK' : 'MISMATCH'}`);
+  if (!ok) problems.push(`[${label}] timeline ledger does not add up (${when}): ${selected} + ${unselected} vs ${total}, expected ${expectTotal}`);
+  return { total, selected, unselected };
+}
+async function checkTimeline(page, label, keptOnResults) {
+  const start = await timelineLedger(page, label, 'start', keptOnResults);
+  if (start.selected !== start.total) problems.push(`[${label}] timeline: not everything starts selected`);
+  const expect = (cond, what) => { if (!cond) problems.push(`[${label}] timeline: ${what}`); };
+
+  // Untick a whole day (one with several photos, if there is one).
+  const days = page.locator('.tl-day');
+  const several = days.filter({ has: page.locator('.tl-day-count', { hasText: /^all/ }) });
+  const day = (await several.count()) ? several.first() : days.first();
+  const dayBox = day.locator('.tl-day-h input');
+  const dayTotal = num((await day.locator('.tl-day-count').innerText()).replace(/selected/, ''));
+  await dayBox.click();
+  let s = await timelineLedger(page, label, 'day unticked', keptOnResults);
+  expect(s.selected === start.selected - dayTotal, `unticking a day of ${dayTotal} left ${s.selected} of ${start.selected}`);
+  expect(!(await dayBox.isChecked()), 'day checkbox still ticked after unticking the day');
+  const tiles = day.locator('.tl-grid input[type=checkbox]');
+  expect((await tiles.evaluateAll((els) => els.filter((e) => e.checked).length)) === 0, 'tiles still ticked after unticking the day');
+  await page.waitForTimeout(1300);
+  const said = await page.locator('main [role=status]').innerText();
+  expect(/selected/.test(said), `selection change not announced (got "${said}")`);
+  await page.screenshot({ path: `${out}/${label}-5-day-unticked.png` });
+
+  // Tick one photo back: the day becomes mixed; clicking the day selects it all again.
+  if (dayTotal > 1) {
+    await tiles.first().click();
+    expect(await dayBox.evaluate((e) => e.indeterminate), 'day checkbox not mixed after ticking one photo');
+  }
+  await dayBox.click();
+  s = await timelineLedger(page, label, 'day ticked again', keptOnResults);
+  expect(s.selected === start.selected, 'ticking the day again did not select all of it');
+
+  // A whole month.
+  const month = page.locator('.tl-month').first();
+  const monthTotal = num((await month.locator('.month-count').innerText()).replace(/^.* of /, ''));
+  await month.getByRole('button', { name: /^Unselect all of/ }).click();
+  s = await timelineLedger(page, label, 'month unticked', keptOnResults);
+  expect(s.selected === start.selected - monthTotal, `unticking a month of ${monthTotal} left ${s.selected}`);
+  await month.getByRole('button', { name: /^Select all of/ }).click();
+  s = await timelineLedger(page, label, 'month ticked again', keptOnResults);
+  expect(s.selected === start.selected, 'ticking the month again did not select all of it');
+
+  // A single photo.
+  const one = page.locator('.tl-grid input[type=checkbox]').nth(0);
+  const name = await one.getAttribute('aria-label');
+  expect(/^Save (photo|video|file) /.test(name ?? ''), `tile checkbox has no useful name ("${name}")`);
+  await one.click();
+  s = await timelineLedger(page, label, 'one unticked', keptOnResults);
+  expect(s.selected === start.selected - 1, 'unticking one photo did not change the count by 1');
+
+  // Nothing selected: Save explains why it can't go on.
+  await page.getByRole('button', { name: 'Unselect all', exact: true }).click();
+  s = await timelineLedger(page, label, 'none', keptOnResults);
+  const save = page.locator('.tl-save:visible');
+  expect(s.selected === 0, 'Unselect all left files selected');
+  expect((await save.getAttribute('aria-disabled')) === 'true', 'Save not disabled with nothing selected');
+  expect(/nothing to save/.test(await page.locator('#save-why').innerText()), 'no reason shown for the disabled Save');
+  await save.click({ force: true });
+  expect(await page.getByRole('heading', { level: 1, name: /Choose what to save/ }).isVisible(), 'disabled Save still moved on');
+  await page.getByRole('button', { name: 'Select all', exact: true }).click();
+  s = await timelineLedger(page, label, 'all again', keptOnResults);
+  expect(s.selected === s.total, 'Select all did not select everything');
+
+  // Choices survive a trip back to Clean up.
+  await page.locator('.tl-grid input[type=checkbox]').nth(0).click();
+  await page.getByRole('button', { name: 'Back to Clean up' }).click();
+  await page.getByRole('button', { name: /^Review my/ }).click();
+  s = await timelineLedger(page, label, 'after Clean up and back', keptOnResults);
+  expect(s.selected === s.total - 1, 'selection lost after going back to Clean up');
+
+  await page.locator('.tl-save:visible').click();
+  const h = await page.locator('h1').innerText();
+  expect(num(h) === s.selected, `save step got ${h}, expected ${s.selected}`);
+  await page.getByRole('button', { name: 'Back to choosing' }).click();
+}
+
 const browser = await chromium.launch({ executablePath: exe });
 const problems = [];
 const requests = [];
@@ -71,9 +155,13 @@ try {
     await page.getByRole('button', { name: 'Set these aside again' }).click();
     console.log(`[${label}] after undo: ${await page.locator('h1').innerText()}`);
 
+    const keptOnResults = num((await page.locator('dl.ledger dd').allInnerTexts())[1]);
     await page.getByRole('button', { name: /^Review my/ }).click();
+    await page.getByRole('heading', { level: 1, name: /Choose what to save/ }).waitFor();
+    await page.waitForTimeout(500);
     await page.screenshot({ path: `${out}/${label}-4-review.png`, fullPage: true });
     await checkNoSideScroll(page, label, 'review');
+    await checkTimeline(page, label, keptOnResults);
     await page.close();
   }
 } finally {

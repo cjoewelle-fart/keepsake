@@ -3,21 +3,24 @@ import * as Comlink from 'comlink';
 import { directoryOpen } from 'browser-fs-access';
 import type { FileRecord, Progress } from './engine/types';
 import type { SetAsideGroup } from './engine/summary';
-import { effectiveGroup } from './engine/summary';
-import { PHOTO_KINDS, VIDEO_KINDS } from './engine/sniff';
+import { summarize } from './engine/summary';
 import type { ScanApi } from './worker/scan.worker';
 // Bundled into the page itself, so the app is a single self-contained file set.
 import ScanWorker from './worker/scan.worker.ts?worker&inline';
 import { SAMPLES_ENABLED, loadSamples } from './sample';
 import { Header } from './ui/Header';
 import { Results } from './ui/Results';
-import { copy, n } from './ui/copy';
+import { Timeline } from './ui/Timeline';
+import { Selection } from './ui/timeline';
+import { copy } from './ui/copy';
 
 type Screen =
   | { name: 'start'; note?: string }
   | { name: 'scanning'; progress: Progress }
   | { name: 'results' }
   | { name: 'review' }
+  /** Placeholder for the save step (T25). */
+  | { name: 'save'; ids: number[] }
   | { name: 'error' };
 
 /** Files the operating system adds to folders; they're not part of the recovery. */
@@ -29,6 +32,9 @@ export default function App() {
   const [files, setFiles] = useState<File[]>([]);
   const [records, setRecords] = useState<FileRecord[]>([]);
   const [movedBack, setMovedBack] = useState<ReadonlySet<SetAsideGroup>>(new Set());
+  // What's selected on the review timeline. Kept here so going back to Clean up keeps the choices.
+  const [selection, setSelection] = useState(() => new Selection(0));
+  const setAside = useMemo(() => summarize(records, movedBack).setAside, [records, movedBack]);
   const workerRef = useRef<{ raw: Worker; api: Comlink.Remote<ScanApi> } | null>(null);
   const headingRef = useRef<HTMLHeadingElement>(null);
 
@@ -81,6 +87,7 @@ export default function App() {
         return;
       }
       setRecords(result);
+      setSelection(new Selection(list.length));
       setScreen({ name: 'results' });
     } catch {
       setScreen({ name: 'error' });
@@ -94,7 +101,7 @@ export default function App() {
       return next;
     });
 
-  const step = screen.name === 'results' ? 2 : screen.name === 'review' ? 3 : 1;
+  const step = screen.name === 'results' ? 2 : screen.name === 'review' ? 3 : screen.name === 'save' ? 4 : 1;
 
   return (
     <div className="app">
@@ -113,7 +120,24 @@ export default function App() {
             onStartOver={() => { setRecords([]); setFiles([]); setScreen({ name: 'start' }); }}
           />
         )}
-        {screen.name === 'review' && <ReviewByYear records={records} movedBack={movedBack} onBack={() => setScreen({ name: 'results' })} />}
+        {screen.name === 'review' && (
+          <Timeline
+            records={records}
+            files={files}
+            movedBack={movedBack}
+            setAside={setAside}
+            selection={selection}
+            onBack={() => setScreen({ name: 'results' })}
+            onSave={(ids) => setScreen({ name: 'save', ids })}
+          />
+        )}
+        {screen.name === 'save' && (
+          <main className="page narrow">
+            <h1 tabIndex={-1}>{copy.save.title(screen.ids.length)}</h1>
+            <p className="lede">{copy.save.body}</p>
+            <div><button type="button" className="btn btn-secondary" onClick={() => setScreen({ name: 'review' })}>{copy.save.back}</button></div>
+          </main>
+        )}
         {screen.name === 'error' && (
           <main className="page narrow">
             <h1 tabIndex={-1}>{copy.error.title}</h1>
@@ -202,35 +226,5 @@ function StageIcon({ state }: { state: 'done' | 'current' | 'todo' }) {
       {state === 'current' && <><circle cx="9" cy="9" r="7.2" stroke="#23596B" strokeWidth="1.8" /><circle cx="9" cy="9" r="3" fill="#23596B" /></>}
       {state === 'todo' && <circle cx="9" cy="9" r="7.2" stroke="#767D80" strokeWidth="1.6" />}
     </svg>
-  );
-}
-
-function ReviewByYear({ records, movedBack, onBack }: { records: FileRecord[]; movedBack: ReadonlySet<SetAsideGroup>; onBack: () => void }) {
-  // Same rules as the cleanup summary, so every number matches the previous screen.
-  const rows = useMemo(() => {
-    const years = new Map<string, number>();
-    let undated = 0, videos = 0, others = 0;
-    for (const r of records) {
-      if (effectiveGroup(r, movedBack) !== 'keep') continue;
-      if (VIDEO_KINDS.has(r.kind)) videos++;
-      else if (!PHOTO_KINDS.has(r.kind)) others++;
-      else if (r.takenAt) years.set(r.takenAt.slice(0, 4), (years.get(r.takenAt.slice(0, 4)) ?? 0) + 1);
-      else undated++;
-    }
-    const out: [string, number][] = [...years.entries()].sort((a, b) => a[0].localeCompare(b[0]));
-    if (undated) out.push([copy.review.undated, undated]);
-    if (videos) out.push([copy.review.videos, videos]);
-    if (others) out.push([copy.review.otherFiles, others]);
-    return out;
-  }, [records, movedBack]);
-  return (
-    <main className="page narrow">
-      <h1 tabIndex={-1}>{copy.review.title}</h1>
-      <p className="lede">{copy.review.body}</p>
-      <ul className="year-list">
-        {rows.map(([y, c]) => <li key={y}><span>{y}</span><strong>{n(c)}</strong></li>)}
-      </ul>
-      <div><button type="button" className="btn btn-secondary" onClick={onBack}>{copy.review.back}</button></div>
-    </main>
   );
 }
