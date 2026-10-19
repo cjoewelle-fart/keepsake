@@ -170,6 +170,61 @@ progress::-moz-progress-bar { background: var(--accent); border-radius: 999px; }
   .envelope { position: sticky; top: 24px; }
 }
 
+/* Review timeline, "Choose what to save" (T24). Source: team/brand/quiet-prints/TL-*.dc.html.
+   Text sizes follow the 2026-10-19 type hierarchy; final polish waits for the T20 revision. */
+.tl-selected-word { display: block; font-size: 20px; font-weight: 700; color: var(--accent); }
+.ledger .ledger-plain { border-top: 0; }
+.tl-save { min-height: 48px; padding: 0 24px; font-size: 16px; }
+.tl-save[aria-disabled='true'] { background: var(--rule); color: var(--ink-soft); cursor: not-allowed; }
+.tl-bulk { display: flex; flex-wrap: wrap; gap: 4px 18px; }
+.tl-bulk .btn-link { font-size: 15px; }
+.tl-col { gap: 40px; }
+.tl-tools { display: flex; flex-direction: column; gap: 10px; padding: 12px 0; background: var(--bg); z-index: 2; }
+.tl-tools-row { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px; }
+.timeline .chip { font-weight: 400; font-size: 15px; padding: 0 16px; }
+.timeline .chip[aria-current='true'] { background: var(--accent); color: #FFFFFF; }
+.timeline .chip-sm { padding: 0 12px; }
+.tl-months-pills .chip[aria-current='true'] { background: var(--tint); color: var(--accent-deep); }
+.tl-filter { display: flex; flex-wrap: wrap; gap: 4px; padding: 4px; border-radius: 999px; background: var(--surface); }
+.tl-filter .chip { min-height: 40px; }
+.tl-month-select { display: none; flex-direction: column; gap: 4px; font-size: 15px; color: var(--muted); width: 100%; }
+.tl-month-select select { min-height: 44px; padding: 0 12px; border-radius: 12px; border: 1px solid var(--control-edge); background: var(--surface); color: var(--ink); font: inherit; font-size: 16px; }
+.tl-month { gap: 18px; }
+.tl-month-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px; }
+.tl-month .month-h { font-size: 24px; scroll-margin-top: 16px; }
+.tl-days { display: flex; flex-direction: column; gap: 18px; }
+.tl-day { display: flex; flex-direction: column; gap: 10px; }
+.tl-day-h { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; min-height: 44px; font-weight: 700; cursor: pointer; }
+.tl-day-h input { width: 22px; height: 22px; margin: 0 4px 0 0; accent-color: var(--accent); cursor: pointer; }
+.tl-day-count { font-weight: 400; color: var(--muted); font-size: 15px; }
+.tl-grid { display: grid; grid-template-columns: repeat(var(--cols, 6), minmax(0, 1fr)); gap: var(--gap, 12px); }
+.tl-tile.off { box-shadow: none; outline: 2px dashed var(--control-edge); outline-offset: -2px; }
+.tl-tile.off .tile { opacity: 0.55; }
+.chk { position: absolute; top: 0; right: 0; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+.chk input { position: absolute; inset: 0; opacity: 0; width: 44px; height: 44px; margin: 0; cursor: pointer; }
+.dot { pointer-events: none; width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--accent); box-shadow: 0 0 0 2px #FFFFFF; }
+.tl-tile.off .dot { background: #FFFFFF; box-shadow: inset 0 0 0 2px var(--muted), 0 0 0 2px #FFFFFF; }
+.chk input:focus-visible + .dot { outline: 3px solid var(--accent); outline-offset: 3px; }
+.vid { position: absolute; right: 8px; bottom: 8px; display: flex; align-items: center; padding: 5px 8px; border-radius: 999px; background: #FFFFFF; color: var(--ink); }
+.tl-aside { flex-direction: row; flex-wrap: wrap; justify-content: space-between; align-items: center; padding: 18px 22px; }
+.tl-aside .btn-sm { align-self: center; }
+.tl-empty { display: flex; flex-direction: column; gap: 12px; align-items: flex-start; }
+.tl-footer { display: none; }
+
+/* Keep the jump bar in view on tall, wide windows. */
+@media (min-width: 960px) and (min-height: 720px) {
+  .tl-tools { position: sticky; top: 0; }
+}
+/* Narrow: the count and Save button sit at the bottom of the window; the month list becomes a picker. */
+@media (max-width: 959px) {
+  .tl-wide { display: none; }
+  .tl-footer { display: flex; flex-direction: column; gap: 8px; position: sticky; bottom: 0; z-index: 3; margin: 0 -24px -72px; padding: 12px 24px 16px; background: var(--surface); border-top: 1px solid var(--rule-soft); }
+  .tl-footer .tl-save { width: 100%; }
+  .tl-footer-line { display: flex; justify-content: space-between; gap: 8px; font-size: 15px; color: var(--muted); font-variant-numeric: tabular-nums; }
+  .tl-months-pills { display: none; }
+  .tl-month-select { display: flex; }
+}
+
 @media (max-width: 640px) {
   .topbar { padding: 18px 16px; }
   .page { padding: 16px 16px 48px; }
@@ -182,6 +237,9 @@ progress::-moz-progress-bar { background: var(--accent); border-radius: 999px; }
   .samples { display: none; }
   .group-body { padding-left: 22px; }
   .actions, .actions .btn, .cta .btn-primary { width: 100%; }
+  .tl-footer { margin: 0 -16px -48px; padding: 12px 16px 16px; }
+  .vid { right: 6px; bottom: 6px; padding: 4px 6px; }
+  .dot { width: 24px; height: 24px; }
   .fan { transform: scale(0.9); transform-origin: left top; height: 136px; }
 }
 

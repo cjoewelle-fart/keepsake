@@ -15,8 +15,8 @@ PhotoRec recovers files well but loses their names and folders, leaving thousand
 
 ## Status: phase 1 (prototype the engine)
 
-Done: folder picking, scanning in a background worker, cleanup rules, the cleanup results screen, a basic by-year view, offline install.
-Next (phase 2): full review timeline with selection, export, PhotoRec guide, privacy page.
+Done: folder picking, scanning in a background worker, cleanup rules, the cleanup results screen, the review timeline ("Choose what to save": photos and videos by year, month and day, everything selected to start), offline install.
+Next (phase 2): saving (folder and zip), PhotoRec guide, privacy page.
 
 ## Run it
 
@@ -73,7 +73,8 @@ HEIC camera details and dates are read from the Exif item wherever the file's 'i
 
 - HEIC is tested on files encoded by libheif in an iPhone-like layout (tiles, thumbnail, Exif item) and on real PhotoRec 7.1 output of those files, but not yet on photos taken by an iPhone.
 - AVIF previews rely on the browser (all current browsers show AVIF). CR3 and other RAW formats are recognised but untested on real files, and have no preview.
-- Video recording dates are read (T19), but the results screen's month groups show photos only until the review timeline is built.
+- Video recording dates are read (T19) and videos are placed by date on the review timeline; the results screen's month groups still show photos only. Video length isn't read yet, so video tiles show a play mark without a duration, and videos have no preview picture.
+- The review timeline only draws the days near the screen (placeholders hold the rest), so it stays light on 40,000 files; this is tested with unit tests and the 363-file fixture, not yet in a browser with 40,000 real files.
 - Files over 64 MB are compared for copies by sampling the start and end, which could rarely mark two different videos as copies.
 - Stopping a scan waits for the file currently being read.
 

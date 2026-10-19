@@ -11,10 +11,27 @@ const MONTHS = ['January', 'February', 'March', 'April', 'May', 'June', 'July', 
 export const dayMonth = (takenAt: string) => `${Number(takenAt.slice(8, 10))} ${MONTHS[Number(takenAt.slice(5, 7)) - 1]}`;
 /** '2024-06' → 'June 2024' */
 export const monthYear = (ym: string) => `${MONTHS[Number(ym.slice(5, 7)) - 1]} ${ym.slice(0, 4)}`;
+/** '2024-06' → 'June' */
+export const monthName = (ym: string) => MONTHS[Number(ym.slice(5, 7)) - 1];
+const WEEKDAYS = ['Sunday', 'Monday', 'Tuesday', 'Wednesday', 'Thursday', 'Friday', 'Saturday'];
+/** '2024-06-28' → 'Friday 28 June' (weekday worked out from the calendar date, no time zone involved) */
+export const weekdayDayMonth = (ymd: string) => {
+  const [y, m, d] = [Number(ymd.slice(0, 4)), Number(ymd.slice(5, 7)), Number(ymd.slice(8, 10))];
+  return `${WEEKDAYS[new Date(Date.UTC(y, m - 1, d)).getUTCDay()]} ${d} ${MONTHS[m - 1]}`;
+};
+/** '2024-06-28T09:12:…' → '09:12' */
+export const clock = (takenAt: string) => takenAt.slice(11, 16);
+/** Bytes as people read them: '840 KB', '3.4 GB'. */
+export const bytes = (x: number) => {
+  const units = ['bytes', 'KB', 'MB', 'GB', 'TB'];
+  let u = 0;
+  while (x >= 1000 && u < units.length - 1) { x /= 1000; u++; }
+  return u === 0 ? `${n(x)} ${plural(x, 'byte', 'bytes')}` : `${x >= 100 ? Math.round(x) : x.toFixed(1).replace(/\.0$/, '')} ${units[u]}`;
+};
 
 export const copy = {
   appName: 'Keepsake',
-  steps: ['Recover', 'Scan', 'Clean up', 'Review', 'Export'],
+  steps: ['Recover', 'Scan', 'Clean up', 'Review', 'Save'],
   stepOf: (i: number, total: number, name: string) => `Step ${i + 1} of ${total} · ${name}`,
   skip: 'Skip to content',
   privacy: 'Your files never leave this computer, and your recovery folder is never changed.',
@@ -99,7 +116,7 @@ export const copy = {
     noDates: 'No dates found',
     morePreviews: (x: number) => `+${n(x)}`,
     undated: (x: number) => `${n(x)} ${plural(x, 'photo has', 'photos have')} no date.`,
-    undatedMore: 'They’ll go in their own “Undated” group so they don’t get lost.',
+    undatedMore: 'They’ll go in their own “No date” group so they don’t get lost.',
     asideTitle: 'Set aside',
     asideSub: 'Open a group to see why we set it aside. If you want those files, you can keep them.',
     files: (x: number) => `${n(x)} ${plural(x, 'file', 'files')}`,
@@ -144,6 +161,77 @@ export const copy = {
     title: 'We couldn’t read that folder.',
     body: 'Nothing was changed. Try choosing the folder again. If it’s on an SD card or USB drive, check that it’s still plugged in.',
     retry: 'Choose folder again',
+  },
+
+  // Review timeline, "Choose what to save" (T24). Source: team/brand/quiet-prints/TL-*.dc.html,
+  // strings from team/content/review-export-copy.md (T22, draft awaiting owner review).
+  timeline: {
+    title: 'Choose what to save',
+    selectedWord: 'selected',
+    intro: 'Everything starts selected, so nothing gets missed. Unselect anything you don’t want to save.',
+    ledgerLabel: 'Your files, added up',
+    ledgerTotal: 'Kept photos and videos',
+    ledgerTotalMixed: 'Kept files',
+    ledgerSelected: 'Selected to save',
+    ledgerNotSelected: 'Not selected',
+    ledgerSize: 'Size of what’s selected', // not in T22: needs UX writer review
+    ledgerAside: 'Still set aside, kept safe',
+    ledgerSafe: 'Deleted · Uploaded',
+    ledgerSafeValue: '0 · 0',
+    ledgerSafeSr: 'Files deleted and uploaded',
+    ledgerSafeValueSr: 'None deleted, none uploaded',
+    notSelectedMeans: 'Photos you don’t select stay where they are now. Nothing is deleted.',
+    nothingSelected: 'Nothing is selected, so there’s nothing to save yet. Your photos are all still here.',
+    save: (x: number) => (x === 0 ? 'Save selected' : `Save ${n(x)} selected`),
+    selectAll: 'Select all',
+    selectNone: 'Unselect all',
+    footerCount: (sel: number, total: number) => `${n(sel)} of ${n(total)} selected`,
+    footerDeleted: 'Deleted: 0',
+    announce: (sel: number, total: number) => (sel === 0 ? 'Nothing selected. Nothing is deleted.' : `${n(sel)} of ${n(total)} selected.`),
+    announceGroup: (group: string, gSel: number, gTotal: number, sel: number, total: number) =>
+      sel === 0 ? 'Nothing selected. Nothing is deleted.' : `${group}: ${n(gSel)} of ${n(gTotal)} selected. ${n(sel)} of ${n(total)} selected in all.`,
+    jumpYear: 'Jump to a year',
+    jumpMonth: 'Jump to a month',
+    jumpMonthIn: (y: string) => `Jump to a month in ${y}`,
+    noDatePill: (x: number) => `No date · ${n(x)}`,
+    monthOption: (label: string, sel: number, total: number) => `${label} · ${n(sel)} of ${n(total)}`,
+    filterLabel: 'Show only',
+    // "Not selected" isn't in T22 (it has "Screenshots", which the app can't detect): needs UX writer review.
+    filters: { all: 'All', photos: 'Photos', videos: 'Videos', unselected: 'Not selected' },
+    monthSelected: (sel: number, total: number) => (sel === 0 ? `None of ${n(total)} selected` : `${n(sel)} of ${n(total)} selected`),
+    monthNoneNote: 'These won’t be saved. They stay where they are, and nothing is deleted.',
+    selectMonth: (name: string) => `Select all of ${name}`,
+    unselectMonth: (name: string) => `Unselect all of ${name}`,
+    selectNoDate: 'Select all with no date',
+    unselectNoDate: 'Unselect all with no date',
+    noDate: 'No date',
+    noDateNote: 'We couldn’t find when these were taken, so they’re kept together here. Photos sent through chat apps often lose their date. They’ll be saved in a folder called No date.',
+    daySelected: (sel: number, total: number) =>
+      sel === 0 ? 'none selected' : sel === total ? (total === 1 ? '1 selected' : `all ${n(total)} selected`) : `${n(sel)} of ${n(total)} selected`,
+    /** Checkbox names. "Save …" says what ticking does. */
+    tileLabel: (type: 'photo' | 'video' | 'other', takenAt: string | undefined, pos: number, of: number) => {
+      const what = type === 'other' ? 'file' : type;
+      return takenAt
+        ? `Save ${what} from ${Number(takenAt.slice(8, 10))} ${monthYear(takenAt.slice(0, 7))}, ${takenAt.slice(11, 16)}`
+        : `Save ${what} with no date (${n(pos)} of ${n(of)})`;
+    },
+    video: 'Video',
+    emptyFilter: {
+      photos: 'There are no photos to show.',
+      videos: 'There are no videos to show.',
+      unselected: 'Everything is selected. Photos you unselect will show here.',
+      all: 'There’s nothing to choose from yet.',
+    },
+    showAll: 'Show all',
+    asideLine: (x: number) => `${n(x)} ${plural(x, 'file is', 'files are')} still set aside, kept safe. To look through them or keep any, go back to Clean up.`,
+    back: 'Back to Clean up',
+  },
+
+  save: {
+    // Placeholder until the export step (T25) is built.
+    title: (x: number) => `Ready to save ${n(x)} ${plural(x, 'file', 'files')}`,
+    body: 'Saving to a new folder is coming in the next version. Nothing has been changed.',
+    back: 'Back to choosing',
   },
 
   review: {
