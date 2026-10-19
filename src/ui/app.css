@@ -76,7 +76,7 @@ a:hover { color: var(--accent-hover); }
 .btn-primary:hover { background: var(--accent-hover); }
 .btn-secondary { background: var(--surface); color: var(--ink); border-color: var(--control-edge); }
 .btn-secondary:hover { background: var(--surface-2); border-color: var(--ink); }
-.btn-secondary:disabled { cursor: default; color: var(--muted); }
+.btn-secondary:disabled, .btn-secondary[aria-disabled='true'] { cursor: default; color: var(--muted); }
 .btn-link { min-height: var(--control-h); padding: 0; background: transparent; color: var(--accent); font-weight: 400; font-size: var(--control-text); text-decoration: underline; text-underline-offset: 3px; border-radius: 4px; }
 .btn-link:hover { color: var(--accent-hover); }
 
