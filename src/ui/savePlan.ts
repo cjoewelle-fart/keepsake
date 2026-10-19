@@ -86,6 +86,8 @@ const key = (name: string) => name.normalize('NFC').toLowerCase();
  */
 export class NameBook {
   private dirs = new Map<string, Set<string>>();
+  /** Where to start counting for a name already handed out, so many same-minute photos stay fast. */
+  private next = new Map<string, number>();
   private names(dir: string): Set<string> {
     let s = this.dirs.get(dir);
     if (!s) this.dirs.set(dir, (s = new Set()));
@@ -105,10 +107,12 @@ export class NameBook {
   claim(dir: string, base: string, ext: string): string {
     const s = this.names(dir);
     const make = (k: number) => `${base}${k > 1 ? ` (${k})` : ''}${ext ? `.${ext}` : ''}`;
-    let k = 1;
+    const hint = `${dir}\u0000${key(make(1))}`;
+    let k = this.next.get(hint) ?? 1;
     while (s.has(key(make(k)))) k++;
     const name = make(k);
     s.add(key(name));
+    this.next.set(hint, k + 1);
     return name;
   }
 }
