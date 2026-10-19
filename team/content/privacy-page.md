@@ -17,14 +17,16 @@ iPhone photos (HEIC files) are turned into previews on your computer too. The pa
 Some browsers show a message like "Upload files to this site?" when you choose a folder. That is the browser's own wording. The files are only read on this computer. They are not sent anywhere.
 <!-- [CONFIRM: which browsers show "upload" wording in the folder dialog (Chrome/Edge show "Upload {n} files to this site?" on the fallback path; Firefox/Safari?). Adjust or drop this paragraph to match.] -->
 
-## Nothing is deleted
+## None of your files are deleted
 
 [Name] only reads your recovery folder. It can't change it, move files in it, or delete anything from it.
 
 When we set files aside, they stay exactly where they were. "Set aside" only means we don't show them with your photos. You can keep any of them.
 
-When you save your photos, [Name] makes new copies in a folder you choose. Your recovery folder stays as it was.
-<!-- [CONFIRM: export is phase 2. Confirm it (a) only writes to a new folder the user picks, (b) never writes into the recovery folder, (c) copies, never moves. Remove this paragraph if export isn't shipped when the page goes live.] -->
+When you save your photos, [Name] makes new copies in a folder you choose. It never replaces a file that's already there. Your recovery folder stays as it was.
+
+If saving stops partway, [Name] removes the one empty file it had just started for that copy. It never removes anything that was there before, any copy it finished, or anything in your recovery folder.
+<!-- D17. Saving has shipped: writes only inside <chosen folder>/Keepsake photos, refuses the recovery folder, copies and never moves, never overwrites. Removes only its own 0-byte file when a copy fails or is stopped. -->
 
 ## Nothing is hidden
 

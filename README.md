@@ -2,7 +2,7 @@
 
 Sort photos recovered by PhotoRec into a clean, dated library — entirely on your own computer.
 
-PhotoRec recovers files well but loses their names and folders, leaving thousands of files like `f12345678.jpg` mixed with thumbnails, copies, broken files and app junk. Keepsake finds the photos and videos worth keeping and sets the rest aside, without deleting or changing anything.
+PhotoRec recovers files well but loses their names and folders, leaving thousands of files like `f12345678.jpg` mixed with thumbnails, copies, broken files and app junk. Keepsake finds the photos and videos worth keeping and sets the rest aside, without deleting or changing any of your files.
 
 ## Privacy by design
 
