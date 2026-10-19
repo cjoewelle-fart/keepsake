@@ -142,7 +142,7 @@ export const copy = {
     },
     damaged: {
       title: 'Damaged or incomplete files',
-      why: 'Part of each file is missing, so it may not open. Some still show part of a picture, so look through them in case one matters to you.',
+      why: 'Part of each file is missing, so it may not open. Some photos still show part of the picture. Cut-off videos usually won’t play. If one might matter to you, keep it.',
     },
     system: {
       title: 'App and system files',

@@ -3,7 +3,7 @@ import { readFileSync } from 'node:fs';
 import { basename } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { beforeAll, describe, expect, it } from 'vitest';
-import { scanAll } from '../src/engine/scan';
+import { inspect, scanAll } from '../src/engine/scan';
 import type { FileRecord, FileSource } from '../src/engine/types';
 import { fsSource, walk } from './fs-source';
 
@@ -93,6 +93,18 @@ describe('real phone files', () => {
     expect(records.filter((r) => r.group !== 'keep').map((r) => r.path).sort())
       .toEqual([extras.cutHeic.path, extras.cutJpeg.path, extras.copy.path].sort());
   });
+
+  // T49: a recovered video that stops early has no playable end. The real files are whole
+  // (their boxes end exactly at the end of the file), so they stay in Keep (above).
+  for (const name of ['iphone-6_video.mov', 'samsung-android_video.mp4']) {
+    it(`sets aside ${name} cut off at any point as damaged, cut off`, async () => {
+      for (const frac of [0.05, 0.2, 0.4, 0.6, 0.8, 0.95, 0.999]) {
+        const f = cut(name, frac);
+        const r = await inspect(mem(`recup_dir.9/${frac}.${name.split('.').pop()}`, f), 0);
+        expect([frac, r.group, r.reason]).toEqual([frac, 'damaged', 'cut-off']);
+      }
+    });
+  }
 
   it('leaves the files on disk unchanged', () => {
     expect(new Map(media().map((p) => [p, sha(p)]))).toEqual(before);

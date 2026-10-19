@@ -1,4 +1,5 @@
-// Video capture dates from MP4/QuickTime/3GP containers (ISO base media file format).
+// Video capture dates, lengths and cut-off checks for MP4/QuickTime/3GP containers
+// (ISO base media file format).
 // Pure byte parsing: only box headers and a few small boxes are read, never the video data.
 //
 // The file is a list of boxes. 'moov' describes the movie and may come before or after the
@@ -8,6 +9,9 @@
 // - 'meta' (QuickTime, iPhones and many Androids) may hold 'com.apple.quicktime.creationdate',
 //   an ISO 8601 text date in the camera's local time. We prefer it when it's valid, because
 //   photos are stored in local time too.
+// - 'mvhd' also holds the length (duration / timescale).
+// A recovered video whose boxes stop before the file says they should, or that has no 'moov'
+// at all, can't be played as it is: that's how a cut-off video is told apart from a whole one.
 
 import { readBoxHeader, type BoxHeader } from './heif';
 
@@ -99,6 +103,7 @@ const T_HDLR = tag('hdlr');
 const T_KEYS = tag('keys');
 const T_ILST = tag('ilst');
 const T_DATA = tag('data');
+const T_MEHD = tag('mehd');
 
 /**
  * The 'com.apple.quicktime.creationdate' text from a QuickTime 'meta' box (the whole box,
@@ -141,12 +146,79 @@ export function quicktimeCreationText(meta: Uint8Array): string | undefined {
   }
 }
 
+export type VideoInfo = {
+  /** 'YYYY-MM-DDTHH:mm:ss', or undefined when there's no believable date. */
+  takenAt?: string;
+  /** Length in seconds from 'mvhd' (or 'mehd' for fragmented files), when it's believable. */
+  durationSec?: number;
+  /**
+   * The file stops early: a top-level box says it's longer than what's left of the file,
+   * or the boxes run cleanly to the end of the file and none of them is 'moov' (the part
+   * that tells a player how to play the video). Only set when the walk proves it.
+   */
+  cutOff?: boolean;
+};
+
+/** Longest length we believe (a week): anything bigger is a broken or placeholder value. */
+const MAX_DURATION_SEC = 7 * 24 * 3600;
+
 /**
- * Find the capture date of an MP4/MOV/3GP video. `head` is the start of the file already read.
- * Returns 'YYYY-MM-DDTHH:mm:ss' or undefined when there's no believable date. Never throws on
- * malformed or truncated files (read errors from `read` do propagate).
+ * Parse the length out of an 'mvhd' body (from its version byte): duration / timescale.
+ * Undefined for version 0/1 "unknown" all-ones values, zero timescale, or nonsense.
  */
-export async function videoDate(read: Read, fileSize: number, head: Uint8Array, now = Date.now()): Promise<string | undefined> {
+export function mvhdDuration(body: Uint8Array): number | undefined {
+  if (body.length < 4) return undefined;
+  const version = body[0];
+  let timescale: number;
+  let duration: number;
+  if (version === 0) {
+    if (body.length < 20) return undefined;
+    timescale = u32(body, 12);
+    duration = u32(body, 16);
+    if (duration === 0xffffffff) return undefined;
+  } else if (version === 1) {
+    if (body.length < 32) return undefined;
+    timescale = u32(body, 20);
+    const hi = u32(body, 24);
+    if (hi >= 0x200000) return undefined; // all-ones "unknown", or beyond 2^53
+    duration = hi * 2 ** 32 + u32(body, 28);
+  } else {
+    return undefined;
+  }
+  return toSeconds(duration, timescale);
+}
+
+const toSeconds = (duration: number, timescale: number) => {
+  if (!timescale || !duration) return undefined;
+  const secs = duration / timescale;
+  return Number.isFinite(secs) && secs > 0 && secs <= MAX_DURATION_SEC ? secs : undefined;
+};
+
+/** The fragment_duration from a whole 'mvex' box (header included), in the movie's timescale. */
+function mehdDuration(mvex: Uint8Array): number | undefined {
+  for (const k of rawChildren(mvex, 8, mvex.length)) {
+    if (k.type !== T_MEHD || k.body + 8 > k.end) continue;
+    const version = mvex[k.body];
+    if (version === 1) {
+      if (k.body + 12 > k.end) return undefined;
+      const hi = u32(mvex, k.body + 4);
+      return hi >= 0x200000 ? undefined : hi * 2 ** 32 + u32(mvex, k.body + 8);
+    }
+    return version === 0 ? u32(mvex, k.body + 4) : undefined;
+  }
+  return undefined;
+}
+
+/**
+ * Walk an MP4/MOV/3GP video's boxes: its capture date, its length, and whether it was cut off.
+ * `head` is the start of the file already read. Only box headers and a few small boxes inside
+ * 'moov' are read, never the video data. Never throws on malformed or truncated files (read
+ * errors from `read` do propagate).
+ *
+ * Being unsure never counts as cut off: bytes that aren't a box header, or more boxes than
+ * MAX_BOXES, end the walk without a verdict, so the video stays in Keep.
+ */
+export async function videoInfo(read: Read, fileSize: number, head: Uint8Array, now = Date.now()): Promise<VideoInfo> {
   const bytesAt = async (s: number, e: number) => {
     const end = Math.min(e, fileSize);
     return end <= head.length ? head.subarray(s, end) : read(s, end);
@@ -156,31 +228,63 @@ export async function videoDate(read: Read, fileSize: number, head: Uint8Array, 
     return h && h.end > at ? h : null;
   };
 
-  // Top level: hop over boxes until 'moov'.
+  // Top level: hop from header to header to the end of the file.
   let moov: BoxHeader | undefined;
   let moovAt = 0;
-  for (let at = 0, n = 0; at + 8 <= fileSize && n < MAX_BOXES; n++) {
+  let cutOff = false;
+  let reachedEnd = false;
+  let at = 0;
+  for (let n = 0; n < MAX_BOXES; n++) {
+    if (at + 8 > fileSize) { reachedEnd = true; break; } // at the end, or a few stray bytes after the last box
     const h = await header(at, fileSize);
-    if (!h) return undefined;
-    if (h.type === 'moov') { moov = h; moovAt = at; break; }
+    if (!h) break; // not a box header: unsure, so no verdict
+    if (h.end > fileSize) { cutOff = true; if (h.type === 'moov' && !moov) { moov = h; moovAt = at; } break; }
+    if (h.type === 'moov' && !moov) { moov = h; moovAt = at; }
     at = h.end;
   }
-  if (!moov) return undefined;
+  if (reachedEnd && !moov) cutOff = true;
+  const info: VideoInfo = cutOff ? { cutOff } : {};
+  if (!moov) return info;
 
   // Inside 'moov': only read the small boxes we need. A cut-off moov is fine if they're whole.
   const moovEnd = Math.min(moov.end, fileSize);
   let fromMvhd: string | undefined;
   let fromMeta: string | undefined;
-  for (let at = moovAt + moov.headerLen, n = 0; at + 8 <= moovEnd && n < MAX_BOXES; n++) {
-    const h = await header(at, moov.end);
+  let timescale = 0;
+  let duration: number | undefined;
+  let mvex: { at: number; end: number } | undefined;
+  for (let p = moovAt + moov.headerLen, n = 0; p + 8 <= moovEnd && n < MAX_BOXES; n++) {
+    const h = await header(p, moov.end);
     if (!h || h.end > moovEnd) break;
-    if (h.type === 'mvhd' && fromMvhd === undefined) {
-      fromMvhd = mvhdDate(await bytesAt(at + h.headerLen, Math.min(h.end, at + h.headerLen + 16)), now);
-    } else if (h.type === 'meta' && fromMeta === undefined && h.end - at <= META_MAX) {
-      const text = quicktimeCreationText(await bytesAt(at, h.end));
+    if (h.type === 'mvhd' && fromMvhd === undefined && timescale === 0) {
+      const body = await bytesAt(p + h.headerLen, Math.min(h.end, p + h.headerLen + 32));
+      fromMvhd = mvhdDate(body, now);
+      duration = mvhdDuration(body);
+      timescale = body[0] === 1 && body.length >= 24 ? u32(body, 20) : body.length >= 16 ? u32(body, 12) : 0;
+    } else if (h.type === 'meta' && fromMeta === undefined && h.end - p <= META_MAX) {
+      const text = quicktimeCreationText(await bytesAt(p, h.end));
       if (text) fromMeta = quicktimeDate(text, now);
+    } else if (h.type === 'mvex' && !mvex && h.end - p <= META_MAX) {
+      mvex = { at: p, end: h.end };
     }
-    at = h.end;
+    p = h.end;
   }
-  return fromMeta ?? fromMvhd;
+  // Fragmented files often leave mvhd's duration at zero and give the total in mvex > mehd.
+  if (duration === undefined && mvex && timescale) {
+    const frag = mehdDuration(await bytesAt(mvex.at, mvex.end));
+    if (frag !== undefined) duration = toSeconds(frag, timescale);
+  }
+  const takenAt = fromMeta ?? fromMvhd;
+  if (takenAt) info.takenAt = takenAt;
+  if (duration !== undefined) info.durationSec = duration;
+  return info;
+}
+
+/**
+ * Find the capture date of an MP4/MOV/3GP video. `head` is the start of the file already read.
+ * Returns 'YYYY-MM-DDTHH:mm:ss' or undefined when there's no believable date. Never throws on
+ * malformed or truncated files (read errors from `read` do propagate).
+ */
+export async function videoDate(read: Read, fileSize: number, head: Uint8Array, now = Date.now()): Promise<string | undefined> {
+  return (await videoInfo(read, fileSize, head, now)).takenAt;
 }

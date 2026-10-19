@@ -65,9 +65,16 @@ def rand_date(year_lo=2019, year_hi=2024):
     return f"{y}:{rng.randint(1, 12):02d}:{rng.randint(1, 28):02d} {rng.randint(7, 21):02d}:{rng.randint(0, 59):02d}:{rng.randint(0, 59):02d}"
 
 
+def box(kind, body):
+    return (8 + len(body)).to_bytes(4, "big") + kind + body
+
+
 def video_bytes(brand=b"isom", size=300_000):
+    """A whole video: ftyp, mdat (random frames) and a moov with an mvhd (no date, 42 s long).
+    Whole matters: a video with no moov, or a box running past the end, is set aside as cut off."""
     head = (24).to_bytes(4, "big") + b"ftyp" + brand + b"\x00\x00\x02\x00" + b"isomiso2"
-    return head + rng.randbytes(size)
+    mvhd = box(b"mvhd", bytes(12) + (600).to_bytes(4, "big") + (600 * 42).to_bytes(4, "big") + bytes(80))
+    return head + box(b"mdat", rng.randbytes(size)) + box(b"moov", mvhd)
 
 
 items = []  # (ext, bytes, label, note)

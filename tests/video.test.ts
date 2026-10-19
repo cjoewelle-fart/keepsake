@@ -128,10 +128,11 @@ describe('videos in the scan', () => {
     const r = await inspect(mem(f).src, 0);
     expect([r.group, r.reason, r.kind, r.takenAt]).toEqual(['keep', 'video', 'mp4', '2017-06-01T10:00:00']);
   });
-  it('keeps a video with no readable date exactly as before', async () => {
-    const f = cat(ftyp(), mdat(30_000)).slice(0, 25_000);
+  it('keeps a whole video with no readable date exactly as before', async () => {
+    const f = cat(ftyp(), mdat(30_000), box('moov', mvhd0(0), trak));
     const r = await inspect(mem(f).src, 0);
-    expect(r).toEqual({ index: 0, path: 'v.mp4', size: 25_000, kind: 'mp4', group: 'keep', reason: 'video' });
+    expect(r).toMatchObject({ index: 0, path: 'v.mp4', size: f.length, kind: 'mp4', group: 'keep', reason: 'video' });
+    expect(r.takenAt).toBeUndefined();
   });
   it('keeps a video whose date read fails', async () => {
     const f = cat(ftyp(), mdat(300_000), box('moov', mvhd0(t)));
@@ -143,5 +144,66 @@ describe('videos in the scan', () => {
     const f = cat(ftyp(), box('moov', mvhd0(t)));
     const r = await inspect(mem(f).src, 0);
     expect([r.group, r.reason, r.takenAt]).toEqual(['damaged', 'cut-off', undefined]);
+  });
+});
+
+describe('cut-off videos (T49)', () => {
+  const t = secs1904('2017-06-01T10:00:00');
+  const moov = box('moov', mvhd0(t), trak);
+  const verdict = async (f: Uint8Array) => {
+    const r = await inspect(mem(f).src, 0);
+    return [r.group, r.reason];
+  };
+
+  it('sets aside a video whose boxes run cleanly to the end with no moov', async () => {
+    expect(await verdict(cat(ftyp(), mdat(30_000)))).toEqual(['damaged', 'cut-off']);
+    expect(await verdict(cat(ftyp(), box('free', new Uint8Array(100)), mdat(30_000)))).toEqual(['damaged', 'cut-off']);
+    // mdat "to the end of the file" (size 0) and nothing else: the recording never finished.
+    expect(await verdict(cat(ftyp(), be32(0), enc('mdat'), new Uint8Array(30_000)))).toEqual(['damaged', 'cut-off']);
+  });
+
+  it('sets aside a video whose mdat says it is longer than the file', async () => {
+    const whole = cat(ftyp(), mdat(30_000), moov);
+    expect(await verdict(whole.slice(0, 25_000))).toEqual(['damaged', 'cut-off']);
+  });
+
+  it('sets aside a moov-first video cut off in its mdat, and keeps its date', async () => {
+    const whole = cat(ftyp(), moov, mdat(60_000));
+    const r = await inspect(mem(whole.slice(0, 40_000)).src, 0);
+    expect(r).toMatchObject({ group: 'damaged', reason: 'cut-off', takenAt: '2017-06-01T10:00:00' });
+  });
+
+  it('sets aside a video cut off inside its moov', async () => {
+    const whole = cat(ftyp(), mdat(30_000), box('moov', mvhd0(t), trak, box('free', new Uint8Array(500))));
+    expect(await verdict(whole.slice(0, whole.length - 100))).toEqual(['damaged', 'cut-off']);
+  });
+
+  it('keeps whole videos: moov first, moov last, 64-bit sizes, trailing padding', async () => {
+    expect(await verdict(cat(ftyp(), moov, mdat(30_000)))).toEqual(['keep', 'video']);
+    expect(await verdict(cat(ftyp('qt  '), box('wide'), mdat(30_000), moov))).toEqual(['keep', 'video']);
+    expect(await verdict(cat(ftyp(), box64('mdat', new Uint8Array(30_000)), box64('moov', mvhd0(t))))).toEqual(['keep', 'video']);
+    expect(await verdict(cat(ftyp(), moov, be32(0), enc('mdat'), new Uint8Array(30_000)))).toEqual(['keep', 'video']);
+    // Zeros or a few stray bytes after the last box (common in recovered files) aren't a cut.
+    expect(await verdict(cat(ftyp(), mdat(30_000), moov, new Uint8Array(4096)))).toEqual(['keep', 'video']);
+    expect(await verdict(cat(ftyp(), mdat(30_000), moov, new Uint8Array(5)))).toEqual(['keep', 'video']);
+  });
+
+  it('keeps a video when the walk is unsure (bytes that are not a box)', async () => {
+    const junk = new Uint8Array(30_000).fill(0x01);
+    expect(await verdict(cat(ftyp(), box('free', new Uint8Array(10)), junk))).toEqual(['keep', 'video']);
+  });
+
+  const mvex = box('mvex', box('mehd', new Uint8Array(4), be32(600 * 90)), box('trex', new Uint8Array(24)));
+  const fragment = (n: number) => cat(box('moof', box('mfhd', new Uint8Array(4), be32(n)), box('traf', new Uint8Array(40))), mdat(8_000));
+  const fragmented = cat(ftyp('iso6'), box('moov', mvhd0(t), trak, mvex), fragment(1), fragment(2), fragment(3), fragment(4),
+    box('mfra', box('mfro', new Uint8Array(8))));
+
+  it('keeps a whole fragmented MP4 (moov first, then moof/mdat pairs)', async () => {
+    const r = await inspect(mem(fragmented).src, 0);
+    expect(r).toMatchObject({ group: 'keep', reason: 'video', takenAt: '2017-06-01T10:00:00' });
+  });
+
+  it('sets aside a fragmented MP4 cut off in a fragment', async () => {
+    expect(await verdict(fragmented.slice(0, fragmented.length - 9_000))).toEqual(['damaged', 'cut-off']);
   });
 });

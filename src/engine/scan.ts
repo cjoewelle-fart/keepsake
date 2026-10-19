@@ -2,7 +2,7 @@ import exifr from 'exifr';
 import { exifTiff, heifLayout, type Range } from './heif';
 import { PHOTO_KINDS, VIDEO_KINDS, endsCleanly, imageSize, sniff, type Kind, type SizeResult } from './sniff';
 import type { FileRecord, FileSource, Progress, Rules } from './types';
-import { videoDate } from './video';
+import { videoInfo, type VideoInfo } from './video';
 import { DEFAULT_RULES } from './types';
 
 const HEAD_BYTES = 256 * 1024; // enough for photo details and the JPEG frame header
@@ -56,14 +56,14 @@ async function readHeifMeta(src: FileSource, head: Uint8Array, exif: Range[] | u
 const BOX_VIDEO_KINDS: ReadonlySet<Kind> = new Set(['mp4', 'mov', '3gp']);
 
 /**
- * A video's date only adds detail: any failure (odd structure, read error) means "no date",
- * never a different group, so a video is kept exactly as it was before dates were read.
+ * A video's boxes give its date and length, and show when it was cut off. A read error means
+ * "nothing learned", never a different group: the video is kept exactly as it was before.
  */
-async function readVideoDate(src: FileSource, head: Uint8Array): Promise<string | undefined> {
+async function readVideo(src: FileSource, head: Uint8Array): Promise<VideoInfo> {
   try {
-    return await videoDate((s, e) => src.read(s, e), src.size, head);
+    return await videoInfo((s, e) => src.read(s, e), src.size, head);
   } catch {
-    return undefined;
+    return {};
   }
 }
 
@@ -88,8 +88,12 @@ export async function inspect(src: FileSource, index: number, rules: Rules = DEF
 
   if (VIDEO_KINDS.has(kind)) {
     if (src.size < rules.smallBytes) return { ...base, kind, group: 'damaged', reason: 'cut-off' };
-    const takenAt = BOX_VIDEO_KINDS.has(kind) ? await readVideoDate(src, head) : undefined;
-    return { ...base, kind, ...(takenAt ? { takenAt } : {}), group: 'keep', reason: 'video' };
+    const { takenAt, cutOff } = BOX_VIDEO_KINDS.has(kind) ? await readVideo(src, head) : {};
+    const dated = takenAt ? { takenAt } : {};
+    // Cut off: the boxes stop before the file says they should, or there's no 'moov' at all.
+    // The date (if 'moov' survived) stays so a video someone keeps anyway still lands on its day.
+    if (cutOff) return { ...base, kind, ...dated, group: 'damaged', reason: 'cut-off' };
+    return { ...base, kind, ...dated, group: 'keep', reason: 'video' };
   }
   if (!PHOTO_KINDS.has(kind)) return { ...base, kind, group: 'system', reason: 'not-media' };
 
