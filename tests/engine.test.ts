@@ -72,6 +72,23 @@ describe('inspect', () => {
     expect((await inspect(mem('x.txt', bytes('hello world')), 0)).group).toBe('system');
     expect((await inspect(mem('e.jpg', new Uint8Array()), 0)).reason).toBe('empty-file');
   });
+  it('reads a small file once, and still checks how it ends (T27)', async () => {
+    const counted = (data: Uint8Array) => {
+      const src = { ...mem('s.jpg', data), reads: 0 };
+      const read = src.read;
+      src.read = (s, e) => { src.reads++; return read(s, e); };
+      return src;
+    };
+    const whole = counted(jpeg(1200, 900));
+    expect((await inspect(whole, 0)).group).toBe('keep');
+    expect(whole.reads).toBe(1);
+    const cut = counted(jpeg(1200, 900, false));
+    expect((await inspect(cut, 0)).reason).toBe('cut-off');
+    expect(cut.reads).toBe(1);
+    const big = counted(concat(jpeg(4000, 3000).subarray(0, -2), new Uint8Array(300_000).fill(0x55), bytes(0xff, 0xd9)));
+    expect((await inspect(big, 0)).group).toBe('keep');
+    expect(big.reads).toBe(2); // head and tail
+  });
 });
 
 // Regression cases found by QA review (Oct 2026).
