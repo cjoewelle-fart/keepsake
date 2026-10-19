@@ -1,4 +1,5 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
+import { flushSync } from 'react-dom';
 import type { CSSProperties, ReactNode } from 'react';
 import type { FileRecord } from '../engine/types';
 import { bytes, clock, copy, monthName, monthYear, n, runTime, weekdayDayMonth } from './copy';
@@ -316,7 +317,7 @@ function MonthSection({ m, sel, byIndex, files, width, cols, gap, onSet, onToggl
         {blocks.map((b) => (
           <Lazy key={b.key} estimate={estimate(b)} sizeKey={`${cols}:${Math.round(tile)}`}>
             {() => (
-              <div className="tl-day">
+              <div className="tl-day" data-day={b.day.key}>
                 {b.first && !isNone && <DayHead ymd={b.day.key} state={sel.state(b.day.ids)} count={sel.count(b.day.ids)} total={b.day.ids.length} onToggle={() => onToggle(b.day.ids, weekdayDayMonth(b.day.key))} />}
                 <div className="tl-grid">
                   {b.ids.map((id, k) => (
@@ -335,9 +336,12 @@ function MonthSection({ m, sel, byIndex, files, width, cols, gap, onSet, onToggl
 function DayHead({ ymd, state, count, total, onToggle }: { ymd: string; state: TriState; count: number; total: number; onToggle: () => void }) {
   const box = useRef<HTMLInputElement>(null);
   useEffect(() => { if (box.current) box.current.indeterminate = state === 'some'; }, [state]);
+  // A one-photo day's checkbox does exactly what the photo's own does (whose name has the date),
+  // so it's left out of the Tab order and hidden from screen readers: one Tab stop, not two.
+  const single = total === 1;
   return (
-    <label className="tl-day-h">
-      <input ref={box} type="checkbox" checked={state === 'all'} onChange={onToggle} />
+    <label className="tl-day-h" aria-hidden={single || undefined}>
+      <input ref={box} type="checkbox" checked={state === 'all'} onChange={onToggle} tabIndex={single ? -1 : undefined} />
       <span>{weekdayDayMonth(ymd)}</span>
       <span className="tl-day-count">{t.daySelected(count, total)}</span>
     </label>
@@ -379,13 +383,54 @@ function watch(el: Element, cb: (near: boolean) => void) {
   return () => { shared?.unobserve(el); watchers.delete(el); };
 }
 
+// Keyboard: Tab moves focus to the next control in the page, and skips a block that isn't drawn
+// yet. So whenever focus is in the timeline, the blocks just before and after it are drawn at
+// once, whatever the observer says, and Tab (even held down) always lands on the next photo.
+const KEY_AHEAD = 3;
+const forcers = new Map<Element, (on: boolean) => void>();
+let forced = new Set<Element>();
+function drawAroundFocus(target: EventTarget | null) {
+  const next = new Set<Element>();
+  if (target instanceof Element && target.closest('.tl-col')) {
+    const blocks = [...document.querySelectorAll('.tl-block')].filter((b) => forcers.has(b)); // in page order
+    // First block that is (or follows) the focused element.
+    let lo = 0;
+    let hi = blocks.length;
+    while (lo < hi) {
+      const mid = (lo + hi) >> 1;
+      const b = blocks[mid];
+      if (b === target || b.contains(target) || target.compareDocumentPosition(b) & Node.DOCUMENT_POSITION_FOLLOWING) hi = mid; else lo = mid + 1;
+    }
+    const inside = blocks[lo]?.contains(target) ? 1 : 0;
+    for (let i = Math.max(0, lo - KEY_AHEAD); i < Math.min(blocks.length, lo + inside + KEY_AHEAD); i++) next.add(blocks[i]);
+  }
+  if (!next.size && !forced.size) return;
+  // Drawn before this event ends, so the very next Tab already sees them.
+  flushSync(() => {
+    for (const el of forced) if (!next.has(el)) forcers.get(el)?.(false);
+    for (const el of next) if (!forced.has(el)) forcers.get(el)?.(true);
+  });
+  forced = next;
+}
+if (typeof document !== 'undefined') document.addEventListener('focusin', (e) => drawAroundFocus(e.target));
+
 function Lazy({ estimate, sizeKey, children }: { estimate: number; sizeKey: string; children: () => ReactNode }) {
   const ref = useRef<HTMLDivElement>(null);
-  const [near, setNear] = useState(false);
+  const [observed, setNear] = useState(false);
+  const [pinned, setPinned] = useState(false);
+  const near = observed || pinned;
   // The real height when a block is dropped, so the page doesn't jump (used until the size changes).
   const [held, setHeld] = useState<{ key: string; h: number }>();
   const key = useRef(sizeKey);
   useEffect(() => { key.current = sizeKey; }, [sizeKey]);
+  useEffect(() => {
+    const el = ref.current!;
+    forcers.set(el, (on) => {
+      if (!on && el.firstElementChild) setHeld({ key: key.current, h: el.offsetHeight });
+      setPinned(on);
+    });
+    return () => { forcers.delete(el); forced.delete(el); };
+  }, []);
   useEffect(() => watch(ref.current!, (v) => {
     const el = ref.current;
     if (!el) return;

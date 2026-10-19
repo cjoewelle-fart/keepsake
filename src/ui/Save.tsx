@@ -187,7 +187,9 @@ export function Save({ records, files, ids, onBack, onDone }: Props) {
     }
   }
 
-  const doStop = () => { stop.current = true; setStopping(true); };
+  // Stays focusable while stopping (aria-disabled, not disabled), so keyboard focus doesn't fall
+  // to the page; repeat presses do nothing.
+  const doStop = () => { if (stop.current) return; stop.current = true; setStopping(true); };
 
   const savedN = sess.saved.size;
   const failedN = sess.failed.size;
@@ -211,7 +213,7 @@ export function Save({ records, files, ids, onBack, onDone }: Props) {
         <div className="scan-foot">
           <p className="safe-box"><span>{s.reassure}</span><b>{copy.scanning.deleted}</b></p>
           <p className="sub-sm">{s.keepOpen}</p>
-          <button type="button" className="btn btn-secondary btn-block" disabled={stopping} aria-disabled={stopping} onClick={doStop}>
+          <button type="button" className="btn btn-secondary btn-block" aria-disabled={stopping || undefined} onClick={doStop}>
             {stopping ? s.stopping : s.stop}
           </button>
         </div>

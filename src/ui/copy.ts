@@ -51,6 +51,8 @@ export const copy = {
   appName: 'Keepsake',
   steps: ['Recover', 'Scan', 'Clean up', 'Review', 'Save'],
   stepOf: (i: number, total: number, name: string) => `Step ${i + 1} of ${total} · ${name}`,
+  /** The browser tab's title on each step: "Clean up · Keepsake". `app` keeps the test build's "(test)". */
+  pageTitle: (step: string, app: string) => `${step} · ${app}`,
   skip: 'Skip to content',
   privacy: 'Your files never leave this computer, and your recovery folder is never changed.',
 
@@ -105,8 +107,6 @@ export const copy = {
     seeEveryMonth: 'See every month',
     seeThemAll: 'See them all',
     asideSafeTitle: 'Set aside, kept safe',
-    groupLabel: (open: boolean, title: string, count: number, kept: boolean) =>
-      `${open ? 'Hide' : 'Show'} ${title.toLowerCase()}, ${n(count)} ${plural(count, 'file', 'files')}${kept ? ', keeping these' : ''}`,
     asideIntro: (x: number) =>
       x === 0
         ? 'You’re keeping all of these files. You can set any group aside again.'

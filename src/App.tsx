@@ -26,6 +26,8 @@ type Screen =
 
 /** Files the operating system adds to folders; they're not part of the recovery. */
 const isOsClutter = (name: string) => name.startsWith('.') || /^(thumbs\.db|desktop\.ini)$/i.test(name);
+/** The title the page loaded with ("Keepsake", or "Keepsake (test)" in the test build). */
+const APP_TITLE = (typeof document !== 'undefined' && document.title) || copy.appName;
 const pathOf = (f: File) => (f as File & { webkitRelativePath?: string }).webkitRelativePath || f.name;
 
 export default function App() {
@@ -104,11 +106,16 @@ export default function App() {
     });
 
   const step = screen.name === 'results' ? 2 : screen.name === 'review' ? 3 : screen.name === 'save' ? 4 : 1;
+  const done = screen.name === 'save' && saveDone;
+  // Which step you're on, in the browser tab too (2.4.2).
+  useEffect(() => {
+    document.title = copy.pageTitle(done ? copy.save.doneStep : copy.steps[step], APP_TITLE);
+  }, [step, done]);
 
   return (
     <div className="app">
       <a className="skip" href="#main">{copy.skip}</a>
-      <Header current={step} done={screen.name === 'save' && saveDone} />
+      <Header current={step} done={done} />
       <div id="main" ref={headingRef}>
         {screen.name === 'start' && <Start note={screen.note} onChoose={chooseFolder} onSamples={SAMPLES_ENABLED ? trySamples : undefined} />}
         {screen.name === 'scanning' && <Scanning progress={screen.progress} onStop={() => getWorker().cancel()} />}
@@ -150,13 +157,23 @@ export default function App() {
 
 function Start({ note, onChoose, onSamples }: { note?: string; onChoose: () => void; onSamples?: () => void }) {
   const fullSupport = typeof window !== 'undefined' && 'showDirectoryPicker' in window;
+  // The live region must exist before its text arrives, or screen readers stay silent. Start
+  // can mount with a note already ("Scan stopped"), so the text goes in a moment after mount.
+  const [ready, setReady] = useState<string>();
+  useEffect(() => {
+    if (!note) return;
+    const t = setTimeout(() => setReady(note), 150);
+    return () => clearTimeout(t);
+  }, [note]);
+  const said = note && ready === note ? note : undefined;
   return (
     <main className="page narrow start">
       <Prints />
       <h1 tabIndex={-1}>{copy.start.title}</h1>
       <p className="lede">{copy.start.body}</p>
       <p className="sub">{copy.start.hint}</p>
-      {note && <p className="note-box" role="status">{note}</p>}
+      {/* Always mounted, and filled after mount, so screen readers announce the note (4.1.3). */}
+      <div role="status">{said && <p className="note-box">{said}</p>}</div>
       <div className="actions">
         <button type="button" className="btn btn-primary btn-lg" onClick={onChoose}>{copy.start.choose}</button>
         {onSamples && <button type="button" className="btn btn-secondary btn-lg" onClick={onSamples}>{copy.start.samples}</button>}
@@ -209,7 +226,8 @@ function Scanning({ progress, onStop }: { progress: Progress; onStop: () => void
       </ol>
       <div className="scan-foot">
         <p className="safe-box"><span>{copy.scanning.reassure}</span><b>{copy.scanning.deleted}</b></p>
-        <button type="button" className="btn btn-secondary btn-lg btn-block" disabled={stopping} aria-disabled={stopping} onClick={() => { setStopping(true); onStop(); }}>
+        {/* Stays focusable while stopping (aria-disabled, not disabled), so keyboard focus doesn't fall to the page. */}
+        <button type="button" className="btn btn-secondary btn-lg btn-block" aria-disabled={stopping || undefined} onClick={() => { if (stopping) return; setStopping(true); onStop(); }}>
           {stopping ? copy.scanning.stopping : copy.scanning.stop}
         </button>
       </div>

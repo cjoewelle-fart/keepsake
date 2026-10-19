@@ -43,8 +43,9 @@ async function checkTimeline(page, label, keptOnResults) {
 
   // Untick a whole day (one with several photos, if there is one).
   const days = page.locator('.tl-day');
-  const several = days.filter({ has: page.locator('.tl-day-count', { hasText: /^all/ }) });
-  const day = (await several.count()) ? several.first() : days.first();
+  // Pinned by position: a filter on "all … selected" would move to another day once this one is unticked.
+  const key = await days.evaluateAll((els) => (els.find((e) => /^all/.test(e.querySelector('.tl-day-count')?.textContent ?? '')) ?? els[0]).dataset.day);
+  const day = page.locator(`.tl-day[data-day="${key}"]`).first();
   const dayBox = day.locator('.tl-day-h input');
   const dayTotal = num((await day.locator('.tl-day-count').innerText()).replace(/selected/, ''));
   await dayBox.click();
@@ -334,3 +335,4 @@ try {
 }
 console.log(problems.length ? `PROBLEMS:\n${problems.join('\n')}` : 'No console errors.');
 console.log(requests.length ? `OUTSIDE REQUESTS:\n${requests.join('\n')}` : 'No requests left this computer.');
+if (problems.length || requests.length) process.exitCode = 1;
