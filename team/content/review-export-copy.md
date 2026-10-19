@@ -1,0 +1,196 @@
+# Review and save: screen copy
+
+<!-- T22 · UX writer · 2026-10-19. For T24 (review timeline) and T25 (save: folder and zip). Source mockups: team/brand/quiet-prints/TL-desktop, TL-phone, EX-choose, EX-done (.dc.html). "Keepsake" is the working name until D15. {n}, {total}, {size} etc. are real values filled in by the app; numbers always use thousands separators (copy.ts `n()`). "new" = state not in the mockups yet. [CONFIRM: …] = developer to check before shipping. Status: draft, awaiting owner review on the dashboard. -->
+
+## Words we use on these screens
+
+Same words as the results screen and `src/ui/copy.ts`:
+
+- **selected / unselect / select all**: the review choice. Not "tick", "untick", "check" or "include".
+- **Not selected** means *not copied*. It never means removed. Always say "Nothing is deleted" nearby.
+- **set aside, kept safe**: files from the Clean up step.
+- **No date**: photos without a date taken. Not "Undated". (Change `copy.ts` `results.undatedMore`, which still says "Undated".)
+- **save / copies**: what the last step does. Not "export". The step is called **Save** (change `copy.ts` `steps[4]` from "Export" to "Save" so it matches the mockups' "Step 5 of 5 · Save").
+- **Deleted · Uploaded 0 · 0**: the same box everywhere, with the same screen-reader text as results (`ledgerSafeSr`, `ledgerSafeValueSr`).
+
+---
+
+## 1. Review timeline, desktop (TL-desktop)
+
+| Location | Current | Proposed | Why |
+|---|---|---|---|
+| Header | Step 4 of 5 · Review | keep | |
+| h1 | Choose what to save / 2,224 / selected | keep | Clear, and the number matches the ledger. |
+| Intro | Everything starts selected, because saving it all is the safe choice. Untick anything you don't want. | Everything starts selected, so nothing gets missed. Unselect anything you don't want to save. | "the safe choice" suggests unselecting is risky. "Unselect" is clearer than "untick" for readers who use US English (Philippines). |
+| Ledger aria-label | Your photos, added up | Your files, added up | The list includes 36,176 set-aside files, which aren't all photos. Matches the results screen. |
+| Ledger | Kept photos and videos · 2,236 | keep | Matches "Review my 2,236 photos and videos" on results. |
+| Ledger | Selected to save · 2,224 | keep | |
+| Ledger | Not selected · 12 | keep | |
+| Ledger | Still set aside, kept safe · 36,176 | keep | Matches the results screen. |
+| Ledger | Deleted · Uploaded · 0 · 0 | keep (screen reader: "Files deleted and uploaded" / "None deleted, none uploaded") | Same as results. |
+| Note under ledger | Not selected means not saved. Nothing is deleted. | Photos you don't select stay where they are now. Nothing is deleted. | "not saved" can read as "lost". This says what really happens. |
+| Same (role) | role="status" on fixed text | Make the note plain text. Put a separate status line in the page that announces changes (see "Announcements"). | Fixed text in a status region is never announced. Changes should be. |
+| Main button | Save 2,224 photos and videos | **Save 2,224 selected** | Shorter (the owner said button text feels oversized). Still true when videos are included. Singular: "Save 1 selected". |
+| Text link | Select everything | Select all | Shorter. Matches "Select all of June". |
+| Text link | Select none | Unselect all | Pairs with "Select all". Same verb as the intro. |
+| Year nav aria-label | Jump to a year | keep | Matches results. |
+| Year pills | 2024 … 2019 · No date · 312 | keep | Matches results (`undatedChip`). |
+| Month nav aria-label | Jump to a month in 2024 | keep | |
+| Month pills | June, May, April, February, January | keep | Show only months that have photos. |
+| Filter group aria-label | Show | Show only | Screen readers say "Show only, radio group, All". |
+| Filters | All · Photos · Videos · Screenshots | All · Photos · Videos (· Screenshots, see open question 3) | Drop "Screenshots" unless the app can really find them. |
+| Month heading | June 2024 · 136 of 148 selected | keep | |
+| Month button | Select all of June | keep when some or none are selected. When all are selected: **Unselect all of June** | One button that switches, so a month can be emptied in one go. |
+| Day row | Friday 28 June · 4 of 6 selected | keep | |
+| Day row | Sunday 23 June · all 6 selected | keep | |
+| Photo checkbox aria-label | 28 June 2024, 09:12, photo | Save photo from 28 June 2024, 09:12 | "Checked" alone doesn't say what checking does. |
+| Video checkbox aria-label | 28 June 2024, 11:40, video, 0:42 | Save video from 28 June 2024, 11:40, 42 seconds long | Same reason. "0:42" is read out oddly. |
+| Time tags | 09:12 etc. | keep | |
+| Video badge | ▶ 0:42 (inline SVG triangle) | keep | |
+| Set-aside card | 36,176 files set aside, kept safe. You can look through them on the Clean up step. | 36,176 files are still set aside, kept safe. To look through them or keep any, go back to Clean up. | Says what you can do there. |
+| Set-aside button | Go back to Clean up | Back to Clean up | Shorter. [CONFIRM: going back keeps the selections made here.] |
+
+## 2. Review timeline, phone (TL-phone)
+
+| Location | Current | Proposed | Why |
+|---|---|---|---|
+| Header | Step 4 of 5 · Review | keep | |
+| h1 | Choose what to save | keep | |
+| Intro | Everything starts selected. Untick anything you don't want. Nothing is deleted. | Everything starts selected. Unselect anything you don't want to save. Nothing is deleted. | Same verb as desktop. |
+| Year nav | Jump to a year · 2024 … · No date · 312 | keep | |
+| Month picker label | Jump to month | Jump to a month | Matches desktop. |
+| Month option | June 2024 · 136 of 148 | keep | |
+| Day row | Friday 28 June · 4 of 6 | keep | |
+| Photo and video aria-labels | as desktop | as desktop | |
+| Video tag | 0:42 ▶ (in place of the time) | 11:40 time tag, plus a separate 0:42 badge with an SVG triangle, as on desktop | Phone loses the time for videos; "▶" may render as an emoji on iOS. |
+| Footer status | 2,224 of 2,236 selected · Deleted: 0 | keep | |
+| Footer button | Save 2,224 | **Save 2,224 selected** | Same label on every screen size. |
+| Missing on phone | (Select all / Unselect all, filters, set-aside card) | Add the same strings as desktop, or confirm on purpose (open question 3) | |
+
+## 3. Review timeline: states not in the mockups (new)
+
+| State | Location | Proposed | Notes |
+|---|---|---|---|
+| **new** Nothing selected | h1 number | 0 / selected | |
+| | Note under ledger | Nothing is selected, so there's nothing to save yet. Your photos are all still here. | Replaces the usual note. |
+| | Main button (disabled) | Save selected | Leave out "0". Keep it focusable with `aria-disabled="true"` and `aria-describedby` to the note. |
+| | Phone footer | 0 of 2,236 selected · Deleted: 0 | |
+| **new** Month fully unselected | Month heading count | None of 148 selected | |
+| | Line under heading | These won't be saved. They stay where they are, and nothing is deleted. | Only in this state. |
+| | Phone month option | June 2024 · 0 of 148 | |
+| **new** Day fully unselected | Day row count | none selected | |
+| **new** No date section | Heading | No date · 312 of 312 selected | Matches `noDateTitle`. |
+| | Intro | We couldn't find when these were taken, so they're kept together here. Photos sent through chat apps often lose their date. They'll be saved in a folder called No date. | |
+| | Section button | Select all with no date / Unselect all with no date | |
+| | Photo aria-label | Save photo with no date ({n} of 312) | |
+| **new** Filter shows nothing | Empty message | No videos from June 2024. (Also: "No photos from June 2024.") | |
+| | Button | Show all | |
+| **new** Announcements (status line) | After one photo changes | {selected} of {total} selected. | Polite; wait ~1 s after the last click. |
+| | After a day, month or all changes | June 2024: 148 of 148 selected. {selected} of {total} selected in all. | |
+| | Nothing selected | Nothing selected. Nothing is deleted. | |
+
+## 4. Choose where to save (EX-choose)
+
+| Location | Current | Proposed | Why |
+|---|---|---|---|
+| Header | Step 5 of 5 · Save | keep (and change `copy.ts` steps to "Save") | |
+| h1 | Where should we save your 2,224 photos and videos? | keep | |
+| Ledger aria-label | What will be saved | keep | |
+| Ledger | Selected to save · 2,224 | keep | |
+| Ledger | Total size · 9.8 GB | keep | |
+| Ledger | Free space on that drive · after you choose | Remove the row. Under the ledger: "You'll need at least 9.8 GB of free space." | A browser can't read a folder's free space (open question 1). |
+| Ledger | Deleted · Uploaded · 0 · 0 | keep | |
+| Note | We make new copies. Your recovery folder stays exactly as it was. | We save new copies. Your recovery folder stays exactly as it was. | |
+| Section h2 | Choose a folder | Save to a folder | The h2 and the button said the same thing twice. |
+| Body | Pick or make a folder, for example in Pictures. We'll add your photos to it and won't change anything already there. | Choose a folder or make a new one, for example in Pictures. We'll put a folder called Keepsake photos inside it. Anything already there stays as it is. | Matches the receipt ("Pictures › Keepsake photos"). |
+| new line under body | (none) | Choose a place on this computer or on another drive. Don't save onto the memory card your photos came from. | Saving onto the source card could overwrite unrecovered files. |
+| Button | Choose a folder | keep | |
+| Browser note | In Safari and Firefox, your photos download as zip files instead: 9.8 GB comes as 5 files of under 2 GB each. | In Safari and Firefox, your photos and videos download as 5 zip files instead, each under 2 GB. | |
+| Example h2 | How your folder will look | keep | |
+| Example aria-label | Folder layout example | Example of how your folder will look | |
+| Example items | Keepsake photos / 2024 / 06 June / 2024-06-28 14.32.jpg / 2024-06-28 14.32 (2).jpg / No date | keep | "Keepsake photos" changes with the name (D15). |
+| Caption | A folder for each year and month. Each photo is named by the date and time it was taken. | A folder for each year and month, and one called No date. Each file is named by the date and time it was taken. If two have the same time, the second gets (2) at the end. | |
+| **new** Back link | (none) | Back to review | |
+
+### Choose where to save: states not in the mockups (new)
+
+| State | Location | Proposed | Notes |
+|---|---|---|---|
+| **new** Safari/Firefox (zip) | Section h2 | Download as zip files | |
+| | Body | This browser can't save straight into a folder. So your 2,224 photos and videos come as 5 zip files, each under 2 GB. They go to your Downloads folder. Open each one to see your photos, sorted the same way. | |
+| | Tip | Your browser may ask if Keepsake can download several files. Choose Allow. | [CONFIRM: what Safari and Firefox show.] |
+| | Tip | To save straight into a folder, open Keepsake in Chrome or Edge. | |
+| | Button | Download 5 zip files | Singular: "Download zip file". |
+| **new** Folder picker cancelled | (none) | No message. Stay on this screen. | |
+| **new** Permission denied | Heading | Keepsake can't save to that folder. | |
+| | Body | Your browser didn't allow it, or the folder is protected. Nothing was saved there, and nothing was deleted. Try a folder in Pictures or Documents. | [CONFIRM: which folders Chrome and Edge block.] |
+| | Button | Choose a different folder | |
+| **new** Chose the recovery folder | Heading | That's your recovery folder. | |
+| | Body | To keep it exactly as it was, Keepsake won't save there. Please choose a different folder. | Only if the app can tell. [CONFIRM] |
+| **new** Keepsake photos folder exists | Body | This folder already has a Keepsake photos folder. We'll add a new one called Keepsake photos (2), so nothing in the old one changes. | [CONFIRM app behaviour.] |
+
+## 5. Saving in progress (new)
+
+| Location | Proposed | Notes |
+|---|---|---|
+| h1 | Saving your photos and videos… | |
+| Progress | Saved {done} of 2,224 | Same pattern as "Checked {n} of {total} files". |
+| Zip progress | Making zip file {i} of 5… · Saved {done} of 2,224 | |
+| Reassurance | This happens on your computer. Nothing is uploaded, and your recovery folder isn't changed. | |
+| Tip | Keep this tab open until it's done. If you can, keep the computer plugged in so it doesn't go to sleep. | |
+| Button | Stop saving / Stopping… | |
+| Announcements | Saved {done} of 2,224. | Polite, about every 10%. |
+| Stopped: heading | Saving stopped. | |
+| Stopped: body | {done} of 2,224 photos and videos were saved to Keepsake photos. Nothing was deleted. You can save the rest any time. | [CONFIRM: "Save the rest" skips files already saved.] |
+| Stopped: buttons | Save the rest · Back to review | |
+
+## 6. Saving problems (new)
+
+| State | Location | Proposed |
+|---|---|---|
+| **Drive full** | Heading | The drive is full. (Zip: "Your Downloads drive is full.") |
+| | Body | We saved {done} of 2,224 photos and videos before it ran out of space. They're in Keepsake photos. Nothing was deleted, and your recovery folder is fine. Make some space, or choose a different drive, then try again. You need about {remainingSize} more. |
+| | Buttons | Save the rest · Choose a different folder |
+| **Stopped partway** | Heading | Saving stopped partway. |
+| | Body | We saved {done} of 2,224 photos and videos before something went wrong. They're in Keepsake photos. Nothing was deleted, and your recovery folder is fine. If you're saving to a USB drive, check that it's still plugged in, then try again. |
+| | Buttons | Save the rest · Choose a different folder |
+| **Permission lost mid-save** | Heading | Keepsake can't save to that folder anymore. |
+| | Body | We saved {done} of 2,224 photos and videos. Nothing was deleted. Choose the folder again to save the rest. |
+| | Button | Choose the folder again |
+| **Zip download didn't start** | Body | Zip file {i} of 5 didn't download. Your photos are fine, and nothing was deleted. |
+| | Button | Download zip file {i} again |
+| **Some files couldn't be saved** (Done screen) | h1 | {saved} of your 2,224 photos and videos are saved. |
+| | Line | {failed} files couldn't be copied. They may be damaged. They're still in your recovery folder, so nothing is lost. |
+| | Receipt row / button | Couldn't save · {failed} / See which ones |
+
+## 7. Done (EX-done)
+
+| Location | Current | Proposed | Why |
+|---|---|---|---|
+| h1 | Your 2,224 photos and videos are saved. | keep | |
+| Line | They're in Keepsake photos, sorted into a folder for each year and month. | keep | |
+| Button | Show me where they are | Remove; show "Find them in Pictures › Keepsake photos". If opening the folder can be built, use **Open my photos**. | A browser can't open the folder in File Explorer or Finder (open question 2). |
+| Line | You can close Keepsake now. Nothing else needs doing. | You can close Keepsake now. There's nothing else to do. | |
+| **new** Tip | (none) | If you can, keep a second copy too, on a USB drive or a backup you already use. | |
+| Receipt | Your receipt / date / Saved / Couldn't save / Saved to / Sorted into / Recovery folder · Untouched / Deleted · Uploaded | keep | |
+| Note | Keep this so you can find your photos later, even after closing Keepsake. | Save or print this so you can find your photos later. | |
+| Button | Save this receipt | Save receipt | |
+| Button | Print | keep | |
+
+### Done: zip version (new)
+
+| Location | Proposed |
+|---|---|
+| Line | They're in 5 zip files in your Downloads folder. Open each one to see your photos, sorted into a folder for each year and month. |
+| Location text | Find them in Downloads: Keepsake photos 1 of 5.zip to 5 of 5.zip |
+| Receipt row | Saved to · Downloads, 5 zip files |
+
+---
+
+## Open questions for design and development
+
+1. **Free space can't be shown** by a browser for a picked folder. A full drive only shows up when saving fails (section 6).
+2. **"Show me where they are" / "Open my photos".** Browsers can't open a folder in File Explorer or Finder. Proposed: show the location as text (matches the T25 note).
+3. **Screenshots filter, and the phone layout.** Nothing in `src` detects screenshots, so drop that filter unless it's built. The phone mockup has no Select all / Unselect all, filters or set-aside card: on purpose?
+4. **Two copy.ts fixes** for T24/T25: `steps[4]` "Export" → "Save"; `results.undatedMore` "Undated" → "No date". On day rows, `aria-checked="mixed"` on a native checkbox does nothing; set `indeterminate` in code.
+5. **Behaviour the copy depends on:** (a) "Back to Clean up" keeps review selections; (b) "Save the rest" skips files already saved; (c) what happens if a "Keepsake photos" folder exists; (d) whether the app can tell the chosen folder is the recovery folder.

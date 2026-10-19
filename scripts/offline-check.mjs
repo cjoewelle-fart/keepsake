@@ -65,6 +65,15 @@ try {
     if (!navigator.serviceWorker.controller) {
       await new Promise((r) => navigator.serviceWorker.addEventListener('controllerchange', r, { once: true }));
     }
+    // `ready` resolves, and clientsClaim() fires controllerchange, while the worker is still
+    // 'activating' (its activate handler is cleaning old caches). Wait, up to 10 s, for 'activated'.
+    const worker = reg.active;
+    if (worker && worker.state !== 'activated') {
+      await new Promise((r) => {
+        const t = setTimeout(r, 10_000);
+        worker.addEventListener('statechange', () => worker.state === 'activated' && (clearTimeout(t), r()));
+      });
+    }
     const keys = await caches.keys();
     let entries = 0;
     for (const k of keys) entries += (await (await caches.open(k)).keys()).length;
