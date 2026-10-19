@@ -40,7 +40,7 @@ Use: photos, files, copies, folder, your computer, set aside, keep, save, safe, 
 - Export done: "Your {n} photos and videos are saved." / "They're in [folder name], sorted into a folder for each year and month. Your recovery folder hasn't been touched." Button: "Open my photos". (Check against the real export layout.)
 - Error: "We couldn't open that folder." / "Your files are fine. Nothing was changed. If the folder is on a memory card or USB drive, check that it's still plugged in, then try again." Button: "Choose the folder again".
 - Privacy, one line: "Your photos never leave this computer, and [Name] never changes or deletes your files."
-- Privacy, three points: Nothing is uploaded. Nothing is deleted. Nothing is hidden (free and open source).
+- Privacy, three points: Nothing is uploaded. None of your files are deleted. Nothing is hidden (free and open source).
 
 ## Show trust, don't claim it
 

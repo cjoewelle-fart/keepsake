@@ -26,6 +26,7 @@ Same words as the results screen and `src/ui/copy.ts`:
 | Ledger | Kept photos and videos · 2,236 | keep | Matches "Review my 2,236 photos and videos" on results. |
 | Ledger | Selected to save · 2,224 | keep | |
 | Ledger | Not selected · 12 | keep | |
+| Ledger | **new** Size to save · 9.8 GB | | Size of what's selected now. |
 | Ledger | Still set aside, kept safe · 36,176 | keep | Matches the results screen. |
 | Ledger | Deleted · Uploaded · 0 · 0 | keep (screen reader: "Files deleted and uploaded" / "None deleted, none uploaded") | Same as results. |
 | Note under ledger | Not selected means not saved. Nothing is deleted. | Photos you don't select stay where they are now. Nothing is deleted. | "not saved" can read as "lost". This says what really happens. |
@@ -38,7 +39,7 @@ Same words as the results screen and `src/ui/copy.ts`:
 | Month nav aria-label | Jump to a month in 2024 | keep | |
 | Month pills | June, May, April, February, January | keep | Show only months that have photos. |
 | Filter group aria-label | Show | Show only | Screen readers say "Show only, radio group, All". |
-| Filters | All · Photos · Videos · Screenshots | All · Photos · Videos (· Screenshots, see open question 3) | Drop "Screenshots" unless the app can really find them. |
+| Filters | All · Photos · Videos · Screenshots | All · Photos · Videos · Not selected | Screenshots dropped for the MVP (owner). "Not selected" matches the ledger. Empty: "Everything is selected right now. Anything you unselect will show here." Note while on: "Select any you want to save after all. They stay in this list until you choose another filter." |
 | Month heading | June 2024 · 136 of 148 selected | keep | |
 | Month button | Select all of June | keep when some or none are selected. When all are selected: **Unselect all of June** | One button that switches, so a month can be emptied in one go. |
 | Day row | Friday 28 June · 4 of 6 selected | keep | |
@@ -127,7 +128,8 @@ Same words as the results screen and `src/ui/copy.ts`:
 | | Button | Choose a different folder | |
 | **new** Chose the recovery folder | Heading | That's your recovery folder. | |
 | | Body | To keep it exactly as it was, Keepsake won't save there. Please choose a different folder. | Only if the app can tell. [CONFIRM] |
-| **new** Keepsake photos folder exists | Body | This folder already has a Keepsake photos folder. We'll add a new one called Keepsake photos (2), so nothing in the old one changes. | [CONFIRM app behaviour.] |
+| **new** Keepsake photos folder exists | Note while saving | There's already a Keepsake photos folder here, so we're adding to it. Nothing in it is changed or replaced. If a name is already taken, the new copy gets (2) at the end. | Team decision: add to it, don't make "Keepsake photos (2)". |
+| **new** A file over 2 GB (zip) | Body | Any file over 2 GB, usually a long video, gets a zip file of its own. That zip will be over 2 GB too. | When shown, drop "each under 2 GB" from the zip body and browser note. |
 
 ## 5. Saving in progress (new)
 
@@ -141,7 +143,7 @@ Same words as the results screen and `src/ui/copy.ts`:
 | Button | Stop saving / Stopping… | |
 | Announcements | Saved {done} of 2,224. | Polite, about every 10%. |
 | Stopped: heading | Saving stopped. | |
-| Stopped: body | {done} of 2,224 photos and videos were saved to Keepsake photos. Nothing was deleted. You can save the rest any time. | [CONFIRM: "Save the rest" skips files already saved.] |
+| Stopped: body | {done} of 2,224 photos and videos were saved to Keepsake photos. None of your files were deleted. You can save the rest any time. | [CONFIRM: "Save the rest" skips files already saved.] |
 | Stopped: buttons | Save the rest · Back to review | |
 
 ## 6. Saving problems (new)
@@ -149,13 +151,13 @@ Same words as the results screen and `src/ui/copy.ts`:
 | State | Location | Proposed |
 |---|---|---|
 | **Drive full** | Heading | The drive is full. (Zip: "Your Downloads drive is full.") |
-| | Body | We saved {done} of 2,224 photos and videos before it ran out of space. They're in Keepsake photos. Nothing was deleted, and your recovery folder is fine. Make some space, or choose a different drive, then try again. You need about {remainingSize} more. |
+| | Body | We saved {done} of 2,224 photos and videos before it ran out of space. They're in Keepsake photos. None of your files were deleted, and your recovery folder is fine. Make some space, or choose a different drive, then try again. You need about {remainingSize} more. |
 | | Buttons | Save the rest · Choose a different folder |
 | **Stopped partway** | Heading | Saving stopped partway. |
-| | Body | We saved {done} of 2,224 photos and videos before something went wrong. They're in Keepsake photos. Nothing was deleted, and your recovery folder is fine. If you're saving to a USB drive, check that it's still plugged in, then try again. |
+| | Body | We saved {done} of 2,224 photos and videos before something went wrong. They're in Keepsake photos. None of your files were deleted, and your recovery folder is fine. If you're saving to a USB drive, check that it's still plugged in, then try again. |
 | | Buttons | Save the rest · Choose a different folder |
 | **Permission lost mid-save** | Heading | Keepsake can't save to that folder anymore. |
-| | Body | We saved {done} of 2,224 photos and videos. Nothing was deleted. Choose the folder again to save the rest. |
+| | Body | We saved {done} of 2,224 photos and videos. None of your files were deleted. Choose the folder again to save the rest. |
 | | Button | Choose the folder again |
 | **Zip download didn't start** | Body | Zip file {i} of 5 didn't download. Your photos are fine, and nothing was deleted. |
 | | Button | Download zip file {i} again |
@@ -169,7 +171,7 @@ Same words as the results screen and `src/ui/copy.ts`:
 |---|---|---|---|
 | h1 | Your 2,224 photos and videos are saved. | keep | |
 | Line | They're in Keepsake photos, sorted into a folder for each year and month. | keep | |
-| Button | Show me where they are | Remove; show "Find them in Pictures › Keepsake photos". If opening the folder can be built, use **Open my photos**. | A browser can't open the folder in File Explorer or Finder (open question 2). |
+| Button | Show me where they are | Remove. Line: "To see them, open {folder} › Keepsake photos in File Explorer (Windows) or Finder (Mac)." | A browser can't open the folder. |
 | Line | You can close Keepsake now. Nothing else needs doing. | You can close Keepsake now. There's nothing else to do. | |
 | **new** Tip | (none) | If you can, keep a second copy too, on a USB drive or a backup you already use. | |
 | Receipt | Your receipt / date / Saved / Couldn't save / Saved to / Sorted into / Recovery folder · Untouched / Deleted · Uploaded | keep | |
@@ -182,12 +184,16 @@ Same words as the results screen and `src/ui/copy.ts`:
 | Location | Proposed |
 |---|---|
 | Line | They're in 5 zip files in your Downloads folder. Open each one to see your photos, sorted into a folder for each year and month. |
-| Location text | Find them in Downloads: Keepsake photos 1 of 5.zip to 5 of 5.zip |
+| Location text | In your Downloads folder, look for Keepsake photos 1 of 5.zip to Keepsake photos 5 of 5.zip. |
 | Receipt row | Saved to · Downloads, 5 zip files |
 
 ---
 
+D17: if saving fails or is stopped, the app removes only the empty file it had just made for that copy. So say "none of your files", never "nothing", on the stopped and error screens.
+
 ## Open questions for design and development
+
+Decided Oct 19: 1, 2 and 3 (Screenshots dropped; location shown as text; filter is Not selected) and 5(c), with the answers above.
 
 1. **Free space can't be shown** by a browser for a picked folder. A full drive only shows up when saving fails (section 6).
 2. **"Show me where they are" / "Open my photos".** Browsers can't open a folder in File Explorer or Finder. Proposed: show the location as text (matches the T25 note).
