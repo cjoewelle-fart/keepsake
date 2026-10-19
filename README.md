@@ -45,7 +45,11 @@ npm run build && node scripts/e2e.mjs <path-to-chromium>   # full flow in a real
 npm run build && npm run offline-check -- <path-to-chromium>   # installs the app, cuts the network, then scans the fixture offline
 node scripts/bench_copies.mjs --files 40000 --concurrency 1,4   # times a 40,000-file scan (12 GB in a temp dir, deleted after)
 node scripts/bench_copies_browser.mjs <path-to-chromium> <folder>   # the same in a Chromium worker (make <folder> with bench_copies.mjs --dir)
+python3 scripts/make_perf_folder.py /tmp/perf/recovery   # a realistic 40,000-file recovery (~5.6 GB: 12 MP JPEGs and HEICs, videos, thumbnails, junk; delete after)
+npm run build && node scripts/perf-browser.mjs <path-to-chromium> /tmp/perf/recovery --runs 3   # full scan + review timeline in the built app: times, memory, long tasks, scroll smoothness
 ```
+
+`perf-browser.mjs` serves the production build on port 4175 (`--port`), runs each pass in a fresh browser, and prints one line per run plus the median and range. Add `--profile <dir>` to save CPU profiles of the page and the scan worker (open them in Chrome DevTools' Performance panel), or `--no-previews` to replace every preview with a blank image (tells picture decoding apart from the page's own work). Timings depend on the machine and on anything else running; the load average is printed with each run.
 
 The exact-copy check fingerprints 4 files at a time (`copyConcurrency` in `scanAll`), so at most 4 whole files (each up to 64 MB) are in memory at once.
 
