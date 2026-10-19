@@ -114,6 +114,71 @@ async function checkTimeline(page, label, keptOnResults) {
   return s.selected;
 }
 
+/**
+ * T51: the highlighted month (pill, and the month picker's value) is the month showing at the
+ * top of the screen, just under the jump bar when it stays in view, whichever way you scroll.
+ */
+async function checkScrollSpy(page, label) {
+  const keys = await page.locator('.tl-month').evaluateAll((els) => els.map((e) => e.dataset.month));
+  if (keys.length < 2) { console.log(`[${label}] month highlight: only ${keys.length} month, skipped`); return; }
+  const settle = () => page.evaluate(() => new Promise((r) => requestAnimationFrame(() => requestAnimationFrame(r))));
+  /** Scroll so month `i`'s top sits `dy` px below the jump bar (or the window's top). */
+  const place = async (i, dy) => {
+    for (let k = 0; k < 3; k++) { // lazy blocks above can change size once drawn: settle, then place again
+      await page.evaluate(([i, dy]) => {
+        const tools = document.querySelector('.tl-tools');
+        const sticky = getComputedStyle(tools).position === 'sticky';
+        const el = document.querySelectorAll('.tl-month')[i];
+        window.scrollTo(0, window.scrollY + el.getBoundingClientRect().top - (sticky ? tools.offsetHeight : 0) - dy);
+      }, [i, dy]);
+      await page.waitForTimeout(120);
+      await settle();
+    }
+  };
+  /** What's showing at the top, and what the page highlights. */
+  const read = () => page.evaluate(() => {
+    const tools = document.querySelector('.tl-tools');
+    const line = Math.max(0, tools.getBoundingClientRect().bottom) + 1;
+    let showing;
+    for (const el of document.querySelectorAll('.tl-month')) { if (el.getBoundingClientRect().top <= line) showing = el.dataset.month; else break; }
+    const pill = document.querySelector('.tl-months-pills .chip[aria-current]')?.textContent ?? null;
+    return { showing, picked: document.querySelector('.tl-month-select select')?.value, pill };
+  });
+  const bad = [];
+  const order = keys.length > 8 ? [0, 1, 2, Math.floor(keys.length / 2), keys.length - 2] : keys.slice(0, -1).map((_, i) => i);
+  // Down the page, then back up: the month at the top, and the one before it while it's still showing.
+  for (const i of [...order, ...[...order].reverse()]) {
+    for (const dy of [-8, i > 0 ? 40 : null]) {
+      if (dy === null) continue;
+      await place(i, dy);
+      const { showing, picked } = await read();
+      const want = dy < 0 ? keys[i] : keys[i - 1];
+      if (showing !== want) continue; // couldn't scroll there (end of the page): nothing to judge
+      if (picked !== showing) bad.push(`${showing} at the top but ${picked} highlighted`);
+    }
+  }
+  // Jumping with a pill highlights that month, even near the end of the page.
+  const pills = page.locator('.tl-months-pills .chip:visible');
+  if (await pills.count()) {
+    const last = pills.last();
+    const name = await last.innerText();
+    await last.click();
+    await page.waitForTimeout(150);
+    const { pill, showing, picked } = await read();
+    const geo = await page.evaluate(() => {
+      const t = document.querySelector('.tl-tools').getBoundingClientRect();
+      const ms = [...document.querySelectorAll('.tl-month')].map((e) => [e.dataset.month, Math.round(e.getBoundingClientRect().top)]).filter(([, y]) => y > -400 && y < 400);
+      return { toolsBottom: Math.round(t.bottom), ms, y: scrollY, max: document.documentElement.scrollHeight - innerHeight };
+    });
+    if (pill !== name) bad.push(`jumped to ${name} but ${pill} highlighted (showing ${showing}, picker ${picked}) ${JSON.stringify(geo)}`);
+  }
+  console.log(`[${label}] month highlight: ${bad.length ? 'WRONG' : 'OK'} (${keys.length} months)`);
+  for (const b of new Set(bad)) { console.log(`  ${b}`); problems.push(`[${label}] month highlight: ${b}`); }
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await page.waitForTimeout(400); // let the days at the top draw again
+  await settle();
+}
+
 /** The receipt: Saved matches what was selected, nothing failed; returns the saved count. */
 async function checkReceipt(page, label, selected) {
   await page.getByRole('heading', { level: 1, name: /saved\./ }).waitFor({ timeout: 120_000 });
@@ -257,6 +322,7 @@ try {
     await page.waitForTimeout(500);
     await page.screenshot({ path: `${out}/${label}-4-review.png`, fullPage: true });
     await checkNoSideScroll(page, label, 'review');
+    await checkScrollSpy(page, label);
     const selected = await checkTimeline(page, label, keptOnResults);
     if (label === 'desktop') await saveToFolder(page, label, selected);
     else await saveAsZip(page, label, selected);

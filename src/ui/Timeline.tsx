@@ -90,27 +90,47 @@ export function Timeline({ records, files, movedBack, setAside, selection: sel, 
   const cols = columnsFor(width);
   const gap = cols === 3 ? 8 : 12;
 
-  // Which month is at the top of the screen, for the year pills and month jump.
+  // Which month is at the top of the screen (just under the jump bar when it stays in view),
+  // for the year pills and month jump (T51). Measured on scroll rather than with an
+  // IntersectionObserver band: a band partway down the screen lagged a month behind what
+  // was showing at the top, and missed months shorter than the band or gaps between months.
   const [current, setCurrent] = useState<string>();
+  const toolsRef = useRef<HTMLDivElement>(null);
+  /** The month last jumped to: kept when the page can't scroll far enough to bring it to the top. */
+  const jumped = useRef<string | undefined>(undefined);
   useEffect(() => {
-    const io = new IntersectionObserver((entries) => {
-      for (const e of entries) if (e.isIntersecting) setCurrent((e.target as HTMLElement).dataset.month);
-    }, { rootMargin: '-25% 0px -65% 0px' });
-    document.querySelectorAll('.tl-month').forEach((el) => io.observe(el));
-    return () => io.disconnect();
+    let frame = 0;
+    const update = () => {
+      frame = 0;
+      setCurrent(monthAtTop(toolsRef.current, jumped));
+    };
+    const soon = () => { if (!frame) frame = requestAnimationFrame(update); };
+    update();
+    window.addEventListener('scroll', soon, { passive: true });
+    window.addEventListener('resize', soon);
+    // Previews and lazy blocks change the page's height without a scroll event.
+    const ro = new ResizeObserver(soon);
+    if (colRef.current) ro.observe(colRef.current);
+    return () => {
+      window.removeEventListener('scroll', soon);
+      window.removeEventListener('resize', soon);
+      ro.disconnect();
+      if (frame) cancelAnimationFrame(frame);
+    };
   }, [tl]);
   const currentKey = current && tl.months.some((m) => m.key === current) ? current : tl.months[0]?.key;
   const currentYear = currentKey && currentKey !== NO_DATE ? currentKey.slice(0, 4) : undefined;
   const yearMonths = (currentKey !== NO_DATE && tl.years.find((y) => y.year === (currentYear ?? tl.years[0]?.year))?.months) || [];
 
-  const toolsRef = useRef<HTMLDivElement>(null);
   const jump = (monthKey: string) => {
+    jumped.current = monthKey;
     const h = document.getElementById(`m-${monthKey}`);
     if (!h) return;
     h.scrollIntoView({ block: 'start' });
     // When the jump bar stays at the top of the window, scroll the heading out from under it.
+    // scrollIntoView already left the heading's 16px scroll margin, so it ends 16px below the bar.
     const tools = toolsRef.current;
-    if (tools && getComputedStyle(tools).position === 'sticky') window.scrollBy(0, -(tools.offsetHeight + 16));
+    if (tools && getComputedStyle(tools).position === 'sticky') window.scrollBy(0, -tools.offsetHeight);
     h.focus({ preventScroll: true });
     setCurrent(monthKey);
   };
@@ -224,6 +244,34 @@ export function Timeline({ records, files, movedBack, setAside, selection: sel, 
       </div>
     </main>
   );
+}
+
+/**
+ * How far below the jump bar (or the top of the window) a month's top may be and still count
+ * as "at the top". A jump leaves the heading 16px below the bar (see jump), so this must be more.
+ */
+const SPY_SLACK = 32;
+
+/**
+ * The month at the top of the screen: the last month section whose top has reached the line
+ * just under the jump bar (the bar's bottom when it's on screen, else the window's top).
+ * After a jump to a month the page can't bring up to the top (near the end), that month stays.
+ */
+function monthAtTop(tools: HTMLElement | null, jumped: { current?: string }): string | undefined {
+  const line = Math.max(0, tools?.getBoundingClientRect().bottom ?? 0) + SPY_SLACK;
+  let key: string | undefined;
+  for (const el of document.querySelectorAll<HTMLElement>('.tl-month')) {
+    if (el.getBoundingClientRect().top > line) break;
+    key = el.dataset.month;
+  }
+  const target = jumped.current && document.querySelector<HTMLElement>(`.tl-month[data-month="${jumped.current}"]`);
+  if (target && key !== jumped.current) {
+    const top = target.getBoundingClientRect().top;
+    const atBottom = window.scrollY + window.innerHeight >= document.documentElement.scrollHeight - 2;
+    if (atBottom && top > line && top < window.innerHeight) return jumped.current;
+  }
+  jumped.current = undefined;
+  return key;
 }
 
 type SectionProps = {
