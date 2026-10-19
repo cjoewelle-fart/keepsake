@@ -10,7 +10,9 @@ let current = { cancelled: false };
 const fromFile = (f: File, path: string): FileSource => ({
   path,
   size: f.size,
-  read: async (start, end) => new Uint8Array(await f.slice(start, end).arrayBuffer()),
+  // A whole-file read skips slice(): in Chrome each slice() registers a new blob with the
+  // browser process, which made up about a third of a 40,000-file scan (T27).
+  read: async (start, end) => new Uint8Array(await (start <= 0 && end >= f.size ? f : f.slice(start, end)).arrayBuffer()),
 });
 
 const api = {

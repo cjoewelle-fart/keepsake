@@ -121,7 +121,8 @@ export async function inspect(src: FileSource, index: number, rules: Rules = DEF
     // We read the whole file and never found where the picture starts: its structure is broken.
     if (size === 'beyond' && head.length >= src.size) return { ...base, kind, group: 'damaged', reason: 'unreadable' };
     const tailStart = Math.max(0, src.size - TAIL_BYTES);
-    const tail = await src.read(tailStart, src.size);
+    // A file that fits in the head was read whole already: its tail is the same bytes (T27).
+    const tail = head.length >= src.size ? head.subarray(tailStart, src.size) : await src.read(tailStart, src.size);
     if (!endsCleanly(kind, tail, { tailStart, head })) return { ...base, kind, group: 'damaged', reason: 'cut-off' };
     meta = await readMeta(head);
   }
