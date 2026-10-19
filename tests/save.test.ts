@@ -138,6 +138,18 @@ describe('receipt', () => {
     expect(copy.save.rSortedValue(0, 0, 4)).toBe('No date (4)');
   });
 
+  it('only promises "under 2 GB" when no single file is over 2 GB, and says where zips are', () => {
+    expect(copy.save.zipBody(3, true, 1)).toContain('come as a zip file, under 2 GB.');
+    expect(copy.save.zipBody(3, true, 1, true)).toContain('come as a zip file. They go');
+    expect(copy.save.zipBody(30, true, 4, true)).toContain('come as 4 zip files. They go');
+    expect(copy.save.browserNote(4)).toMatch(/4 zip files instead, each under 2 GB\.$/);
+    expect(copy.save.browserNote(4, true)).toMatch(/4 zip files instead\.$/);
+    expect(copy.save.fullBody(1, 3, true, '2 GB', true)).toContain('They’re in zip files in your Downloads folder. None of your files were deleted');
+    expect(copy.save.brokenBody(1, 3, true)).toContain('They’re in Keepsake photos. None of your files were deleted');
+    expect(copy.save.findZip(5)).toBe('In your Downloads folder, look for Keepsake photos 1 of 5.zip to Keepsake photos 5 of 5.zip.');
+    expect(copy.save.findZip(1)).toBe('In your Downloads folder, look for Keepsake photos.zip.');
+  });
+
   it('the text file says the same as the screen, and lists what could not be saved', () => {
     const txt = receiptText({
       when: new Date(2026, 9, 16, 16, 5), saved: 2224, failed: 1, mediaOnly: true, savedTo: 'Pictures › Keepsake photos',

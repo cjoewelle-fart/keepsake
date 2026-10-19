@@ -56,8 +56,8 @@ export const copy = {
 
   start: {
     eyebrow: 'Step 2 of 5',
-    title: 'Let’s sort out your recovered photos.',
-    body: 'Choose the folder your recovery program saved files into. We’ll find the photos and videos worth keeping and set the clutter aside.',
+    title: 'Let’s find the photos in your recovered files.',
+    body: 'Choose the folder your recovery program saved files into. We’ll find the photos and videos worth keeping and set the rest aside.',
     hint: 'Inside it, you’ll usually see folders named recup_dir.1, recup_dir.2 and so on.',
     choose: 'Choose recovery folder',
     browserNote: 'Keepsake works best in Chrome or Edge on a computer. You can still scan your folder in this browser.',
@@ -90,7 +90,7 @@ export const copy = {
     ledgerAside: 'Set aside, kept safe below',
     ledgerSafe: 'Deleted · Uploaded',
     ledgerSafeValue: '0 · 0',
-    ledgerSafeSr: 'Files deleted and uploaded',
+    ledgerSafeSr: 'Your files deleted and uploaded',
     ledgerSafeValueSr: 'None deleted, none uploaded',
     ledgerChanged: (keep: number, aside: number) => `Now keeping ${n(keep)} ${plural(keep, 'file', 'files')}. ${n(aside)} set aside.`,
     untouched: 'Your recovery folder is exactly as it was.',
@@ -105,12 +105,12 @@ export const copy = {
     seeEveryMonth: 'See every month',
     seeThemAll: 'See them all',
     asideSafeTitle: 'Set aside, kept safe',
+    groupLabel: (open: boolean, title: string, count: number, kept: boolean) =>
+      `${open ? 'Hide' : 'Show'} ${title.toLowerCase()}, ${n(count)} ${plural(count, 'file', 'files')}${kept ? ', keeping these' : ''}`,
     asideIntro: (x: number) =>
       x === 0
         ? 'You’re keeping all of these files. You can set any group aside again.'
         : `We set aside ${n(x)} ${plural(x, 'file that looks', 'files that look')} like leftovers from the recovery. You can keep any of these.`,
-    groupLabel: (open: boolean, title: string, count: number, kept: boolean) =>
-      `${open ? 'Hide' : 'Show'} ${title.toLowerCase()}, ${n(count)} ${plural(count, 'file', 'files')}${kept ? ', keeping these' : ''}`,
     // Not shown since the Quiet Prints layout (T38); kept for the UX writer.
     eyebrow: (total: number) => `Scan finished · ${n(total)} files checked`,
     titleBefore: 'We found ',
@@ -176,9 +176,9 @@ export const copy = {
   },
 
   error: {
-    title: 'We couldn’t read that folder.',
-    body: 'Nothing was changed. Try choosing the folder again. If it’s on an SD card or USB drive, check that it’s still plugged in.',
-    retry: 'Choose folder again',
+    title: 'We couldn’t open that folder.',
+    body: 'Your files are fine. Nothing was changed. If the folder is on a memory card or USB drive, check that it’s still plugged in, then try again.',
+    retry: 'Choose the folder again',
   },
 
   // Review timeline, "Choose what to save" (T24). Source: team/brand/quiet-prints/TL-*.dc.html,
@@ -192,11 +192,11 @@ export const copy = {
     ledgerTotalMixed: 'Kept files',
     ledgerSelected: 'Selected to save',
     ledgerNotSelected: 'Not selected',
-    ledgerSize: 'Size of what’s selected', // not in T22: needs UX writer review
+    ledgerSize: 'Size to save',
     ledgerAside: 'Still set aside, kept safe',
     ledgerSafe: 'Deleted · Uploaded',
     ledgerSafeValue: '0 · 0',
-    ledgerSafeSr: 'Files deleted and uploaded',
+    ledgerSafeSr: 'Your files deleted and uploaded',
     ledgerSafeValueSr: 'None deleted, none uploaded',
     notSelectedMeans: 'Photos you don’t select stay where they are now. Nothing is deleted.',
     nothingSelected: 'Nothing is selected, so there’s nothing to save yet. Your photos are all still here.',
@@ -239,9 +239,11 @@ export const copy = {
     emptyFilter: {
       photos: 'There are no photos to show.',
       videos: 'There are no videos to show.',
-      unselected: 'Everything is selected. Photos you unselect will show here.',
+      unselected: 'Everything is selected right now. Anything you unselect will show here.',
       all: 'There’s nothing to choose from yet.',
     },
+    /** Above the list while the Not selected filter is on. */
+    unselectedNote: 'Select any you want to save after all. They stay in this list until you choose another filter.',
     showAll: 'Show all',
     asideLine: (x: number) => `${n(x)} ${plural(x, 'file is', 'files are')} still set aside, kept safe. To look through them or keep any, go back to Clean up.`,
     back: 'Back to Clean up',
@@ -272,17 +274,18 @@ export const copy = {
     folderBody: 'Choose a folder or make a new one, for example in Pictures. We’ll put a folder called Keepsake photos inside it. Anything already there stays as it is.',
     notTheCard: 'Choose a place on this computer or on another drive. Don’t save onto the memory card your photos came from.',
     chooseFolder: 'Choose a folder',
-    browserNote: (parts: number) =>
+    /** `bigFile`: a file over 2 GB makes its zip over 2 GB too, so "under 2 GB" isn't promised. */
+    browserNote: (parts: number, bigFile = false) =>
       parts === 1
-        ? 'In Safari and Firefox, your photos and videos download as a zip file instead, under 2 GB.'
-        : `In Safari and Firefox, your photos and videos download as ${n(parts)} zip files instead, each under 2 GB.`,
+        ? `In Safari and Firefox, your photos and videos download as a zip file instead${bigFile ? '' : ', under 2 GB'}.`
+        : `In Safari and Firefox, your photos and videos download as ${n(parts)} zip files instead${bigFile ? '' : ', each under 2 GB'}.`,
     zipH: 'Download as zip files',
-    zipBody: (x: number, mediaOnly: boolean, parts: number) =>
+    zipBody: (x: number, mediaOnly: boolean, parts: number, bigFile = false) =>
       `This browser can’t save straight into a folder. So your ${n(x)} ${mediaOnly ? plural(x, 'photo or video', 'photos and videos') : plural(x, 'file', 'files')} ${
-        parts === 1 ? 'come as a zip file, under 2 GB' : `come as ${n(parts)} zip files, each under 2 GB`
+        parts === 1 ? `come as a zip file${bigFile ? '' : ', under 2 GB'}` : `come as ${n(parts)} zip files${bigFile ? '' : ', each under 2 GB'}`
       }. They go to your Downloads folder. Open each one to see your photos, sorted the same way.`,
-    /** A file over 2 GB on its own (a long video) makes its zip bigger than that. New, not in T22. */
-    zipBigFile: 'One of your videos is bigger than 2 GB, so its zip file will be too.',
+    /** A file over 2 GB on its own (a long video) makes its zip bigger than that. */
+    zipBigFile: 'Any file over 2 GB, usually a long video, gets a zip file of its own. That zip will be over 2 GB too.',
     zipAllowTip: 'Your browser may ask if Keepsake can download several files. Choose Allow.',
     zipChromeTip: 'To save straight into a folder, open Keepsake in Chrome or Edge.',
     downloadZips: (parts: number) => (parts === 1 ? 'Download zip file' : `Download ${n(parts)} zip files`),
@@ -300,7 +303,7 @@ export const copy = {
     recoveryH: 'That’s your recovery folder.',
     recoveryBody: 'To keep it exactly as it was, Keepsake won’t save there. Please choose a different folder.',
     // T22 proposed a new "Keepsake photos (2)" folder; T25 adds to the existing one instead. New, needs UX writer review.
-    existsNote: 'This folder already has a Keepsake photos folder. We’ll add your photos to it. Nothing already in it changes.',
+    existsNote: 'There’s already a Keepsake photos folder here, so we’re adding to it. Nothing in it is changed or replaced. If a name is already taken, the new copy gets (2) at the end.',
 
     // Saving
     savingH: 'Saving your photos and videos…',
@@ -317,18 +320,18 @@ export const copy = {
     stoppedBody: (done: number, total: number, mediaOnly: boolean, zip: boolean) =>
       `${n(done)} of ${n(total)} ${mediaOnly ? 'photos and videos' : 'files'} ${done === 1 ? 'was' : 'were'} saved ${
         zip ? 'in zip files in your Downloads folder' : 'to Keepsake photos'
-      }. Nothing was deleted. You can save the rest any time.`,
+      }. None of your files were deleted. You can save the rest any time.`,
     saveRest: 'Save the rest',
     backToReview: 'Back to review',
     fullH: 'The drive is full.',
-    fullBody: (done: number, total: number, mediaOnly: boolean, remaining: string) =>
-      `We saved ${n(done)} of ${n(total)} ${mediaOnly ? 'photos and videos' : 'files'} before it ran out of space. They’re in Keepsake photos. Nothing was deleted, and your recovery folder is fine. Make some space, or choose a different drive, then try again. You need about ${remaining} more.`,
+    fullBody: (done: number, total: number, mediaOnly: boolean, remaining: string, zip = false) =>
+      `We saved ${n(done)} of ${n(total)} ${mediaOnly ? 'photos and videos' : 'files'} before it ran out of space. ${zip ? 'They’re in zip files in your Downloads folder.' : 'They’re in Keepsake photos.'} None of your files were deleted, and your recovery folder is fine. Make some space, or choose a different drive, then try again. You need about ${remaining} more.`,
     brokenH: 'Saving stopped partway.',
-    brokenBody: (done: number, total: number, mediaOnly: boolean) =>
-      `We saved ${n(done)} of ${n(total)} ${mediaOnly ? 'photos and videos' : 'files'} before something went wrong. They’re in Keepsake photos. Nothing was deleted, and your recovery folder is fine. If you’re saving to a USB drive, check that it’s still plugged in, then try again.`,
+    brokenBody: (done: number, total: number, mediaOnly: boolean, zip = false) =>
+      `We saved ${n(done)} of ${n(total)} ${mediaOnly ? 'photos and videos' : 'files'} before something went wrong. ${zip ? 'They’re in zip files in your Downloads folder.' : 'They’re in Keepsake photos.'} None of your files were deleted, and your recovery folder is fine. If you’re saving to a USB drive, check that it’s still plugged in, then try again.`,
     lostH: 'Keepsake can’t save to that folder anymore.',
     lostBody: (done: number, total: number, mediaOnly: boolean) =>
-      `We saved ${n(done)} of ${n(total)} ${mediaOnly ? 'photos and videos' : 'files'}. Nothing was deleted. Choose the folder again to save the rest.`,
+      `We saved ${n(done)} of ${n(total)} ${mediaOnly ? 'photos and videos' : 'files'}. None of your files were deleted. Choose the folder again to save the rest.`,
     chooseAgain: 'Choose the folder again',
 
     // Done
@@ -345,9 +348,11 @@ export const copy = {
         ? 'They’re in a zip file in your Downloads folder. Open it to see your photos, sorted into a folder for each year and month.'
         : `They’re in ${n(parts)} zip files in your Downloads folder. Open each one to see your photos, sorted into a folder for each year and month.`,
     /** Browsers can't open a folder in File Explorer or Finder (T25 finding), so say where it is. */
-    findThem: (folder: string) => `Find them in ${folder} › Keepsake photos`,
+    findThem: (folder: string) => `To see them, open ${folder} › Keepsake photos in File Explorer (Windows) or Finder (Mac).`,
     findZip: (parts: number) =>
-      parts === 1 ? 'Find it in Downloads: Keepsake photos.zip' : `Find them in Downloads: Keepsake photos 1 of ${n(parts)}.zip to ${n(parts)} of ${n(parts)}.zip`,
+      parts === 1
+        ? 'In your Downloads folder, look for Keepsake photos.zip.'
+        : `In your Downloads folder, look for Keepsake photos 1 of ${n(parts)}.zip to Keepsake photos ${n(parts)} of ${n(parts)}.zip.`,
     closeNow: 'You can close Keepsake now. There’s nothing else to do.',
     secondCopy: 'If you can, keep a second copy too, on a USB drive or a backup you already use.',
     receiptH: 'Your receipt',
@@ -373,14 +378,5 @@ export const copy = {
     zipAgain: (i: number, parts: number) => (parts === 1 ? 'Download zip file again' : `Download zip file ${n(i)} of ${n(parts)} again`),
     /** "16 October 2026, 16:05" (this computer's clock) */
     when: (d: Date) => `${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear()}, ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`,
-  },
-
-  review: {
-    title: 'Your photos and videos by year',
-    body: 'Here’s how many you have from each year. Seeing each photo and choosing which to save is coming in the next version.',
-    undated: 'Photos with no date',
-    videos: 'Videos',
-    otherFiles: 'Other files you kept',
-    back: 'Back to cleanup results',
   },
 };

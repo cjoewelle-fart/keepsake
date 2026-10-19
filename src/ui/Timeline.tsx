@@ -224,6 +224,8 @@ export function Timeline({ records, files, movedBack, setAside, selection: sel, 
           </div>
         )}
 
+        {filter === 'unselected' && tl.months.length > 0 && <p className="note-box">{t.unselectedNote}</p>}
+
         {tl.months.map((m) => (
           <MonthSection key={m.key} m={m} sel={sel} byIndex={byIndex} files={files} width={width} cols={cols} gap={gap} onSet={set} onToggle={toggle} />
         ))}

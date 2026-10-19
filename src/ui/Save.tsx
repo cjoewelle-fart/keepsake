@@ -223,9 +223,9 @@ export function Save({ records, files, ids, onBack, onDone }: Props) {
     const left = remaining().reduce((a, r) => a + sizeOf(r), 0);
     const [h, body, buttons] =
       phase.end === 'stopped' ? [s.stoppedH, s.stoppedBody(savedN, total, mediaOnly, !folderMode), 'rest']
-        : phase.end === 'full' ? [s.fullH, s.fullBody(savedN, total, mediaOnly, bytes(left)), 'rest']
+        : phase.end === 'full' ? [s.fullH, s.fullBody(savedN, total, mediaOnly, bytes(left), !folderMode), 'rest']
           : phase.end === 'denied' ? [s.lostH, s.lostBody(savedN, total, mediaOnly), 'again']
-            : [s.brokenH, s.brokenBody(savedN, total, mediaOnly), 'rest'];
+            : [s.brokenH, s.brokenBody(savedN, total, mediaOnly, !folderMode), 'rest'];
     return (
       <main className="page narrow">
         <h1 tabIndex={-1}>{h}</h1>
@@ -293,12 +293,12 @@ export function Save({ records, files, ids, onBack, onDone }: Props) {
             <div>
               <button type="button" className="btn btn-primary" onClick={chooseFolder}>{phase.problem ? s.chooseDifferent : s.chooseFolder}</button>
             </div>
-            <p className="sub-sm">{s.browserNote(partCount)}</p>
+            <p className="sub-sm">{s.browserNote(partCount, bigFile)}</p>
           </section>
         ) : (
           <section className="card" aria-labelledby="zip-h">
             <h2 id="zip-h">{s.zipH}</h2>
-            <p className="card-body">{s.zipBody(total, mediaOnly, partCount)}</p>
+            <p className="card-body">{s.zipBody(total, mediaOnly, partCount, bigFile)}</p>
             {bigFile && <p className="card-body">{s.zipBigFile}</p>}
             {partCount > 1 && <p className="sub-sm">{s.zipAllowTip}</p>}
             <div><button type="button" className="btn btn-primary" onClick={runZip}>{s.downloadZips(partCount)}</button></div>
@@ -376,7 +376,7 @@ function Done({ total, saved, failedRecords, mediaOnly, folderNames, zips, sorte
         </h1>
         {failed > 0 && <p className="note-box">{s.failedLine(failed)}</p>}
         <p className="lede">{zips ? s.doneZipLine(zips.length) : s.doneLine}</p>
-        <p className="find" data-k="find">{zips ? s.findZip(zips.length) : folderNames.map(s.findThem).join('. ')}</p>
+        <p className="find" data-k="find">{zips ? s.findZip(zips.length) : folderNames.map(s.findThem).join(' ')}</p>
         {zips && zips.length > 0 && <div className="no-print"><ZipAgain zips={zips} /></div>}
         <p className="sub-sm">{s.closeNow}</p>
         <p className="sub-sm">{s.secondCopy}</p>
