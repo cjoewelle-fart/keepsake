@@ -29,11 +29,21 @@ const walk = (d) => readdirSync(d).flatMap((n) => (statSync(join(d, n)).isDirect
 let files = walk(samplesDir).map((p) => ({ path: relative(samplesDir, p).split('\\').join('/'), data: readFileSync(p) }));
 const LIMIT = 14 * 1024 * 1024;
 const total = () => files.reduce((n, f) => n + f.data.length, 0);
-let skip = 2;
-while (total() > LIMIT) {
+// Drop every other large JPEG until it fits; if that runs out, drop the largest files of any kind.
+let size = total();
+while (size > LIMIT) {
   let k = 0;
-  files = files.filter((f) => !(f.path.endsWith('.jpg') && f.data.length > 60_000 && ++k % skip === 0));
-  skip++;
+  const before = files.length;
+  files = files.filter((f) => {
+    const drop = size > LIMIT && f.path.endsWith('.jpg') && f.data.length > 60_000 && ++k % 2 === 0;
+    if (drop) size -= f.data.length;
+    return !drop;
+  });
+  if (files.length === before) {
+    const biggest = files.reduce((a, b) => (b.data.length > a.data.length ? b : a));
+    files = files.filter((f) => f !== biggest);
+    size -= biggest.data.length;
+  }
 }
 const index = Buffer.from(JSON.stringify(files.map((f) => ({ path: f.path, size: f.data.length }))));
 const head = Buffer.alloc(4);
