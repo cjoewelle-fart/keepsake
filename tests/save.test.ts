@@ -1,0 +1,303 @@
+import { execFileSync } from 'node:child_process';
+import { mkdtempSync, rmSync, writeFileSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
+import { describe, expect, it } from 'vitest';
+import type { FileRecord } from '../src/engine/types';
+import {
+  NameBook, ZIP_LIMITS, classifyWriteError, dateParts, extFor, insideRecovery, orderForSave, placeFor,
+  planNames, receiptText, safeName, sortedInto, splitParts, zipPath,
+} from '../src/ui/savePlan';
+import type { ResolvingDir } from '../src/ui/savePlan';
+import { END_COST, ZipWriter, crc32, dosDateTime, dosFrom, entryCost } from '../src/ui/zip';
+import { copy } from '../src/ui/copy';
+
+let i = 0;
+const rec = (takenAt: string | undefined, path?: string, kind: FileRecord['kind'] = 'jpeg', size = 1000): FileRecord =>
+  ({ index: i++, path: path ?? `recup_dir.1/f${String(i).padStart(7, '0')}.jpg`, size, kind, takenAt, group: 'keep', reason: 'photo' });
+
+describe('where each copy goes', () => {
+  it('dated files: Keepsake photos/YYYY/MM Month/YYYY-MM-DD HH.MM.ext', () => {
+    const p = placeFor(rec('2024-06-28T14:32:09'));
+    expect(p).toEqual({ dir: ['2024', '06 June'], base: '2024-06-28 14.32', ext: 'jpg' });
+    expect(zipPath({ dir: p.dir, name: '2024-06-28 14.32.jpg' })).toBe('Keepsake photos/2024/06 June/2024-06-28 14.32.jpg');
+  });
+
+  it('"No date" files keep their original name', () => {
+    expect(placeFor(rec(undefined, 'recup_dir.3/f0001234.jpg'))).toEqual({ dir: ['No date'], base: 'f0001234', ext: 'jpg' });
+    expect(placeFor(rec(undefined, 'recup_dir.3/README'))).toEqual({ dir: ['No date'], base: 'README', ext: '' });
+  });
+
+  it('a date that is not a real date counts as no date', () => {
+    expect(dateParts('2024-13-01T10:00:00')).toBeUndefined();
+    expect(dateParts('0000-00-00T00:00:00')).toBeUndefined();
+    expect(dateParts('nonsense')).toBeUndefined();
+    expect(dateParts('2024-01-02T03:04')).toEqual({ y: '2024', mo: '01', d: '02', h: '03', mi: '04', s: '00' });
+    expect(placeFor(rec('2024-13-01T10:00:00', 'a/f1.jpg')).dir).toEqual(['No date']);
+  });
+
+  it('the format found in the bytes decides the extension; known aliases and RAW keep their own', () => {
+    expect(extFor('jpeg', 'a/f1.JPEG')).toBe('jpeg');
+    expect(extFor('jpeg', 'a/f1.png')).toBe('jpg'); // PhotoRec guessed wrong
+    expect(extFor('heic', 'a/f1.heic')).toBe('heic');
+    expect(extFor('mov', 'a/f1.mp4')).toBe('mov');
+    expect(extFor('tiff', 'a/f1.tif')).toBe('tif');
+    expect(extFor('raw', 'a/f1.CR2')).toBe('cr2');
+    expect(extFor('other', 'a/f1')).toBe('');
+  });
+
+  it('names are safe on Windows, macOS and Linux', () => {
+    expect(safeName('a:b*c?.jpg')).toBe('a_b_c_.jpg');
+    expect(safeName('con.jpg')).toBe('_con.jpg');
+    expect(safeName('photo. ')).toBe('photo');
+    expect(safeName('..')).toBe('file');
+    expect(safeName(`${'x'.repeat(300)}.jpg`)).toHaveLength(180);
+    expect(safeName(`${'x'.repeat(300)}.jpg`).endsWith('.jpg')).toBe(true);
+  });
+});
+
+describe('name collisions', () => {
+  it('same minute: " (2)", " (3)"; case-insensitive; per folder', () => {
+    const b = new NameBook();
+    expect(b.claim('2024/06 June', '2024-06-28 14.32', 'jpg')).toBe('2024-06-28 14.32.jpg');
+    expect(b.claim('2024/06 June', '2024-06-28 14.32', 'jpg')).toBe('2024-06-28 14.32 (2).jpg');
+    expect(b.claim('2024/06 June', '2024-06-28 14.32', 'jpg')).toBe('2024-06-28 14.32 (3).jpg');
+    expect(b.claim('2024/06 June', '2024-06-28 14.32', 'mov')).toBe('2024-06-28 14.32.mov');
+    expect(b.claim('2024/07 July', '2024-06-28 14.32', 'jpg')).toBe('2024-06-28 14.32.jpg');
+    expect(b.claim('No date', 'README', '')).toBe('README');
+    expect(b.claim('No date', 'readme', '')).toBe('readme (2)');
+  });
+
+  it('what is already in the folder is never reused (so never overwritten)', () => {
+    const b = new NameBook();
+    b.seed('2024/06 June', ['2024-06-28 14.32.JPG', '2024-06-28 14.32 (2).jpg', 'notes.txt']);
+    expect(b.isSeeded('2024/06 June')).toBe(true);
+    expect(b.claim('2024/06 June', '2024-06-28 14.32', 'jpg')).toBe('2024-06-28 14.32 (3).jpg');
+  });
+
+  it('a burst is numbered in the order it was taken, and every file gets its own name', () => {
+    const later = rec('2024-06-28T14:32:50', 'recup_dir.1/f1.jpg');
+    const earlier = rec('2024-06-28T14:32:05', 'recup_dir.1/f2.jpg');
+    const other = rec(undefined, 'recup_dir.2/f1.jpg');
+    const same = rec(undefined, 'recup_dir.1/f1.jpg');
+    const plan = planNames([later, other, earlier, same]);
+    expect(plan.map((p) => [p.id, zipPath(p)])).toEqual([
+      [earlier.index, 'Keepsake photos/2024/06 June/2024-06-28 14.32.jpg'],
+      [later.index, 'Keepsake photos/2024/06 June/2024-06-28 14.32 (2).jpg'],
+      [same.index, 'Keepsake photos/No date/f1.jpg'],
+      [other.index, 'Keepsake photos/No date/f1 (2).jpg'],
+    ]);
+  });
+
+  it('40,000 files in a few busy minutes: no two share a path', () => {
+    const files = Array.from({ length: 40_000 }, (_, k) => rec(k % 9 === 0 ? undefined : `2023-0${(k % 3) + 1}-0${(k % 5) + 1}T10:0${k % 4}:00`, `recup_dir.${k % 7}/f${k % 1000}.jpg`));
+    const paths = planNames(files).map((p) => zipPath(p).toLowerCase());
+    expect(new Set(paths).size).toBe(files.length);
+  });
+
+  it('save order: oldest first, then "No date" by path', () => {
+    const a = rec('2024-01-01T00:00:00', 'z');
+    const b = rec('2020-01-01T00:00:00', 'y');
+    const c = rec(undefined, 'b');
+    const d = rec(undefined, 'a');
+    expect(orderForSave([c, a, d, b])).toEqual([b, a, d, c]);
+  });
+});
+
+describe('zip parts', () => {
+  const lim = { maxBytes: 1000, maxEntries: 3 };
+  it('fills each part up to the limit, in order', () => {
+    expect(splitParts([400, 400, 400, 100, 100], (x) => x, 0, lim)).toEqual([[400, 400], [400, 100, 100]]);
+  });
+  it('counts the fixed end record', () => {
+    expect(splitParts([500, 500], (x) => x, 1, lim)).toEqual([[500], [500]]);
+  });
+  it('a file bigger than the limit gets a part to itself', () => {
+    expect(splitParts([100, 5000, 100], (x) => x, 0, lim)).toEqual([[100], [5000], [100]]);
+  });
+  it('caps entries per part so the count never needs ZIP64', () => {
+    expect(splitParts([1, 1, 1, 1, 1, 1, 1], (x) => x, 0, lim)).toEqual([[1, 1, 1], [1, 1, 1], [1]]);
+    expect(ZIP_LIMITS.maxEntries).toBeLessThan(0xffff);
+  });
+  it('9.8 GB of 4.4 MB photos is 5 parts, each under 2 GB', () => {
+    const plan = planNames(Array.from({ length: 2224 }, (_, k) => rec(`2024-06-${String((k % 28) + 1).padStart(2, '0')}T10:00:00`, undefined, 'jpeg', 4_400_000)));
+    const parts = splitParts(plan, (p) => entryCost(zipPath(p), p.size), END_COST);
+    expect(parts).toHaveLength(5);
+    for (const part of parts) expect(part.reduce((s, p) => s + entryCost(zipPath(p), p.size), END_COST)).toBeLessThan(2_000_000_000);
+    expect(parts.flat()).toHaveLength(2224);
+  });
+});
+
+describe('receipt', () => {
+  it('"6 years, 41 months, plus No date (312)"', () => {
+    const plan = planNames([rec('2024-06-01T00:00:00'), rec('2024-05-01T00:00:00'), rec('2019-05-01T00:00:00'), rec(undefined), rec(undefined)]);
+    const s = sortedInto(plan);
+    expect(s).toEqual({ years: 2, months: 3, noDate: 2 });
+    expect(copy.save.rSortedValue(s.years, s.months, s.noDate)).toBe('2 years, 3 months, plus No date (2)');
+    expect(copy.save.rSortedValue(1, 1, 0)).toBe('1 year, 1 month');
+    expect(copy.save.rSortedValue(0, 0, 4)).toBe('No date (4)');
+  });
+
+  it('the text file says the same as the screen, and lists what could not be saved', () => {
+    const txt = receiptText({
+      when: new Date(2026, 9, 16, 16, 5), saved: 2224, failed: 1, mediaOnly: true, savedTo: 'Pictures › Keepsake photos',
+      sorted: { years: 6, months: 41, noDate: 312 }, failedPaths: ['recup_dir.4/f0099.jpg'],
+    });
+    expect(txt).toContain('16 October 2026, 16:05');
+    expect(txt).toMatch(/Saved\s+2,224 photos and videos/);
+    expect(txt).toMatch(/Couldn’t save\s+1/);
+    expect(txt).toMatch(/Saved to\s+Pictures › Keepsake photos/);
+    expect(txt).toMatch(/Sorted into\s+6 years, 41 months, plus No date \(312\)/);
+    expect(txt).toMatch(/Recovery folder\s+Untouched/);
+    expect(txt).toMatch(/Deleted · Uploaded\s+0 · 0/);
+    expect(txt).toContain('  recup_dir.4/f0099.jpg');
+  });
+});
+
+describe('write errors', () => {
+  it('maps browser errors to what the screens say', () => {
+    expect(classifyWriteError(new DOMException('x', 'QuotaExceededError'))).toBe('full');
+    expect(classifyWriteError(new DOMException('x', 'NotAllowedError'))).toBe('denied');
+    expect(classifyWriteError(new DOMException('x', 'SecurityError'))).toBe('denied');
+    expect(classifyWriteError(new DOMException('x', 'NotFoundError'))).toBe('broken');
+    expect(classifyWriteError(new Error('x'))).toBe('broken');
+    expect(classifyWriteError(undefined)).toBe('broken');
+  });
+});
+
+describe('the recovery folder is never a save target', () => {
+  // A fake folder tree: handles that know their path and resolve() like the real API.
+  const dir = (path: string): ResolvingDir & { path: string } => ({
+    path,
+    async resolve(d) {
+      const p = (d as unknown as { path: string }).path;
+      if (p === path) return [];
+      return p.startsWith(`${path}/`) ? p.slice(path.length + 1).split('/') : null;
+    },
+  });
+  // Recovery folder /home/me/rec; its files are in rec/recup_dir.1 and rec/recup_dir.2 (depth 1).
+  const scanDirs = [{ dir: dir('/home/me/rec/recup_dir.1'), depth: 1 }, { dir: dir('/home/me/rec/recup_dir.2'), depth: 1 }];
+  it('refuses the recovery folder, its subfolders and anything inside them', async () => {
+    expect(await insideRecovery(dir('/home/me/rec'), scanDirs)).toBe(true);
+    expect(await insideRecovery(dir('/home/me/rec/recup_dir.2'), scanDirs)).toBe(true);
+    expect(await insideRecovery(dir('/home/me/rec/recup_dir.1/x'), scanDirs)).toBe(true);
+  });
+  it('allows folders beside it or above it', async () => {
+    expect(await insideRecovery(dir('/home/me'), scanDirs)).toBe(false);
+    expect(await insideRecovery(dir('/home/me/Pictures'), scanDirs)).toBe(false);
+    expect(await insideRecovery(dir('/home/me/rec2'), scanDirs)).toBe(false);
+  });
+});
+
+describe('CRC-32', () => {
+  const ascii = (s: string) => new TextEncoder().encode(s);
+  it('matches the standard check values', () => {
+    expect(crc32(ascii('123456789'))).toBe(0xcbf43926);
+    expect(crc32(new Uint8Array(0))).toBe(0);
+    expect(crc32(ascii('The quick brown fox jumps over the lazy dog'))).toBe(0x414fa339);
+  });
+  it('can be fed slice by slice', () => {
+    const data = new Uint8Array(100_003).map((_, k) => (k * 31 + 7) & 0xff);
+    const whole = crc32(data);
+    let c = 0;
+    for (let at = 0; at < data.length; at += 4093) c = crc32(data.subarray(at, at + 4093), c);
+    expect(c).toBe(whole);
+  });
+});
+
+describe('DOS dates', () => {
+  it('packs local date and time, 2-second steps', () => {
+    expect(dosDateTime(2024, 6, 28, 14, 32, 9)).toEqual({ date: (44 << 9) | (6 << 5) | 28, time: (14 << 11) | (32 << 5) | 4 });
+    expect(dosDateTime(1970, 1, 1, 0, 0, 0)).toEqual({ date: 33, time: 0 });
+    expect(dosFrom('2024-06-28T14:32:09', new Date(0))).toEqual(dosDateTime(2024, 6, 28, 14, 32, 9));
+    expect(dosFrom(undefined, new Date(2020, 0, 2, 3, 4, 6))).toEqual(dosDateTime(2020, 1, 2, 3, 4, 6));
+  });
+});
+
+/** Build a zip in memory the way the app does (header, data, header, data, …, directory). */
+function build(entries: { name: string; data: Uint8Array }[], force64 = false) {
+  const w = new ZipWriter(force64);
+  const chunks: Uint8Array[] = [];
+  for (const e of entries) {
+    chunks.push(w.add({ name: e.name, size: e.data.length, crc: crc32(e.data), date: dosDateTime(2024, 6, 28, 14, 32, 10) }), e.data);
+  }
+  chunks.push(w.finish());
+  const out = new Uint8Array(chunks.reduce((s, c) => s + c.length, 0));
+  let p = 0;
+  for (const c of chunks) { out.set(c, p); p += c.length; }
+  expect(w.size).toBe(out.length);
+  return out;
+}
+
+const has = (cmd: string) => { try { execFileSync('sh', ['-c', `command -v ${cmd}`]); return true; } catch { return false; } };
+
+describe('ZIP writer', () => {
+  const entries = [
+    { name: 'Keepsake photos/2024/06 June/2024-06-28 14.32.jpg', data: new Uint8Array(5000).map((_, k) => k & 0xff) },
+    { name: 'Keepsake photos/2024/06 June/2024-06-28 14.32 (2).jpg', data: new Uint8Array([0xff, 0xd8, 0xff, 0xd9]) },
+    { name: 'Keepsake photos/No date/f0001234 café.jpg', data: new Uint8Array(0) },
+  ];
+
+  it('writes the local header byte for byte', () => {
+    const w = new ZipWriter();
+    const h = w.add({ name: 'a.jpg', size: 3, crc: 0x12345678, date: { date: 0x58dc, time: 0x7404 } });
+    expect([...h]).toEqual([
+      0x50, 0x4b, 0x03, 0x04, 20, 0, 0x00, 0x08, 0, 0, 0x04, 0x74, 0xdc, 0x58,
+      0x78, 0x56, 0x34, 0x12, 3, 0, 0, 0, 3, 0, 0, 0, 5, 0, 0, 0, 0x61, 0x2e, 0x6a, 0x70, 0x67,
+    ]);
+  });
+
+  it('entryCost and END_COST predict the size exactly (no ZIP64) and never under-count (ZIP64)', () => {
+    const plain = build(entries);
+    expect(plain.length).toBe(entries.reduce((s, e) => s + entryCost(e.name, e.data.length), 22));
+    const forced = build(entries, true);
+    expect(forced.length).toBeLessThanOrEqual(entries.reduce((s, e) => s + entryCost(e.name, e.data.length, true), END_COST));
+  });
+
+  for (const force64 of [false, true]) {
+    it(`unzip and Python read it back${force64 ? ' with ZIP64 fields' : ''}`, () => {
+      const dir = mkdtempSync(join(tmpdir(), 'keepsake-zip-'));
+      try {
+        const file = join(dir, 'test.zip');
+        writeFileSync(file, build(entries, force64));
+        if (has('unzip')) {
+          const out = execFileSync('unzip', ['-t', file]).toString();
+          expect(out).toMatch(/No errors detected/);
+        }
+        if (has('python3')) {
+          const py = 'import sys,zipfile\nz=zipfile.ZipFile(sys.argv[1])\nassert z.testzip() is None\nfor i in z.infolist(): print(i.filename, i.file_size, i.date_time[:5])';
+          const out = execFileSync('python3', ['-I', '-c', py, file]).toString().trim().split('\n');
+          expect(out).toEqual(entries.map((e) => `${e.name} ${e.data.length} (2024, 6, 28, 14, 32)`));
+        }
+      } finally {
+        rmSync(dir, { recursive: true, force: true });
+      }
+    });
+  }
+
+  it('a 5 GB video gets ZIP64 sizes, and the zip ends with ZIP64 end records', () => {
+    const size = 5_000_000_000;
+    const w = new ZipWriter();
+    const h = w.add({ name: 'v.mov', size, crc: 1, date: { date: 33, time: 0 } });
+    const v = new DataView(h.buffer);
+    expect(v.getUint16(4, true)).toBe(45);
+    expect(v.getUint32(18, true)).toBe(0xffffffff);
+    expect(v.getUint32(22, true)).toBe(0xffffffff);
+    expect(v.getUint16(28, true)).toBe(20); // extra length
+    expect(v.getUint16(35, true)).toBe(1); // ZIP64 extra id after the 5-byte name
+    expect(Number(v.getBigUint64(39, true))).toBe(size);
+    expect(Number(v.getBigUint64(47, true))).toBe(size);
+    const end = w.finish();
+    const e = new DataView(end.buffer);
+    const cdLen = 46 + 5 + 20;
+    expect(e.getUint32(0, true)).toBe(0x02014b50);
+    expect(Number(e.getBigUint64(46 + 5 + 4, true))).toBe(size);
+    expect(e.getUint32(cdLen, true)).toBe(0x06064b50);
+    expect(Number(e.getBigUint64(cdLen + 48, true))).toBe(h.length + size); // directory offset
+    expect(e.getUint32(cdLen + 56, true)).toBe(0x07064b50);
+    expect(Number(e.getBigUint64(cdLen + 56 + 8, true))).toBe(h.length + size + cdLen);
+    expect(e.getUint32(cdLen + 76, true)).toBe(0x06054b50);
+    expect(e.getUint32(cdLen + 76 + 16, true)).toBe(0xffffffff);
+    expect(end.length).toBe(cdLen + 76 + 22);
+  });
+});

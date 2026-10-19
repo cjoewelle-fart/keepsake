@@ -15,8 +15,8 @@ PhotoRec recovers files well but loses their names and folders, leaving thousand
 
 ## Status: phase 1 (prototype the engine)
 
-Done: folder picking, scanning in a background worker, cleanup rules, the cleanup results screen, the review timeline ("Choose what to save": photos and videos by year, month and day, everything selected to start), offline install.
-Next (phase 2): saving (folder and zip), PhotoRec guide, privacy page.
+Done: folder picking, scanning in a background worker, cleanup rules, the cleanup results screen, the review timeline ("Choose what to save": photos and videos by year, month and day, everything selected to start), saving (new copies in a folder, or zip downloads) with a receipt, offline install.
+Next (phase 2): PhotoRec guide, privacy page.
 
 ## Run it
 
@@ -69,6 +69,22 @@ HEIC and AVIF are recognised by the 'ftyp' box: its main brand, or, when that br
 
 HEIC camera details and dates are read from the Exif item wherever the file's 'iloc' table says it is, so they're found even when the Exif block sits after megabytes of picture data.
 
+## How saving works
+
+Saving makes new copies; the recovery folder is only ever read.
+
+```
+Keepsake photos/2024/06 June/2024-06-28 14.32.jpg
+Keepsake photos/2024/06 June/2024-06-28 14.32 (2).jpg   (same minute; numbered oldest first)
+Keepsake photos/No date/f12345678.jpg                   (original name)
+```
+
+- **Chrome and Edge** (`showDirectoryPicker`): you choose a folder and Keepsake writes into `<folder>/Keepsake photos/`. If that folder already exists it's added to: names already there are skipped (" (2)", " (3)"), and every name is checked on disk again just before it's created, so nothing is ever overwritten. Files are copied in 8 MB slices. A folder that is the recovery folder or inside it is refused (checked with `FileSystemDirectoryHandle.resolve`).
+- **Safari and Firefox**: zip downloads with the same layout inside, each under 2 GB (and under 65,000 files), named `Keepsake photos 1 of 5.zip` and so on. The zip writer (`src/ui/zip.ts`) is our own, store-only (photos don't compress), and builds each zip as a Blob of small headers around the original File objects, so photos are never copied into memory; only the CRC-32 reads them, in a worker. ZIP64 fields are written only for a file of 4 GiB or more.
+- A file that can't be read is skipped and counted under "Couldn't save"; saving goes on. A full drive (`QuotaExceededError`), lost permission (`NotAllowedError`) or any other write error stops saving and says how many were saved; "Save the rest" carries on with the files not yet saved. Stop takes effect within one 8 MB slice and leaves no partial file.
+- The one thing the app ever removes: an empty file it created a moment earlier for a copy that then failed or was stopped (the File System Access API creates the file before any bytes arrive).
+- The receipt can be saved as a small `.txt` (made on this computer) or printed.
+
 ## Known gaps
 
 - HEIC is tested on files encoded by libheif in an iPhone-like layout (tiles, thumbnail, Exif item), on real PhotoRec 7.1 output of those files, and on real phone photos from a public sample collection (iPhone 8, iPhone 11 Pro and Samsung Galaxy S10+ HEIC, plus iPhone and Samsung JPEGs and videos; see `tests/real-phones/`). It's not yet tested on PhotoRec output of real phone photos.
@@ -77,6 +93,8 @@ HEIC camera details and dates are read from the Exif item wherever the file's 'i
 - The review timeline only draws the days near the screen (placeholders hold the rest), so it stays light on 40,000 files; this is tested with unit tests and the 363-file fixture, not yet in a browser with 40,000 real files.
 - Files over 64 MB are compared for copies by sampling the start and end, which could rarely mark two different videos as copies.
 - Stopping a scan waits for the file currently being read.
+- Saving: a browser can't tell how much free space a chosen folder (or Downloads) has, so the app says how much is needed and handles a full drive when it happens. It also can't open the saved folder in File Explorer or Finder (no API; picked folders don't expose their path, and `file://` links are blocked), so the done screen names the folder instead. A zip is "saved" once it's handed to the browser's downloads; the app can't see whether the download finished, so the done screen offers each zip again. A single file over 2 GB makes its zip bigger than 2 GB.
+- Saving to a real folder is tested in Chromium against the origin-private file system (the e2e replaces the folder picker) and in unit tests against an in-memory folder, not yet by hand on Windows or macOS folders or USB drives.
 
 ## The team
 

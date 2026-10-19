@@ -1,7 +1,9 @@
 // End-to-end check of the built app in a real browser.
 // Usage: npm run build && node scripts/e2e.mjs [chromiumPath]
-import { spawn } from 'node:child_process';
-import { mkdirSync } from 'node:fs';
+import { execFileSync, spawn } from 'node:child_process';
+import { mkdirSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { join } from 'node:path';
 import { chromium } from 'playwright';
 
 const exe = process.argv[2] || process.env.CHROMIUM_PATH;
@@ -104,9 +106,101 @@ async function checkTimeline(page, label, keptOnResults) {
   expect(s.selected === s.total - 1, 'selection lost after going back to Clean up');
 
   await page.locator('.tl-save:visible').click();
+  await page.getByRole('heading', { level: 1, name: /Where should we save/ }).waitFor();
   const h = await page.locator('h1').innerText();
   expect(num(h) === s.selected, `save step got ${h}, expected ${s.selected}`);
-  await page.getByRole('button', { name: 'Back to choosing' }).click();
+  const onLedger = num(await page.locator('dl.ledger dd[data-k=selected]').innerText());
+  expect(onLedger === s.selected, `save ledger says ${onLedger} selected, timeline said ${s.selected}`);
+  return s.selected;
+}
+
+/** The receipt: Saved matches what was selected, nothing failed; returns the saved count. */
+async function checkReceipt(page, label, selected) {
+  await page.getByRole('heading', { level: 1, name: /saved\./ }).waitFor({ timeout: 120_000 });
+  const saved = num(await page.locator('dd[data-k=saved]').innerText());
+  const failed = num(await page.locator('dd[data-k=failed]').innerText());
+  console.log(`[${label}] receipt: ${saved} saved, ${failed} couldn't save (selected ${selected})`);
+  if (saved !== selected || failed !== 0) problems.push(`[${label}] receipt says ${saved} saved + ${failed} failed, but ${selected} were selected`);
+  const header = await page.locator('.step-line').innerText();
+  if (header !== 'Done') problems.push(`[${label}] header on the receipt says "${header}"`);
+  // "Save receipt" downloads a small text file with the same numbers.
+  const [dl] = await Promise.all([page.waitForEvent('download'), page.getByRole('button', { name: 'Save receipt' }).click()]);
+  const txt = readFileSync(await dl.path(), 'utf8');
+  if (!new RegExp(`Saved\\s+${saved.toLocaleString('en')} `).test(txt)) problems.push(`[${label}] receipt file does not say ${saved} saved:\n${txt}`);
+  if (!/Recovery folder\s+Untouched/.test(txt)) problems.push(`[${label}] receipt file has no recovery-folder line`);
+  return saved;
+}
+
+/** Chromium: save into a folder. The picker is replaced by a folder in the origin-private file system (OPFS). */
+async function saveToFolder(page, label, selected) {
+  await page.evaluate(async () => {
+    const root = await navigator.storage.getDirectory();
+    for await (const k of root.keys()) await root.removeEntry(k, { recursive: true });
+    const picked = await root.getDirectoryHandle('Pictures', { create: true });
+    // A "Keepsake photos" folder that's already there: it must be added to, and this file left alone.
+    const old = await picked.getDirectoryHandle('Keepsake photos', { create: true });
+    const w = await (await old.getFileHandle('keep-me.txt', { create: true })).createWritable();
+    await w.write('mine');
+    await w.close();
+    window.showDirectoryPicker = async () => picked;
+  });
+  await page.screenshot({ path: `${out}/${label}-6-choose.png`, fullPage: true });
+  await checkNoSideScroll(page, label, 'choose where to save');
+  await page.getByRole('button', { name: 'Choose a folder' }).click();
+  const saved = await checkReceipt(page, label, selected);
+  const disk = await page.evaluate(async () => {
+    const files = [];
+    const walk = async (d, path) => {
+      for await (const [name, h] of d.entries()) {
+        if (h.kind === 'directory') await walk(h, `${path}${name}/`);
+        else files.push({ path: `${path}${name}`, size: (await h.getFile()).size, text: name === 'keep-me.txt' ? await (await h.getFile()).text() : undefined });
+      }
+    };
+    await walk(await (await navigator.storage.getDirectory()).getDirectoryHandle('Pictures'), '');
+    return files;
+  });
+  const copies = disk.filter((f) => f.path !== 'Keepsake photos/keep-me.txt');
+  const keep = disk.find((f) => f.path === 'Keepsake photos/keep-me.txt');
+  console.log(`[${label}] folder: ${copies.length} copies written, e.g. ${copies.slice(0, 3).map((f) => f.path).join(' | ')}`);
+  if (copies.length !== saved) problems.push(`[${label}] ${copies.length} files in the folder, receipt says ${saved}`);
+  if (keep?.text !== 'mine') problems.push(`[${label}] the existing file in Keepsake photos was changed or removed`);
+  const bad = copies.filter((f) => !/^Keepsake photos\/(\d{4}\/\d{2} [A-Z][a-z]+\/\d{4}-\d{2}-\d{2} \d{2}\.\d{2}( \(\d+\))?\.[a-z0-9]+|No date\/[^/]+)$/.test(f.path));
+  if (bad.length) problems.push(`[${label}] badly named copies: ${bad.slice(0, 5).map((f) => f.path).join(', ')}`);
+  if (copies.some((f) => f.size === 0)) problems.push(`[${label}] empty copies in the folder`);
+  const find = await page.locator('[data-k=find]').innerText();
+  if (!find.includes('Pictures › Keepsake photos')) problems.push(`[${label}] done screen doesn't say where the photos are ("${find}")`);
+  await page.screenshot({ path: `${out}/${label}-7-done.png`, fullPage: true });
+  await checkNoSideScroll(page, label, 'done');
+}
+
+/** Safari/Firefox path (no folder picker): zip downloads, checked with unzip -t. */
+async function saveAsZip(page, label, selected) {
+  await page.screenshot({ path: `${out}/${label}-6-choose-zip.png`, fullPage: true });
+  await checkNoSideScroll(page, label, 'choose (zip)');
+  const dir = mkdtempSync(join(tmpdir(), 'keepsake-e2e-zip-'));
+  const zips = [];
+  const saving = [];
+  page.on('download', (d) => { if (d.suggestedFilename().endsWith('.zip')) saving.push(d.saveAs(join(dir, d.suggestedFilename())).then(() => zips.push(d.suggestedFilename()))); });
+  try {
+    await page.getByRole('button', { name: /^Download (zip file|\d+ zip files)$/ }).click();
+    const saved = await checkReceipt(page, label, selected);
+    await Promise.all(saving);
+    let entries = 0;
+    for (const z of zips) {
+      const test = execFileSync('unzip', ['-t', join(dir, z)]).toString();
+      if (!/No errors detected/.test(test)) problems.push(`[${label}] ${z} failed unzip -t`);
+      const names = execFileSync('unzip', ['-Z1', join(dir, z)]).toString().trim().split('\n');
+      if (names.some((n) => !n.startsWith('Keepsake photos/'))) problems.push(`[${label}] ${z} has files outside Keepsake photos/`);
+      entries += names.length;
+    }
+    console.log(`[${label}] zip: ${zips.join(', ')}: ${entries} files, unzip -t OK`);
+    if (!zips.length) problems.push(`[${label}] no zip downloaded`);
+    if (entries !== saved) problems.push(`[${label}] zips hold ${entries} files, receipt says ${saved}`);
+    await page.screenshot({ path: `${out}/${label}-7-done-zip.png`, fullPage: true });
+    await checkNoSideScroll(page, label, 'done (zip)');
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
 }
 
 const browser = await chromium.launch({ executablePath: exe });
@@ -137,6 +231,8 @@ try {
     await page.getByRole('heading', { level: 1, name: /Checking your files|Looking for exact copies/ }).waitFor({ timeout: 10_000 }).catch(() => {});
     await page.screenshot({ path: `${out}/${label}-1b-scanning.png` }).catch(() => {});
     await page.getByText('Files checked').waitFor({ timeout: 120_000 });
+    // The scan used the file-input fallback; from here on the desktop run has a folder picker (see saveToFolder).
+    if (label === 'desktop') await page.evaluate(() => { window.showDirectoryPicker = async () => { throw new DOMException('stub', 'AbortError'); }; });
     console.log(`[${label}] scan + render: ${((Date.now() - t0) / 1000).toFixed(1)}s`);
     await page.waitForTimeout(800); // let previews decode
     console.log(`[${label}] heading: ${await page.locator('h1').innerText()}`);
@@ -161,7 +257,9 @@ try {
     await page.waitForTimeout(500);
     await page.screenshot({ path: `${out}/${label}-4-review.png`, fullPage: true });
     await checkNoSideScroll(page, label, 'review');
-    await checkTimeline(page, label, keptOnResults);
+    const selected = await checkTimeline(page, label, keptOnResults);
+    if (label === 'desktop') await saveToFolder(page, label, selected);
+    else await saveAsZip(page, label, selected);
     await page.close();
   }
 } finally {

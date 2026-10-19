@@ -227,11 +227,132 @@ export const copy = {
     back: 'Back to Clean up',
   },
 
+  // Save step (T25). Source: team/brand/quiet-prints/EX-choose and EX-done (.dc.html), strings from
+  // team/content/review-export-copy.md sections 4 to 7 (T22). "new, not in T22" = needs UX writer review.
   save: {
-    // Placeholder until the export step (T25) is built.
-    title: (x: number) => `Ready to save ${n(x)} ${plural(x, 'file', 'files')}`,
-    body: 'Saving to a new folder is coming in the next version. Nothing has been changed.',
-    back: 'Back to choosing',
+    // Folder and file names on the person's disk (D15 may rename "Keepsake photos").
+    rootFolder: 'Keepsake photos',
+    noDateFolder: 'No date',
+    /** '06' → '06 June' */
+    monthFolder: (mo: string) => `${mo} ${MONTHS[Number(mo) - 1]}`,
+    zipName: (i: number, total: number) => (total === 1 ? 'Keepsake photos.zip' : `Keepsake photos ${i} of ${total}.zip`),
+    receiptFile: 'Keepsake receipt.txt', // new, not in T22
+    /** "photos and videos", or "files" when the selection has files that are neither. */
+    what: (x: number, mediaOnly: boolean) => (mediaOnly ? plural(x, 'photo or video', 'photos and videos') : plural(x, 'file', 'files')),
+
+    // Choose where to save
+    titleBefore: 'Where should we save your ',
+    titleAfter: (x: number, mediaOnly: boolean) => ` ${mediaOnly ? plural(x, 'photo or video', 'photos and videos') : plural(x, 'file', 'files')}?`,
+    ledgerLabel: 'What will be saved',
+    ledgerSelected: 'Selected to save',
+    ledgerSize: 'Total size',
+    needSpace: (size: string) => `You’ll need at least ${size} of free space.`,
+    newCopies: 'We save new copies. Your recovery folder stays exactly as it was.',
+    folderH: 'Save to a folder',
+    folderBody: 'Choose a folder or make a new one, for example in Pictures. We’ll put a folder called Keepsake photos inside it. Anything already there stays as it is.',
+    notTheCard: 'Choose a place on this computer or on another drive. Don’t save onto the memory card your photos came from.',
+    chooseFolder: 'Choose a folder',
+    browserNote: (parts: number) =>
+      parts === 1
+        ? 'In Safari and Firefox, your photos and videos download as a zip file instead, under 2 GB.'
+        : `In Safari and Firefox, your photos and videos download as ${n(parts)} zip files instead, each under 2 GB.`,
+    zipH: 'Download as zip files',
+    zipBody: (x: number, mediaOnly: boolean, parts: number) =>
+      `This browser can’t save straight into a folder. So your ${n(x)} ${mediaOnly ? plural(x, 'photo or video', 'photos and videos') : plural(x, 'file', 'files')} ${
+        parts === 1 ? 'come as a zip file, under 2 GB' : `come as ${n(parts)} zip files, each under 2 GB`
+      }. They go to your Downloads folder. Open each one to see your photos, sorted the same way.`,
+    /** A file over 2 GB on its own (a long video) makes its zip bigger than that. New, not in T22. */
+    zipBigFile: 'One of your videos is bigger than 2 GB, so its zip file will be too.',
+    zipAllowTip: 'Your browser may ask if Keepsake can download several files. Choose Allow.',
+    zipChromeTip: 'To save straight into a folder, open Keepsake in Chrome or Edge.',
+    downloadZips: (parts: number) => (parts === 1 ? 'Download zip file' : `Download ${n(parts)} zip files`),
+    treeH: 'How your folder will look',
+    treeLabel: 'Example of how your folder will look',
+    /** The example in "How your folder will look" (made-up dates). */
+    treeExample: { year: '2024', month: '06', files: ['2024-06-28 14.32.jpg', '2024-06-28 14.32 (2).jpg'] },
+    treeCaption:'A folder for each year and month, and one called No date. Each file is named by the date and time it was taken. If two have the same time, the second gets (2) at the end.',
+    back: 'Back to review',
+
+    // Problems before saving starts
+    deniedH: 'Keepsake can’t save to that folder.',
+    deniedBody: 'Your browser didn’t allow it, or the folder is protected. Nothing was saved there, and nothing was deleted. Try a folder in Pictures or Documents.',
+    chooseDifferent: 'Choose a different folder',
+    recoveryH: 'That’s your recovery folder.',
+    recoveryBody: 'To keep it exactly as it was, Keepsake won’t save there. Please choose a different folder.',
+    // T22 proposed a new "Keepsake photos (2)" folder; T25 adds to the existing one instead. New, needs UX writer review.
+    existsNote: 'This folder already has a Keepsake photos folder. We’ll add your photos to it. Nothing already in it changes.',
+
+    // Saving
+    savingH: 'Saving your photos and videos…',
+    progress: (done: number, total: number) => `Saved ${n(done)} of ${n(total)}`,
+    zipProgress: (i: number, parts: number) => `Making zip file ${n(i)} of ${n(parts)}…`,
+    reassure: 'This happens on your computer. Nothing is uploaded, and your recovery folder isn’t changed.',
+    keepOpen: 'Keep this tab open until it’s done. If you can, keep the computer plugged in so it doesn’t go to sleep.',
+    stop: 'Stop saving',
+    stopping: 'Stopping…',
+    announce: (done: number, total: number) => `Saved ${n(done)} of ${n(total)}.`,
+
+    // Stopped and problems while saving
+    stoppedH: 'Saving stopped.',
+    stoppedBody: (done: number, total: number, mediaOnly: boolean, zip: boolean) =>
+      `${n(done)} of ${n(total)} ${mediaOnly ? 'photos and videos' : 'files'} ${done === 1 ? 'was' : 'were'} saved ${
+        zip ? 'in zip files in your Downloads folder' : 'to Keepsake photos'
+      }. Nothing was deleted. You can save the rest any time.`,
+    saveRest: 'Save the rest',
+    backToReview: 'Back to review',
+    fullH: 'The drive is full.',
+    fullBody: (done: number, total: number, mediaOnly: boolean, remaining: string) =>
+      `We saved ${n(done)} of ${n(total)} ${mediaOnly ? 'photos and videos' : 'files'} before it ran out of space. They’re in Keepsake photos. Nothing was deleted, and your recovery folder is fine. Make some space, or choose a different drive, then try again. You need about ${remaining} more.`,
+    brokenH: 'Saving stopped partway.',
+    brokenBody: (done: number, total: number, mediaOnly: boolean) =>
+      `We saved ${n(done)} of ${n(total)} ${mediaOnly ? 'photos and videos' : 'files'} before something went wrong. They’re in Keepsake photos. Nothing was deleted, and your recovery folder is fine. If you’re saving to a USB drive, check that it’s still plugged in, then try again.`,
+    lostH: 'Keepsake can’t save to that folder anymore.',
+    lostBody: (done: number, total: number, mediaOnly: boolean) =>
+      `We saved ${n(done)} of ${n(total)} ${mediaOnly ? 'photos and videos' : 'files'}. Nothing was deleted. Choose the folder again to save the rest.`,
+    chooseAgain: 'Choose the folder again',
+
+    // Done
+    doneStep: 'Done',
+    doneBefore: 'Your ',
+    doneAfter: (x: number, mediaOnly: boolean) =>
+      ` ${mediaOnly ? plural(x, 'photo or video is', 'photos and videos are') : plural(x, 'file is', 'files are')} saved.`,
+    partBefore: '',
+    partAfter: (total: number, mediaOnly: boolean) => ` of your ${n(total)} ${mediaOnly ? 'photos and videos' : 'files'} are saved.`,
+    failedLine: (x: number) => `${n(x)} ${plural(x, 'file', 'files')} couldn’t be copied. They may be damaged. They’re still in your recovery folder, so nothing is lost.`,
+    doneLine: 'They’re in Keepsake photos, sorted into a folder for each year and month.',
+    doneZipLine: (parts: number) =>
+      parts === 1
+        ? 'They’re in a zip file in your Downloads folder. Open it to see your photos, sorted into a folder for each year and month.'
+        : `They’re in ${n(parts)} zip files in your Downloads folder. Open each one to see your photos, sorted into a folder for each year and month.`,
+    /** Browsers can't open a folder in File Explorer or Finder (T25 finding), so say where it is. */
+    findThem: (folder: string) => `Find them in ${folder} › Keepsake photos`,
+    findZip: (parts: number) =>
+      parts === 1 ? 'Find it in Downloads: Keepsake photos.zip' : `Find them in Downloads: Keepsake photos 1 of ${n(parts)}.zip to ${n(parts)} of ${n(parts)}.zip`,
+    closeNow: 'You can close Keepsake now. There’s nothing else to do.',
+    secondCopy: 'If you can, keep a second copy too, on a USB drive or a backup you already use.',
+    receiptH: 'Your receipt',
+    rSaved: 'Saved',
+    rSavedValue: (x: number, mediaOnly: boolean) => `${n(x)} ${mediaOnly ? plural(x, 'photo or video', 'photos and videos') : plural(x, 'file', 'files')}`,
+    rFailed: 'Couldn’t save',
+    rSavedTo: 'Saved to',
+    rSavedToFolder: (folder: string) => `${folder} › Keepsake photos`,
+    rSavedToZip: (parts: number) => `Downloads, ${n(parts)} zip ${plural(parts, 'file', 'files')}`,
+    rSorted: 'Sorted into',
+    rSortedValue: (years: number, months: number, noDate: number) => {
+      const dated = years ? `${n(years)} ${plural(years, 'year', 'years')}, ${n(months)} ${plural(months, 'month', 'months')}` : '';
+      return dated && noDate ? `${dated}, plus No date (${n(noDate)})` : dated || `No date (${n(noDate)})`;
+    },
+    rRecovery: 'Recovery folder',
+    rRecoveryValue: 'Untouched',
+    receiptNote: 'Save or print this so you can find your photos later.',
+    saveReceipt: 'Save receipt',
+    print: 'Print',
+    seeWhich: 'See which ones',
+    failedListLabel: 'Files that couldn’t be saved, by where they are in your recovery folder', // new, not in T22
+    zipAgainNote: 'If a zip file didn’t download, download it again here. Your photos are fine, and nothing was deleted.', // adapted from T22 section 6
+    zipAgain: (i: number, parts: number) => (parts === 1 ? 'Download zip file again' : `Download zip file ${n(i)} of ${n(parts)} again`),
+    /** "16 October 2026, 16:05" (this computer's clock) */
+    when: (d: Date) => `${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear()}, ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`,
   },
 
   review: {

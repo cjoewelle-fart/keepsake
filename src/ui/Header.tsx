@@ -1,7 +1,7 @@
 import { copy } from './copy';
 
-/** current = index into copy.steps (0 = Recover). */
-export function Header({ current }: { current: number }) {
+/** current = index into copy.steps (0 = Recover). `done`: the receipt screen, which says "Done". */
+export function Header({ current, done }: { current: number; done?: boolean }) {
   return (
     <header className="topbar">
       <div className="brand">
@@ -12,7 +12,7 @@ export function Header({ current }: { current: number }) {
         </svg>
         <span>{copy.appName}</span>
       </div>
-      <p className="step-line">{copy.stepOf(current, copy.steps.length, copy.steps[current])}</p>
+      <p className="step-line">{done ? copy.save.doneStep : copy.stepOf(current, copy.steps.length, copy.steps[current])}</p>
     </header>
   );
 }

@@ -92,7 +92,7 @@ export function Results({ records, files, movedBack, onToggleGroup, onReview, on
         <div className="cta">
           {s.keep > 0 && (
             <>
-              <button type="button" className="btn btn-primary btn-lg" onClick={onReview}>{r.review(s.keep, s.others === 0)}</button>
+              <button type="button" className="btn btn-primary" onClick={onReview}>{r.review(s.keep, s.others === 0)}</button>
               <span className="sub-sm">{r.takeYourTime}</span>
             </>
           )}

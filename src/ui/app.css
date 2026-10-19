@@ -20,6 +20,17 @@
   --shadow: 0 1px 2px rgba(31, 36, 39, 0.12), 0 6px 16px rgba(31, 36, 39, 0.08);
   --display: 'Bricolage Grotesque Variable', 'Atkinson Hyperlegible', system-ui, sans-serif;
   --body: 'Atkinson Hyperlegible', system-ui, sans-serif;
+  /* Type rule (T20, owner-approved 2026-10-19): bold only for things you read (big numbers,
+     headings, day labels, ledger numbers). Controls are regular weight at 15px; the primary
+     button is 16px bold, 48px tall, fully rounded and the only filled teal control. */
+  --text-small: 15px;       /* small grey text */
+  --control-text: 15px;     /* pills, filters, text links, secondary buttons */
+  --primary-text: 16px;
+  --primary-h: 48px;
+  --control-h: 44px;
+  --pill-h: 36px;           /* filters and month pills on desktop; 44px on phones and touch */
+  --pill-on-bg: var(--tint);
+  --pill-on-ink: var(--accent-deep);
   color-scheme: light;
 }
 
@@ -50,22 +61,23 @@ a:hover { color: var(--accent-hover); }
 .page { max-width: 1180px; margin: 0 auto; padding: 24px 24px 72px; }
 .page.narrow { max-width: 680px; display: flex; flex-direction: column; gap: 22px; }
 .lede { font-size: 18px; color: var(--muted); max-width: 640px; }
-.sub { color: var(--muted); font-size: 16px; }
-.sub-sm { color: var(--muted); font-size: 15px; }
+.sub { color: var(--muted); font-size: var(--text-small); }
+.sub-sm { color: var(--muted); font-size: var(--text-small); }
 .actions { display: flex; flex-wrap: wrap; gap: 12px; }
 .note-box { background: var(--tint-2); color: var(--accent-deep); border-radius: 12px; padding: 12px 16px; font-size: 16px; }
 
-/* Buttons: pills, 44px and up */
-.btn { min-height: 48px; padding: 0 22px; border-radius: 999px; font-size: 17px; font-weight: 700; cursor: pointer; border: 1px solid transparent; }
-.btn-lg { min-height: 54px; padding: 0 28px; }
-.btn-sm { min-height: 44px; padding: 0 18px; font-size: 15px; align-self: flex-start; }
+/* Buttons: pills, 44px and up. Controls are regular weight; only the primary is bold and filled. */
+.btn { min-height: var(--control-h); padding: 0 18px; border-radius: 999px; font-size: var(--control-text); font-weight: 400; cursor: pointer; border: 1px solid transparent; }
+/* The start and scanning screens keep their larger buttons (not part of the T20 revision). */
+.btn-lg { min-height: 54px; padding: 0 28px; font-size: 17px; font-weight: 700; }
+.btn-sm { min-height: var(--control-h); padding: 0 18px; font-size: var(--control-text); align-self: flex-start; }
 .btn-block { width: 100%; }
-.btn-primary { background: var(--accent); color: #FFFFFF; }
+.btn-primary { min-height: var(--primary-h); padding: 0 24px; font-size: var(--primary-text); font-weight: 700; background: var(--accent); color: #FFFFFF; border: 0; }
 .btn-primary:hover { background: var(--accent-hover); }
 .btn-secondary { background: var(--surface); color: var(--ink); border-color: var(--control-edge); }
 .btn-secondary:hover { background: var(--surface-2); border-color: var(--ink); }
 .btn-secondary:disabled { cursor: default; color: var(--muted); }
-.btn-link { min-height: 44px; padding: 0; background: transparent; color: var(--accent); font-weight: 400; font-size: 16px; text-decoration: underline; text-underline-offset: 3px; border-radius: 4px; }
+.btn-link { min-height: var(--control-h); padding: 0; background: transparent; color: var(--accent); font-weight: 400; font-size: var(--control-text); text-decoration: underline; text-underline-offset: 3px; border-radius: 4px; }
 .btn-link:hover { color: var(--accent-hover); }
 
 /* Fanned prints (decorative, start and scanning) */
@@ -117,9 +129,11 @@ progress::-moz-progress-bar { background: var(--accent); border-radius: 999px; }
 .sheet-col { display: flex; flex-direction: column; gap: 52px; min-width: 0; }
 .sheet { display: flex; flex-direction: column; gap: 22px; }
 .chips { display: flex; flex-wrap: wrap; gap: 8px; }
-.chip { min-height: 44px; padding: 0 18px; border-radius: 999px; border: 1px solid transparent; background: var(--surface); color: var(--ink); font-weight: 700; cursor: pointer; }
+.chip { min-height: var(--control-h); padding: 0 16px; border-radius: 999px; border: 1px solid transparent; background: var(--surface); color: var(--ink); font-weight: 400; font-size: var(--control-text); cursor: pointer; }
 .chip:hover { border-color: var(--control-edge); }
-.chip[aria-pressed='true'] { background: var(--accent); color: #FFFFFF; }
+/* The chosen pill is tinted with a teal edge, not filled: the primary button is the only filled teal control. */
+.chip[aria-pressed='true'], .chip[aria-current='true'] { background: var(--pill-on-bg); color: var(--pill-on-ink); border-color: var(--accent); }
+.chip-sm { min-height: var(--pill-h); padding: 0 12px; }
 .months { display: flex; flex-direction: column; gap: 22px; }
 .month { display: flex; flex-direction: column; gap: 12px; }
 .month-h { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 10px; scroll-margin-top: 16px; }
@@ -132,7 +146,7 @@ progress::-moz-progress-bar { background: var(--accent); border-radius: 999px; }
 .print-more { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-height: 44px; padding: 8px; border: 0; background: var(--surface); color: var(--accent); text-align: center; cursor: pointer; box-shadow: none; }
 .print-more:hover { background: var(--tint-2); }
 .print-more b { font-size: 20px; line-height: 1.2; }
-.print-more span { font-size: 14px; line-height: 1.3; }
+.print-more span { font-size: var(--control-text); line-height: 1.3; }
 
 /* Previews (shared) */
 .tile { background: var(--blank); overflow: hidden; display: flex; align-items: center; justify-content: center; }
@@ -156,9 +170,9 @@ progress::-moz-progress-bar { background: var(--accent); border-radius: 999px; }
 .swatch { width: 12px; height: 12px; border-radius: 3px; flex: none; }
 .samples { display: flex; gap: 4px; flex: none; }
 .group-text { flex: 1; min-width: 0; display: flex; flex-direction: column; }
-.kept-note { font-size: 14px; font-weight: 700; color: var(--accent); }
+.kept-note { font-size: var(--text-small); font-weight: 700; color: var(--accent); }
 .group-count { color: var(--muted); font-variant-numeric: tabular-nums; }
-.group-toggle { color: var(--accent); font-weight: 700; font-size: 15px; min-width: 40px; text-align: right; }
+.group-toggle { color: var(--accent); font-weight: 400; font-size: var(--control-text); min-width: 40px; text-align: right; }
 .group-body { padding: 0 0 16px 26px; display: flex; flex-direction: column; gap: 10px; color: var(--ink-soft); font-size: 16px; }
 .group-body[hidden] { display: none; }
 
@@ -174,21 +188,14 @@ progress::-moz-progress-bar { background: var(--accent); border-radius: 999px; }
    Text sizes follow the 2026-10-19 type hierarchy; final polish waits for the T20 revision. */
 .tl-selected-word { display: block; font-size: 20px; font-weight: 700; color: var(--accent); }
 .ledger .ledger-plain { border-top: 0; }
-.tl-save { min-height: 48px; padding: 0 24px; font-size: 16px; }
 .tl-save[aria-disabled='true'] { background: var(--rule); color: var(--ink-soft); cursor: not-allowed; }
 .tl-bulk { display: flex; flex-wrap: wrap; gap: 4px 18px; }
-.tl-bulk .btn-link { font-size: 15px; }
 .tl-col { gap: 40px; }
 .tl-tools { display: flex; flex-direction: column; gap: 10px; padding: 12px 0; background: var(--bg); z-index: 2; }
 .tl-tools-row { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px; }
-.timeline .chip { font-weight: 400; font-size: 15px; padding: 0 16px; }
-.timeline .chip[aria-current='true'] { background: var(--accent); color: #FFFFFF; }
-.timeline .chip-sm { padding: 0 12px; }
-.tl-months-pills .chip[aria-current='true'] { background: var(--tint); color: var(--accent-deep); }
 .tl-filter { display: flex; flex-wrap: wrap; gap: 4px; padding: 4px; border-radius: 999px; background: var(--surface); }
-.tl-filter .chip { min-height: 40px; }
 .tl-month-select { display: none; flex-direction: column; gap: 4px; font-size: 15px; color: var(--muted); width: 100%; }
-.tl-month-select select { min-height: 44px; padding: 0 12px; border-radius: 12px; border: 1px solid var(--control-edge); background: var(--surface); color: var(--ink); font: inherit; font-size: 16px; }
+.tl-month-select select { min-height: 44px; padding: 0 12px; border-radius: 12px; border: 1px solid var(--control-edge); background: var(--surface); color: var(--ink); font: inherit; font-size: var(--control-text); }
 .tl-month { gap: 18px; }
 .tl-month-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px; }
 .tl-month .month-h { font-size: 24px; scroll-margin-top: 16px; }
@@ -196,7 +203,7 @@ progress::-moz-progress-bar { background: var(--accent); border-radius: 999px; }
 .tl-day { display: flex; flex-direction: column; gap: 10px; }
 .tl-day-h { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; min-height: 44px; font-weight: 700; cursor: pointer; }
 .tl-day-h input { width: 22px; height: 22px; margin: 0 4px 0 0; accent-color: var(--accent); cursor: pointer; }
-.tl-day-count { font-weight: 400; color: var(--muted); font-size: 15px; }
+.tl-day-count { font-weight: 400; color: var(--muted); font-size: var(--text-small); }
 .tl-grid { display: grid; grid-template-columns: repeat(var(--cols, 6), minmax(0, 1fr)); gap: var(--gap, 12px); }
 .tl-tile.off { box-shadow: none; outline: 2px dashed var(--control-edge); outline-offset: -2px; }
 .tl-tile.off .tile { opacity: 0.55; }
@@ -241,6 +248,58 @@ progress::-moz-progress-bar { background: var(--accent); border-radius: 999px; }
   .vid { right: 6px; bottom: 6px; padding: 4px 6px; }
   .dot { width: 24px; height: 24px; }
   .fan { transform: scale(0.9); transform-origin: left top; height: 136px; }
+}
+
+/* Phones and touch screens: every pill is 44px tall. */
+@media (max-width: 959px), (pointer: coarse) {
+  .chip-sm { min-height: var(--control-h); }
+}
+
+/* Save (T25). Source: team/brand/quiet-prints/EX-choose.dc.html and EX-done.dc.html. */
+.accent-num { color: var(--accent); }
+.save .envelope h1 { font-weight: 800; font-size: clamp(30px, 4.6vw, 36px); line-height: 1.1; }
+.save-col { gap: 24px; }
+.card { background: var(--surface); border-radius: 20px; padding: 28px; display: flex; flex-direction: column; gap: 14px; box-shadow: 0 1px 2px rgba(31, 36, 39, 0.08); }
+.card h2 { font-size: 24px; }
+.card-body { color: var(--ink-soft); }
+.card-quiet { background: var(--surface-2); border: 1px solid var(--rule-soft); box-shadow: none; }
+.card-quiet h2 { font-size: 22px; }
+.card-problem { background: var(--tint-2); box-shadow: none; }
+.tree { list-style: none; margin: 0; padding: 0; font-size: 16px; font-variant-numeric: tabular-nums; display: flex; flex-direction: column; gap: 6px; }
+.tree li { display: flex; align-items: center; gap: 10px; min-width: 0; overflow-wrap: anywhere; }
+.tree-root { font-weight: 700; }
+.tree-file { color: var(--ink-soft); }
+.save-progress .note-box { margin-top: -6px; }
+.zip-again { display: flex; flex-direction: column; gap: 10px; }
+
+.done { display: flex; flex-wrap: wrap; gap: 56px; align-items: flex-start; }
+.done-side { flex: 1 1 360px; max-width: 460px; min-width: 0; display: flex; flex-direction: column; gap: 22px; }
+.done-side .fan { height: 170px; }
+.done-side h1 { font-size: clamp(30px, 4.6vw, 40px); line-height: 1.08; }
+.find { font-size: 17px; font-weight: 700; overflow-wrap: anywhere; }
+.receipt { flex: 999 1 520px; min-width: 0; background: var(--surface); border-radius: 20px; padding: 30px; display: flex; flex-direction: column; gap: 16px; box-shadow: 0 1px 2px rgba(31, 36, 39, 0.08), 0 10px 30px rgba(31, 36, 39, 0.06); }
+.receipt-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
+.receipt-head h2 { font-size: 24px; }
+.receipt-head .sub-sm { font-variant-numeric: tabular-nums; }
+.receipt-rows > div { gap: 16px; padding: 11px 0; }
+.receipt-rows dd { text-align: right; min-width: 0; overflow-wrap: anywhere; }
+.receipt-rows dd.plain { font-weight: 400; }
+.failed-list { margin: 8px 0 0; padding-left: 20px; font-size: var(--text-small); color: var(--ink-soft); max-height: 240px; overflow: auto; overflow-wrap: anywhere; }
+.failed-list[hidden] { display: none; }
+@media (max-width: 640px) {
+  .card, .receipt { padding: 22px 18px; border-radius: 16px; }
+  .done { gap: 32px; }
+}
+
+@media print {
+  .topbar, .skip, .no-print, .done-side .sub-sm { display: none !important; }
+  html, body { background: #FFFFFF; }
+  .page { padding: 0; }
+  .done { display: block; }
+  .done-side { max-width: none; margin-bottom: 24px; }
+  .receipt { box-shadow: none; border: 1px solid var(--rule); }
+  .failed-list { max-height: none; overflow: visible; }
+  .failed-list[hidden] { display: block; }
 }
 
 @media (prefers-reduced-motion: reduce) {

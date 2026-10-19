@@ -11,6 +11,7 @@ import { SAMPLES_ENABLED, loadSamples } from './sample';
 import { Header } from './ui/Header';
 import { Results } from './ui/Results';
 import { Timeline } from './ui/Timeline';
+import { Save } from './ui/Save';
 import { Selection } from './ui/timeline';
 import { copy } from './ui/copy';
 
@@ -19,7 +20,7 @@ type Screen =
   | { name: 'scanning'; progress: Progress }
   | { name: 'results' }
   | { name: 'review' }
-  /** Placeholder for the save step (T25). */
+  /** Step 5: save new copies of the selected files (T25). */
   | { name: 'save'; ids: number[] }
   | { name: 'error' };
 
@@ -37,6 +38,7 @@ export default function App() {
   const setAside = useMemo(() => summarize(records, movedBack).setAside, [records, movedBack]);
   const workerRef = useRef<{ raw: Worker; api: Comlink.Remote<ScanApi> } | null>(null);
   const headingRef = useRef<HTMLHeadingElement>(null);
+  const [saveDone, setSaveDone] = useState(false);
 
   useEffect(() => () => workerRef.current?.raw.terminate(), []);
   // Move keyboard and screen-reader focus to the new screen's heading.
@@ -106,7 +108,7 @@ export default function App() {
   return (
     <div className="app">
       <a className="skip" href="#main">{copy.skip}</a>
-      <Header current={step} />
+      <Header current={step} done={screen.name === 'save' && saveDone} />
       <div id="main" ref={headingRef}>
         {screen.name === 'start' && <Start note={screen.note} onChoose={chooseFolder} onSamples={SAMPLES_ENABLED ? trySamples : undefined} />}
         {screen.name === 'scanning' && <Scanning progress={screen.progress} onStop={() => getWorker().cancel()} />}
@@ -132,11 +134,7 @@ export default function App() {
           />
         )}
         {screen.name === 'save' && (
-          <main className="page narrow">
-            <h1 tabIndex={-1}>{copy.save.title(screen.ids.length)}</h1>
-            <p className="lede">{copy.save.body}</p>
-            <div><button type="button" className="btn btn-secondary" onClick={() => setScreen({ name: 'review' })}>{copy.save.back}</button></div>
-          </main>
+          <Save records={records} files={files} ids={screen.ids} onBack={() => setScreen({ name: 'review' })} onDone={setSaveDone} />
         )}
         {screen.name === 'error' && (
           <main className="page narrow">
