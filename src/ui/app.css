@@ -29,8 +29,8 @@
   --primary-h: 48px;
   --control-h: 44px;
   --pill-h: 36px;           /* filters and month pills on desktop; 44px on phones and touch */
-  --pill-on-bg: var(--tint);
-  --pill-on-ink: var(--accent-deep);
+  --pill-on-bg: var(--accent); /* selected pills filled teal, as in the approved TL mockups */
+  --pill-on-ink: #FFFFFF;
   color-scheme: light;
 }
 
