@@ -162,16 +162,19 @@ describe('copy check with several reads at once', () => {
     expect(seen.length).toBeLessThan(total);
   });
 
-  it('files over 64 MB are still compared by sampling the start and end', async () => {
+  it('files over 64 MB are compared in full, 1 MB at a time (T33)', async () => {
     const size = 70 * 1024 * 1024;
-    const ranges: [number, number][] = [];
-    const big = (fill: number): FileSource => ({
+    const ranges: [number, number][][] = [[], [], []];
+    const big = (i: number, fill: number): FileSource => ({
       path: 'v.mp4', size,
-      read: async (s, e) => { ranges.push([s, e]); return new Uint8Array(e - s).fill(fill); },
+      read: async (s, e) => { ranges[i].push([s, e]); return new Uint8Array(e - s).fill(fill); },
     });
     const records: FileRecord[] = [0, 1, 2].map((i) => ({ index: i, path: 'v.mp4', size, kind: 'mp4', group: 'keep', reason: 'video' }));
-    await markCopies(records, [big(1), big(1), big(2)], undefined, undefined, 4);
+    await markCopies(records, [big(0, 1), big(1, 1), big(2, 2)], undefined, undefined, 4);
     expect(records.map((r) => r.group)).toEqual(['keep', 'duplicate', 'keep']);
-    expect(ranges.every(([s, e]) => e - s === 4 * 1024 * 1024)).toBe(true);
+    expect(ranges.flat().every(([s, e]) => e - s <= 1024 * 1024)).toBe(true);
+    // The two matching files were read in full; the third only at its start and end.
+    const bytesRead = ranges.map((rs) => rs.reduce((n, [s, e]) => n + e - s, 0));
+    expect(bytesRead).toEqual([size + 2 * 1024 * 1024, size + 2 * 1024 * 1024, 2 * 1024 * 1024]);
   });
 });

@@ -2,12 +2,15 @@ import exifr from 'exifr';
 import { exifTiff, heifLayout, type Range } from './heif';
 import { PHOTO_KINDS, VIDEO_KINDS, endsCleanly, imageSize, sniff, type Kind, type SizeResult } from './sniff';
 import type { FileRecord, FileSource, Progress, Rules } from './types';
+import { Sha256 } from './sha256';
 import { videoInfo, type VideoInfo } from './video';
 import { DEFAULT_RULES } from './types';
 
 const HEAD_BYTES = 256 * 1024; // enough for photo details and the JPEG frame header
 const TAIL_BYTES = 64 * 1024; // room for phone trailers and padding after the end of the picture
-const FULL_HASH_LIMIT = 64 * 1024 * 1024; // bigger files get a sampled fingerprint
+const WHOLE_READ_LIMIT = 16 * 1024 * 1024; // copy suspects up to this size are read whole; bigger ones in pieces
+const SAMPLE_BYTES = 1024 * 1024; // start and end compared first for big copy suspects
+const SLICE_BYTES = 1024 * 1024; // piece size when reading a big file in full
 const EXIF_MAX = 1024 * 1024; // a HEIF Exif block bigger than this is ignored (real ones are a few KB)
 const HEIF_KINDS: ReadonlySet<Kind> = new Set(['heic', 'avif']);
 
@@ -138,19 +141,59 @@ export async function inspect(src: FileSource, index: number, rules: Rules = DEF
 
 const hex = (buf: ArrayBuffer) => Array.from(new Uint8Array(buf), (x) => x.toString(16).padStart(2, '0')).join('');
 
-/** Returns null if the scan was cancelled between reads. */
-async function fingerprint(src: FileSource, isCancelled?: () => boolean): Promise<string | null> {
-  if (src.size <= FULL_HASH_LIMIT) {
-    return hex(await crypto.subtle.digest('SHA-256', await src.read(0, src.size) as BufferSource));
+/**
+ * Fingerprint `src` from `start` to `end` in SLICE_BYTES pieces, so memory stays flat however
+ * big the file is, checking for Stop between pieces. Returns null if the scan was cancelled.
+ */
+async function streamHash(src: FileSource, ranges: [number, number][], isCancelled?: () => boolean): Promise<string | null> {
+  const h = new Sha256();
+  for (const [start, end] of ranges) {
+    for (let at = start; at < end; at += SLICE_BYTES) {
+      if (isCancelled?.()) return null;
+      const piece = await src.read(at, Math.min(end, at + SLICE_BYTES));
+      if (piece.length !== Math.min(end, at + SLICE_BYTES) - at) throw new Error('short read');
+      h.update(piece);
+    }
   }
-  const part = 4 * 1024 * 1024;
-  const a = await src.read(0, part);
-  if (isCancelled?.()) return null;
-  const z = await src.read(src.size - part, src.size);
-  const both = new Uint8Array(a.length + z.length);
-  both.set(a);
-  both.set(z, a.length);
-  return `${src.size}:` + hex(await crypto.subtle.digest('SHA-256', both as BufferSource));
+  return h.hex();
+}
+
+/**
+ * The cheap first look at a copy suspect. Files up to WHOLE_READ_LIMIT get their full
+ * fingerprint ('f:'); bigger ones only a fingerprint of their first and last SAMPLE_BYTES ('s:'),
+ * which can only rule copies out. Returns null if the scan was cancelled.
+ */
+async function quickPrint(src: FileSource, isCancelled?: () => boolean): Promise<string | null> {
+  if (src.size <= WHOLE_READ_LIMIT) {
+    return 'f:' + hex(await crypto.subtle.digest('SHA-256', await src.read(0, src.size) as BufferSource));
+  }
+  const p = await streamHash(src, [[0, SAMPLE_BYTES], [src.size - SAMPLE_BYTES, src.size]], isCancelled);
+  return p === null ? null : 's:' + p;
+}
+
+/** Every byte of a big file, read in pieces. Returns null if the scan was cancelled. */
+async function fullPrint(src: FileSource, isCancelled?: () => boolean): Promise<string | null> {
+  const p = await streamHash(src, [[0, src.size]], isCancelled);
+  return p === null ? null : 'f:' + p;
+}
+
+/**
+ * Run `job(0..count-1)` with at most `width` running at once. A job that returns false, or
+ * Stop, ends the run and pool returns false. (Jobs handle their own read errors.)
+ */
+async function pool(count: number, width: number, job: (i: number) => Promise<boolean>, isCancelled?: () => boolean): Promise<boolean> {
+  let next = 0;
+  let stopped = false;
+  const lane = async () => {
+    while (next < count && !stopped) {
+      if (isCancelled?.()) { stopped = true; return; }
+      const i = next++;
+      if (!(await job(i))) { stopped = true; return; }
+    }
+  };
+  const w = Math.max(1, Math.min(Math.floor(width) || 1, count));
+  await Promise.all(Array.from({ length: count ? w : 0 }, lane));
+  return !stopped && !isCancelled?.();
 }
 
 /** Higher = better original to keep among identical copies. */
@@ -160,10 +203,14 @@ const richness = (r: FileRecord) => (r.takenAt ? 2 : 0) + (r.camera ? 1 : 0);
  * Among files still in Keep, mark exact copies. Only files that share a byte size
  * with another file are fingerprinted, which skips most of the expensive reading.
  *
- * Up to `concurrency` files are fingerprinted at once (each holds at most one whole file
- * of up to 64 MB in memory while it's hashed). Fingerprints are collected first and the
- * copies are decided afterwards in file order, so the result never depends on which read
- * finished first. Cancelling stops new reads at once and marks nothing.
+ * Cheap first, thorough second: files up to 16 MB are fingerprinted whole straight away. Bigger
+ * ones (long videos) first get a fingerprint of their first and last 1 MB; only those whose
+ * sample matches another same-size file's are then read in full, 1 MB at a time, so two files
+ * are only called copies when every byte matches, without ever holding a big file in memory.
+ *
+ * Up to `concurrency` files are fingerprinted at once (each holds at most 16 MB). Fingerprints
+ * are collected first and the copies are decided afterwards in file order, so the result never
+ * depends on which read finished first. Cancelling stops new reads at once and marks nothing.
  */
 export async function markCopies(
   records: FileRecord[],
@@ -180,42 +227,74 @@ export async function markCopies(
   }
   const suspects = [...bySize.values()].filter((l) => l.length > 1);
   const queue = suspects.flat();
-  const total = queue.length;
+  const big = (r: FileRecord) => r.size > WHOLE_READ_LIMIT;
+  // A big file is two steps (sample, then maybe the full read), so the total is known up front.
+  const total = queue.length + queue.filter(big).length;
   // Fingerprint per queue position; undefined = couldn't read it (stays in Keep).
-  const prints: (string | undefined)[] = new Array(total);
-  let next = 0;
+  const prints: (string | undefined)[] = new Array(queue.length);
   let done = 0;
   let lastReport = 0;
-  let stopped = false;
-  const worker = async () => {
-    while (next < total) {
-      if (isCancelled?.()) { stopped = true; return; }
-      const i = next++;
-      try {
-        const fp = await fingerprint(sources[queue[i].index], isCancelled);
-        if (fp === null) { stopped = true; return; }
-        prints[i] = fp;
-      } catch {
-        // couldn't read it in full: leave it in Keep rather than lose the scan
-      }
-      done++;
-      const now = Date.now();
-      if (now - lastReport > 100 || done === total) {
-        lastReport = now;
-        onProgress?.({ stage: 'copies', done, total });
-      }
+  const tick = (by = 1) => {
+    done += by;
+    const now = Date.now();
+    if (now - lastReport > 100 || done === total) {
+      lastReport = now;
+      onProgress?.({ stage: 'copies', done, total });
     }
   };
-  const width = Math.max(1, Math.min(Math.floor(concurrency) || 1, total));
-  await Promise.all(Array.from({ length: total ? width : 0 }, worker));
-  if (stopped || isCancelled?.()) return;
 
+  const first = await pool(queue.length, concurrency, async (i) => {
+    let fp: string | null;
+    try {
+      fp = await quickPrint(sources[queue[i].index], isCancelled);
+    } catch {
+      tick(big(queue[i]) ? 2 : 1); // couldn't read it: it stays in Keep, and has no second step
+      return true;
+    }
+    if (fp === null) return false;
+    prints[i] = fp;
+    tick();
+    return true;
+  }, isCancelled);
+  if (!first) return;
+
+  // Big files whose start and end match another same-size file's: read them in full.
+  const again: number[] = [];
   let at = 0;
+  for (const list of suspects) {
+    const seen = new Map<string, number>();
+    for (let k = 0; k < list.length; k++) { const fp = prints[at + k]; if (fp?.startsWith('s:')) seen.set(fp, (seen.get(fp) ?? 0) + 1); }
+    for (let k = 0; k < list.length; k++) {
+      const fp = prints[at + k];
+      if (fp?.startsWith('s:')) {
+        if (seen.get(fp)! > 1) again.push(at + k); else tick(); // unique start and end: can't be a copy
+      }
+    }
+    at += list.length;
+  }
+  const second = await pool(again.length, concurrency, async (j) => {
+    const i = again[j];
+    prints[i] = undefined; // a sample alone never decides a copy
+    let fp: string | null;
+    try {
+      fp = await fullPrint(sources[queue[i].index], isCancelled);
+    } catch {
+      tick(); // couldn't read it in full: it stays in Keep
+      return true;
+    }
+    if (fp === null) return false;
+    prints[i] = fp;
+    tick();
+    return true;
+  }, isCancelled);
+  if (!second) return;
+
+  at = 0;
   for (const list of suspects) {
     const byPrint = new Map<string, FileRecord[]>();
     for (const r of list) {
       const fp = prints[at++];
-      if (fp === undefined) continue;
+      if (fp === undefined || !fp.startsWith('f:')) continue;
       const same = byPrint.get(fp);
       if (same) same.push(r); else byPrint.set(fp, [r]);
     }
@@ -235,16 +314,49 @@ export async function markCopies(
 export type ScanOptions = {
   rules?: Rules;
   onProgress?: (p: Progress) => void;
+  /** Polled often (between files, between 1 MB pieces, and on a short timer), so Stop answers fast. */
   isCancelled?: () => boolean;
   /** Files inspected at once (only the start and end of each file are read). */
   concurrency?: number;
-  /** Copy suspects fingerprinted at once; each may hold a whole file (up to 64 MB) in memory. */
+  /** Copy suspects fingerprinted at once; each holds at most 16 MB in memory. */
   copyConcurrency?: number;
 };
 
-/** Scan every file. Returns null if cancelled. Never writes anything. */
+/** How often scanAll checks for Stop while it waits on a slow read. */
+const STOP_POLL_MS = 25;
+
+/**
+ * Scan every file. Returns null if cancelled. Never writes anything.
+ *
+ * Stop answers within about STOP_POLL_MS even while a read is in flight (a slow card can take
+ * seconds for one): the scan returns null at once, and the work still running sees the flag at
+ * its next check (between files or 1 MB pieces) and ends without reporting progress.
+ */
 export async function scanAll(sources: FileSource[], opts: ScanOptions = {}): Promise<FileRecord[] | null> {
-  const { rules = DEFAULT_RULES, onProgress, isCancelled, concurrency = 6, copyConcurrency = 4 } = opts;
+  const { rules = DEFAULT_RULES, isCancelled, concurrency = 6, copyConcurrency = 4 } = opts;
+  const onProgress = opts.onProgress && ((p: Progress) => { if (!isCancelled?.()) opts.onProgress!(p); });
+  const work = scanWork(sources, rules, onProgress, isCancelled, concurrency, copyConcurrency);
+  if (!isCancelled) return work;
+  work.catch(() => {}); // if Stop wins the race, a later failure of the abandoned work isn't an error
+  let timer: ReturnType<typeof setInterval> | undefined;
+  const stopped = new Promise<null>((resolve) => {
+    timer = setInterval(() => { if (isCancelled()) resolve(null); }, STOP_POLL_MS);
+  });
+  try {
+    return await Promise.race([work, stopped]);
+  } finally {
+    clearInterval(timer);
+  }
+}
+
+async function scanWork(
+  sources: FileSource[],
+  rules: Rules,
+  onProgress: ((p: Progress) => void) | undefined,
+  isCancelled: (() => boolean) | undefined,
+  concurrency: number,
+  copyConcurrency: number,
+): Promise<FileRecord[] | null> {
   const records: FileRecord[] = new Array(sources.length);
   let next = 0;
   let done = 0;
@@ -263,6 +375,7 @@ export async function scanAll(sources: FileSource[], opts: ScanOptions = {}): Pr
       try {
         records[i] = await inspect(sources[i], i, rules);
       } catch {
+        if (isCancelled?.()) return;
         try {
           records[i] = await inspect(sources[i], i, rules); // flaky cards often succeed on a second try
         } catch {
