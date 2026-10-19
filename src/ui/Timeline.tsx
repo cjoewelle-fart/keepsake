@@ -1,7 +1,7 @@
 import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import type { CSSProperties, ReactNode } from 'react';
 import type { FileRecord } from '../engine/types';
-import { bytes, clock, copy, monthName, monthYear, n, weekdayDayMonth } from './copy';
+import { bytes, clock, copy, monthName, monthYear, n, runTime, weekdayDayMonth } from './copy';
 import { Preview } from './Preview';
 import { NO_DATE, blocksOf, buildTimeline, columnsFor, inPlay, mediaType, selectedIds, tally } from './timeline';
 import type { Block, Filter, Month, Selection, TriState } from './timeline';
@@ -301,7 +301,7 @@ function Tile({ r, file, pos, of, on, onChange }: TileProps) {
     <figure className={`print tl-tile${on ? '' : ' off'}`}>
       <Preview file={file} record={r} size="fill" />
       <label className="chk">
-        <input type="checkbox" checked={on} onChange={(e) => onChange(e.target.checked)} aria-label={t.tileLabel(type, r.takenAt, pos, of)} />
+        <input type="checkbox" checked={on} onChange={(e) => onChange(e.target.checked)} aria-label={t.tileLabel(type, r.takenAt, pos, of, r.durationSec)} />
         <span className="dot" aria-hidden="true">
           {on && <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7.2l2.6 2.6L11 4.4" stroke="#FFFFFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>}
         </span>
@@ -310,6 +310,7 @@ function Tile({ r, file, pos, of, on, onChange }: TileProps) {
       {type === 'video' && (
         <span className="vid" aria-hidden="true" title={t.video}>
           <svg width="10" height="10" viewBox="0 0 10 10"><path d="M2 1l7 4-7 4z" fill="currentColor" /></svg>
+          {r.durationSec !== undefined && <span className="vid-len">{runTime(r.durationSec)}</span>}
         </span>
       )}
     </figure>

@@ -3,7 +3,7 @@ import type { SetAsideGroup } from '../src/engine/summary';
 import { summarize } from '../src/engine/summary';
 import type { FileRecord, Group } from '../src/engine/types';
 import { NO_DATE, Selection, blocksOf, buildTimeline, columnsFor, inPlay, selectedIds, tally } from '../src/ui/timeline';
-import { bytes, copy, weekdayDayMonth } from '../src/ui/copy';
+import { bytes, copy, runTime, runTimeWords, weekdayDayMonth } from '../src/ui/copy';
 
 let i = 0;
 const rec = (takenAt: string | undefined, kind: FileRecord['kind'] = 'jpeg', group: Group = 'keep', size = 1000): FileRecord =>
@@ -136,6 +136,11 @@ describe('timeline words', () => {
     expect(copy.timeline.tileLabel('photo', '2024-06-28T09:12:00', 1, 6)).toBe('Save photo from 28 June 2024, 09:12');
     expect(copy.timeline.tileLabel('video', '2024-06-28T11:40:00', 4, 6)).toBe('Save video from 28 June 2024, 11:40');
     expect(copy.timeline.tileLabel('photo', undefined, 3, 312)).toBe('Save photo with no date (3 of 312)');
+    expect(copy.timeline.tileLabel('video', '2024-06-28T11:40:00', 4, 6, 42.4)).toBe('Save video from 28 June 2024, 11:40, 42 seconds long');
+    expect(copy.timeline.tileLabel('video', undefined, 1, 2, 65)).toBe('Save video with no date (1 of 2), 1 minute 5 seconds long');
+    expect(copy.timeline.tileLabel('photo', '2024-06-28T09:12:00', 1, 6, 9)).toBe('Save photo from 28 June 2024, 09:12');
+    expect([0.2, 42, 59.6, 600, 725, 3723, 7200].map(runTime)).toEqual(['0:01', '0:42', '1:00', '10:00', '12:05', '1:02:03', '2:00:00']);
+    expect([1, 60, 61, 3600, 3723].map(runTimeWords)).toEqual(['1 second', '1 minute', '1 minute 1 second', '1 hour', '1 hour 2 minutes']);
     expect(copy.timeline.save(0)).toBe('Save selected');
     expect(copy.timeline.save(2224)).toBe('Save 2,224 selected');
   });

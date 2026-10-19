@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
 import { inspect } from '../src/engine/scan';
-import { mvhdDate, quicktimeDate, videoDate } from '../src/engine/video';
+import { mvhdDate, mvhdDuration, quicktimeDate, videoDate, videoInfo } from '../src/engine/video';
 import type { FileSource } from '../src/engine/types';
 
 // Tiny synthetic MP4/MOV files built box by box.
@@ -205,5 +205,42 @@ describe('cut-off videos (T49)', () => {
 
   it('sets aside a fragmented MP4 cut off in a fragment', async () => {
     expect(await verdict(fragmented.slice(0, fragmented.length - 9_000))).toEqual(['damaged', 'cut-off']);
+  });
+});
+
+describe('video length', () => {
+  const t = secs1904('2017-06-01T10:00:00');
+  const info = (f: Uint8Array) => videoInfo((s, e) => Promise.resolve(f.slice(s, e)), f.length, f.slice(0, 64), NOW);
+
+  it('reads duration / timescale from version 0 and 1 mvhd', async () => {
+    expect((await info(cat(ftyp(), mdat(1000), box('moov', mvhd0(t), trak)))).durationSec).toBe(10); // 6000 / 600
+    expect((await info(cat(ftyp('qt  '), box('moov', mvhd1(t))))).durationSec).toBe(10);
+    const long = box('mvhd', new Uint8Array([1, 0, 0, 0]), be64(t), be64(t), be32(90_000), be64(90_000 * 3723), new Uint8Array(80));
+    expect((await info(cat(ftyp(), box('moov', long))))).toMatchObject({ durationSec: 3723, takenAt: '2017-06-01T10:00:00' });
+  });
+
+  it('gives no length for unknown, zero-timescale or absurd values', () => {
+    const v0 = (scale: number, dur: number) => cat(new Uint8Array(4), be32(0), be32(0), be32(scale), be32(dur));
+    expect(mvhdDuration(v0(600, 0xffffffff))).toBeUndefined();
+    expect(mvhdDuration(v0(0, 6000))).toBeUndefined();
+    expect(mvhdDuration(v0(600, 0))).toBeUndefined();
+    expect(mvhdDuration(v0(1, 30 * 24 * 3600))).toBeUndefined();
+    expect(mvhdDuration(cat(new Uint8Array([1, 0, 0, 0]), be64(0), be64(0), be32(600), new Uint8Array(8).fill(0xff)))).toBeUndefined();
+    expect(mvhdDuration(v0(600, 6000).slice(0, 18))).toBeUndefined();
+    expect(mvhdDuration(v0(1000, 42_500))).toBe(42.5);
+  });
+
+  it('uses mehd for a fragmented MP4 whose mvhd says 0', async () => {
+    const mvhdNoLen = box('mvhd', new Uint8Array(4), be32(t), be32(t), be32(1000), be32(0), new Uint8Array(80));
+    const mvex = box('mvex', box('mehd', new Uint8Array(4), be32(42_000)), box('trex', new Uint8Array(24)));
+    const f = cat(ftyp('iso6'), box('moov', mvhdNoLen, trak, mvex), box('moof', new Uint8Array(40)), mdat(5000));
+    expect(await info(f)).toEqual({ takenAt: '2017-06-01T10:00:00', durationSec: 42 });
+  });
+
+  it('stores the length on kept videos, not on cut-off ones', async () => {
+    const whole = cat(ftyp(), box('moov', mvhd0(t), trak), mdat(30_000));
+    expect((await inspect(mem(whole).src, 0)).durationSec).toBe(10);
+    const r = await inspect(mem(whole.slice(0, 25_000)).src, 0);
+    expect([r.group, r.durationSec]).toEqual(['damaged', undefined]);
   });
 });

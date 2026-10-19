@@ -212,7 +212,9 @@ progress::-moz-progress-bar { background: var(--accent); border-radius: 999px; }
 .dot { pointer-events: none; width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--accent); box-shadow: 0 0 0 2px #FFFFFF; }
 .tl-tile.off .dot { background: #FFFFFF; box-shadow: inset 0 0 0 2px var(--muted), 0 0 0 2px #FFFFFF; }
 .chk input:focus-visible + .dot { outline: 3px solid var(--accent); outline-offset: 3px; }
-.vid { position: absolute; right: 8px; bottom: 8px; display: flex; align-items: center; padding: 5px 8px; border-radius: 999px; background: #FFFFFF; color: var(--ink); }
+.vid { position: absolute; right: 8px; bottom: 8px; display: flex; align-items: center; gap: 4px; padding: 5px 8px; border-radius: 999px; background: #FFFFFF; color: var(--ink); }
+/* Video length beside the play mark (TL mockups: "▶ 0:42"). */
+.vid-len { font-size: 13px; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; }
 .tl-aside { flex-direction: row; flex-wrap: wrap; justify-content: space-between; align-items: center; padding: 18px 22px; }
 .tl-aside .btn-sm { align-self: center; }
 .tl-empty { display: flex; flex-direction: column; gap: 12px; align-items: flex-start; }

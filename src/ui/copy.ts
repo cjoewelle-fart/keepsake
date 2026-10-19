@@ -21,6 +21,24 @@ export const weekdayDayMonth = (ymd: string) => {
 };
 /** '2024-06-28T09:12:…' → '09:12' */
 export const clock = (takenAt: string) => takenAt.slice(11, 16);
+/** A video's length the way phones show it: "0:42", "12:05", "1:02:03". Rounded, never "0:00". */
+export const runTime = (secs: number) => {
+  const s = Math.max(1, Math.round(secs));
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const ss = String(s % 60).padStart(2, '0');
+  return h ? `${h}:${String(m).padStart(2, '0')}:${ss}` : `${m}:${ss}`;
+};
+/** The same length in words, for screen readers: "42 seconds", "1 minute 5 seconds", "1 hour 2 minutes". */
+export const runTimeWords = (secs: number) => {
+  const s = Math.max(1, Math.round(secs));
+  const h = Math.floor(s / 3600);
+  const m = Math.floor((s % 3600) / 60);
+  const parts = h
+    ? [`${h} ${plural(h, 'hour', 'hours')}`, m ? `${m} ${plural(m, 'minute', 'minutes')}` : '']
+    : [m ? `${m} ${plural(m, 'minute', 'minutes')}` : '', s % 60 ? `${s % 60} ${plural(s % 60, 'second', 'seconds')}` : ''];
+  return parts.filter(Boolean).join(' ');
+};
 /** Bytes as people read them: '840 KB', '3.4 GB'. */
 export const bytes = (x: number) => {
   const units = ['bytes', 'KB', 'MB', 'GB', 'TB'];
@@ -209,11 +227,13 @@ export const copy = {
     daySelected: (sel: number, total: number) =>
       sel === 0 ? 'none selected' : sel === total ? (total === 1 ? '1 selected' : `all ${n(total)} selected`) : `${n(sel)} of ${n(total)} selected`,
     /** Checkbox names. "Save …" says what ticking does. */
-    tileLabel: (type: 'photo' | 'video' | 'other', takenAt: string | undefined, pos: number, of: number) => {
+    tileLabel: (type: 'photo' | 'video' | 'other', takenAt: string | undefined, pos: number, of: number, durationSec?: number) => {
       const what = type === 'other' ? 'file' : type;
+      // Video length (not in T22: needs UX writer review). Mockup TL: "…, video, 0:42".
+      const long = type === 'video' && durationSec !== undefined ? `, ${runTimeWords(durationSec)} long` : '';
       return takenAt
-        ? `Save ${what} from ${Number(takenAt.slice(8, 10))} ${monthYear(takenAt.slice(0, 7))}, ${takenAt.slice(11, 16)}`
-        : `Save ${what} with no date (${n(pos)} of ${n(of)})`;
+        ? `Save ${what} from ${Number(takenAt.slice(8, 10))} ${monthYear(takenAt.slice(0, 7))}, ${takenAt.slice(11, 16)}${long}`
+        : `Save ${what} with no date (${n(pos)} of ${n(of)})${long}`;
     },
     video: 'Video',
     emptyFilter: {

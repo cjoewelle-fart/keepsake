@@ -29,6 +29,8 @@ export type FileRecord = {
    * creation time, which is meant to be UTC (some cameras write local time there instead).
    */
   takenAt?: string;
+  /** Videos: length in seconds, from the container's 'mvhd' (or 'mehd'). Not set for cut-off videos. */
+  durationSec?: number;
   group: Group;
   reason: Reason;
   /** For copies: the index of the file that was kept. */
