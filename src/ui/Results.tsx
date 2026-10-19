@@ -185,7 +185,6 @@ export function Results({ records, files, movedBack, onToggleGroup, onReview, on
                       className="group-head"
                       aria-expanded={isOpen}
                       aria-controls={panelId}
-                      aria-label={r.groupLabel(isOpen, copy.groups[g].title, s.groups[g], moved)}
                       onClick={() => setOpen(isOpen ? null : g)}
                     >
                       <span className="swatch" aria-hidden="true" style={{ background: SHADES[g] }} />
