@@ -1,6 +1,6 @@
-// Main-thread side of HEIC previews: one decoding worker, started on first use, fed one file at
-// a time, replaced if a decode hangs, and shut down when idle so its memory is given back.
-// The queue, time limit and URL cache live in previewQueue.ts (tested in Node).
+// Main-thread side of HEIC previews: one or two decoding workers, started on first use, each fed
+// one file at a time, replaced if a decode hangs, and shut down when idle so their memory is given
+// back. The queue, time limit and URL cache live in previewQueue.ts (tested in Node).
 import * as Comlink from 'comlink';
 import type { HeicApi } from '../worker/heic.worker';
 import { createPreviewQueue, type Lease } from './previewQueue';
@@ -19,7 +19,19 @@ async function startDecoder() {
   return { decode: (file: Blob, maxSide: number) => api.preview(file, maxSide), terminate: () => raw.terminate() };
 }
 
-const queue = createPreviewQueue({ startDecoder, timeoutMs: 15_000, idleMs: 20_000, maxCached: 200 });
+/**
+ * Most phone HEICs carry a small copy that decodes in ~15 ms (T54), but one without it (edited or
+ * exported photos) takes ~1 s and grows its worker to ~90 MB. A second worker keeps such a file
+ * from holding up the quick ones behind it. It only starts when two previews are waiting at once,
+ * and only on computers with 4+ cores and (where the browser says) 4+ GB of memory.
+ */
+function workers(): number {
+  if (typeof navigator === 'undefined') return 1;
+  const memoryGb = (navigator as Navigator & { deviceMemory?: number }).deviceMemory ?? 4;
+  return (navigator.hardwareConcurrency || 2) >= 4 && memoryGb >= 4 ? 2 : 1;
+}
+
+const queue = createPreviewQueue({ startDecoder, concurrency: workers(), timeoutMs: 15_000, idleMs: 20_000, maxCached: 200 });
 
 /** A small JPEG preview of a HEIC file, as a URL the caller releases when it stops showing it. */
 export const heicPreview = (file: Blob, isWanted: () => boolean, maxSide = 320): Promise<Lease> =>

@@ -75,7 +75,8 @@ export function Preview({ file, record, size = 'md' }: { file: File; record: Fil
     let side = 0;
     let lease: Lease | undefined;
     const wanted = () => alive && near;
-    // Small copies are sized to the tile on this screen; HEIC decodes keep their own size (T54).
+    // Small copies are sized to the tile on this screen. HEIC decodes stay 320 px on the longer
+    // side: the size of the copy iPhones store in the file, which is what makes them quick (T54).
     const make = () => stage === 'thumb' ? thumbnail(file, wanted, side) : heicPreview(file, wanted);
     const start = () => {
       if (!alive || !near || started) return;
