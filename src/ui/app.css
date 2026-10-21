@@ -154,7 +154,7 @@ progress::-moz-progress-bar { background: var(--accent); border-radius: 999px; }
 .tile-sm { width: 56px; height: 56px; flex: none; border-radius: 8px; }
 .tile-xs { width: 34px; height: 34px; flex: none; border-radius: 6px; }
 .tile-fill { width: 100%; height: 100%; }
-.tile img { width: 100%; height: 100%; object-fit: cover; display: block; }
+.tile img, .tile canvas { width: 100%; height: 100%; object-fit: cover; display: block; }
 .tile-label { font-size: 11px; font-weight: 700; color: var(--ink-soft); letter-spacing: 0.04em; }
 .tile-xs .tile-label { font-size: 9px; letter-spacing: 0; }
 
@@ -207,7 +207,7 @@ progress::-moz-progress-bar { background: var(--accent); border-radius: 999px; }
 .tl-grid { display: grid; grid-template-columns: repeat(var(--cols, 6), minmax(0, 1fr)); gap: var(--gap, 12px); }
 .tl-tile.off { box-shadow: none; outline: 2px dashed var(--control-edge); outline-offset: -2px; }
 /* Fade the picture only: the file-type label on a tile with no preview keeps its contrast (T30). */
-.tl-tile.off .tile img { opacity: 0.55; }
+.tl-tile.off .tile img, .tl-tile.off .tile canvas { opacity: 0.55; }
 .chk { position: absolute; top: 0; right: 0; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
 .chk input { position: absolute; inset: 0; opacity: 0; width: 44px; height: 44px; margin: 0; cursor: pointer; }
 .dot { pointer-events: none; width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--accent); box-shadow: 0 0 0 2px #FFFFFF; }
