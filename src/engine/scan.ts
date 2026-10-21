@@ -326,6 +326,11 @@ export type ScanOptions = {
    * files will come; the scan then ends with null.
    */
   ready?: (i: number) => Promise<void>;
+  /**
+   * Told when file `i` is set aside by the first pass (T57). Only files still in Keep are read
+   * again (by the copy check), so the caller can let go of this file's source.
+   */
+  setAside?: (i: number) => void;
 };
 
 /** How often scanAll checks for Stop while it waits on a slow read. */
@@ -339,9 +344,9 @@ const STOP_POLL_MS = 25;
  * its next check (between files or 1 MB pieces) and ends without reporting progress.
  */
 export async function scanAll(sources: FileSource[], opts: ScanOptions = {}): Promise<FileRecord[] | null> {
-  const { rules = DEFAULT_RULES, isCancelled, concurrency = 6, copyConcurrency = 4, ready } = opts;
+  const { rules = DEFAULT_RULES, isCancelled, concurrency = 6, copyConcurrency = 4, ready, setAside } = opts;
   const onProgress = opts.onProgress && ((p: Progress) => { if (!isCancelled?.()) opts.onProgress!(p); });
-  const work = scanWork(sources, rules, onProgress, isCancelled, concurrency, copyConcurrency, ready);
+  const work = scanWork(sources, rules, onProgress, isCancelled, concurrency, copyConcurrency, ready, setAside);
   if (!isCancelled) return work;
   work.catch(() => {}); // if Stop wins the race, a later failure of the abandoned work isn't an error
   let timer: ReturnType<typeof setInterval> | undefined;
@@ -363,6 +368,7 @@ async function scanWork(
   concurrency: number,
   copyConcurrency: number,
   ready: ((i: number) => Promise<void>) | undefined,
+  setAside: ((i: number) => void) | undefined,
 ): Promise<FileRecord[] | null> {
   const records: FileRecord[] = new Array(sources.length);
   let next = 0;
@@ -395,6 +401,7 @@ async function scanWork(
           records[i] = { index: i, path: sources[i].path, size: sources[i].size, kind: 'other', group: 'keep', reason: 'not-checked' };
         }
       }
+      if (records[i].group !== 'keep') setAside?.(i);
       done++;
       report();
     }

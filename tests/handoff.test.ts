@@ -58,6 +58,25 @@ describe('feed', () => {
     expect(before!.some((r) => r.group === 'duplicate')).toBe(true);
   });
 
+  it('letting go of set-aside files as the scan goes changes nothing (T57)', async () => {
+    const all = direct();
+    const before = await scanAll(all);
+    const f = feed<FileSource>(all.map((s) => s.path), (s) => s);
+    const released: number[] = [];
+    const scanning = scanAll(f.sources, { ready: f.ready, setAside: (i) => { released.push(i); f.release(i); } });
+    const fed = handOver(all, (s) => s.size, async (start, b, sizes) => { await tick(); f.add(start, b, sizes); }, () => false, { maxBatch: 3 });
+    const [after] = await Promise.all([scanning, fed]);
+    expect(after).toEqual(before);
+    // Only files the first pass set aside; copies are found later and were still needed.
+    expect(released.sort((a, b) => a - b)).toEqual(before!.filter((r) => r.group !== 'keep' && r.group !== 'duplicate').map((r) => r.index));
+    expect(released.length).toBeGreaterThan(0);
+    // A released file keeps its path and size, but can't be read any more.
+    const i = released[0];
+    expect(f.sources[i].path).toBe(all[i].path);
+    expect(f.sources[i].size).toBe(all[i].size);
+    await expect(f.sources[i].read(0, 1)).rejects.toThrow(/released/);
+  });
+
   it('files wait for their batch; closing fails the waits so a stopped scan ends', async () => {
     const all = direct();
     const f = feed<FileSource>(all.map((s) => s.path), (s) => s);

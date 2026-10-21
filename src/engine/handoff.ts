@@ -58,6 +58,11 @@ export type Feed<F> = {
   add(start: number, files: readonly F[], sizes: readonly number[]): void;
   /** No more files will come (Stop, or the page failed): waits still pending fail with `err`. */
   close(err: Error): void;
+  /**
+   * File `i` won't be read again: drop it (T57). Its path and size stay; a read now fails.
+   * In Chromium each File handed to the worker holds native memory until it is collected.
+   */
+  release(i: number): void;
 };
 
 /**
@@ -101,6 +106,12 @@ export function feed<F>(paths: readonly string[], open: (file: F, path: string, 
         const list = waiting.get(i);
         if (list) { waiting.delete(i); for (const w of list) w.ok(); }
       });
+    },
+    release(i) {
+      const s = opened[i];
+      if (!s) return;
+      const { path, size } = s;
+      opened[i] = { path, size, read: () => Promise.reject(new Error(`file ${i} was released`)) };
     },
     close(err) {
       if (closed) return;
