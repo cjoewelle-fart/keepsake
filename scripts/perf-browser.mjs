@@ -4,6 +4,8 @@
 //   npm run build
 //   node scripts/perf-browser.mjs <chromium> <dir>/recovery [--runs 3] [--port 4175] [--profile <out-dir>] [--no-previews]
 //   node scripts/perf-browser.mjs <chromium> <dir>/recovery --handoff   # only the seconds after picking (T52)
+//   PERF_HEAPSNAP=<dir>: heap snapshots of the page and workers on the results screen (T57)
+//   PERF_GC=1: memory on the results screen again after a forced garbage collection; --results-only stops there
 //
 // Each run starts a fresh browser, feeds the folder through the app's folder-upload fallback
 // (as scripts/e2e.mjs does), and measures: scan time (to the results screen), time to the first
@@ -28,6 +30,8 @@ const PROFILE = opt('profile', null);
 const NO_PREVIEWS = process.argv.includes('--no-previews');
 // Only the first seconds after picking (T52): is the page responsive, does progress show, does Stop work?
 const HANDOFF = process.argv.includes('--handoff');
+// Stop on the results screen (memory diagnostics; no review timeline).
+const RESULTS_ONLY = process.argv.includes('--results-only');
 const DEBUG_PORT = 9400 + (PORT % 100);
 const MB = (b) => Math.round(b / 2 ** 20);
 
@@ -72,16 +76,18 @@ async function devtools(pageUrlPrefix) {
       send('Runtime.runIfWaitingForDebugger', {}, msg.params.sessionId);
     }
     if (msg.method === 'Target.detachedFromTarget') workers.delete(msg.params.sessionId);
+    if (msg.method === 'HeapProfiler.addHeapSnapshotChunk') api.onChunk?.(msg.sessionId, msg.params.chunk);
   };
   // A worker that goes away mid-request never answers: give up after 5 s.
   const send = (method, params = {}, sessionId) => new Promise((ok) => {
     const k = ++id;
-    const timer = setTimeout(() => { waiting.delete(k); ok({ error: 'timeout' }); }, 5000);
+    const timer = setTimeout(() => { waiting.delete(k); ok({ error: 'timeout' }); }, method === 'HeapProfiler.takeHeapSnapshot' ? 300_000 : method === 'HeapProfiler.collectGarbage' ? 20_000 : 5000);
     waiting.set(k, (r) => { clearTimeout(timer); ok(r.result ?? { error: r.error }); });
     ws.send(JSON.stringify({ id: k, method, params, ...(sessionId ? { sessionId } : {}) }));
   });
   await send('Target.setAutoAttach', { autoAttach: true, waitForDebuggerOnStart: false, flatten: true });
-  return { send, workers, close: () => ws.close() };
+  const api = { send, workers, close: () => ws.close(), onChunk: null };
+  return api;
 }
 
 // --- PERF_MEMDUMP=1: Chrome's own memory breakdown (memory-infra) per process, in MB ---
@@ -101,12 +107,37 @@ async function memoryDump(cdp) {
     if (!alloc) continue;
     const row = (out[e.pid] ??= {});
     for (const [name, d] of Object.entries(alloc)) {
-      if (name.includes('/')) continue; // top-level allocators only
+      // Top-level allocators only; PERF_MEMDUMP=2 adds the next two levels (e.g. partition_alloc/partitions/buffer).
+      if (name.split('/').length > (process.env.PERF_MEMDUMP === '2' ? 3 : 1)) continue;
       const size = d.attrs?.effective_size?.value ?? d.attrs?.size?.value;
       if (size) row[name] = (row[name] ?? 0) + MB(parseInt(size, 16));
     }
   }
   return out;
+}
+
+/** PSS of every browser process now (by process type) and the used JS heap of the page and each worker, in MB. */
+async function memoryNow(bcdp, rootPid, dt) {
+  const types = new Map((await bcdp.send('SystemInfo.getProcessInfo')).processInfo.map((p) => [p.id, p.type]));
+  const { total, parts } = treePss(rootPid, types);
+  const page = MB((await dt.send('Runtime.getHeapUsage')).usedSize ?? 0);
+  const workers = [];
+  for (const [s] of dt.workers) workers.push(MB((await dt.send('Runtime.getHeapUsage', {}, s)).usedSize ?? 0));
+  return { pss: MB(total), parts: Object.entries(parts).map(([k, v]) => `${k} ${MB(v)}`).join(', '), page, workers: workers.join('+') || '0' };
+}
+
+/** PERF_HEAPSNAP=<dir>: heap snapshots of the page and each worker on the results screen (open in DevTools > Memory). */
+async function heapSnapshots(dt, outDir, n) {
+  mkdirSync(outDir, { recursive: true });
+  const targets = [['page', undefined], ...[...dt.workers].map(([s, url], i) => [`worker${i}-${url.split('/').pop().slice(0, 20)}`, s])];
+  for (const [name, s] of targets) {
+    const chunks = [];
+    dt.onChunk = (sid, c) => { if (sid === s) chunks.push(c); };
+    await dt.send('HeapProfiler.enable', {}, s);
+    await dt.send('HeapProfiler.takeHeapSnapshot', { reportProgress: false }, s);
+    dt.onChunk = null;
+    writeFileSync(join(outDir, `run${n}-${name}.heapsnapshot`), chunks.join(''));
+  }
 }
 
 const server = spawn('npx', ['vite', 'preview', '--port', String(PORT), '--strictPort'], { stdio: 'pipe', detached: true });
@@ -172,6 +203,8 @@ async function run(n) {
         const w = await dt.send('Runtime.getHeapUsage', {}, s);
         if (w.usedSize > peak.worker) peak.worker = w.usedSize;
       }
+      // PERF_GC_DURING=1 (diagnostic): collect garbage in every worker every ~2 s while scanning.
+      if (process.env.PERF_GC_DURING && phase === 'scan' && trace.length % 8 === 0) for (const [s] of dt.workers) await dt.send('HeapProfiler.collectGarbage', {}, s);
       await new Promise((r) => setTimeout(r, 250));
     }
   })();
@@ -218,6 +251,24 @@ async function run(n) {
   // Review timeline: open it, then scroll top to bottom, one screen per step.
   const memdumps = {};
   if (process.env.PERF_MEMDUMP) memdumps.beforeReview = await memoryDump(bcdp);
+  const atResults = await memoryNow(bcdp, rootPid, dt);
+  // PERF_GC=1 (diagnostic): the same after a full garbage collection in the page and every worker,
+  // to tell memory still referenced apart from garbage V8 hadn't collected yet.
+  let afterGc;
+  if (process.env.PERF_GC) {
+    for (const s of [undefined, ...dt.workers.keys()]) await dt.send('HeapProfiler.collectGarbage', {}, s);
+    await page.waitForTimeout(3000);
+    afterGc = await memoryNow(bcdp, rootPid, dt);
+  }
+  if (RESULTS_ONLY) {
+    sampling = false;
+    await sampler;
+    if (process.env.PERF_TRACE) writeFileSync(`${process.env.PERF_TRACE}.run${n}.tsv`, trace.map((r) => r.join('\t')).join('\n'));
+    dt.close();
+    await browser.close();
+    return { run: n, scanSec: +((tResults - t0) / 1000).toFixed(1), ledger, peakScanPssMB: MB(peak.byPhase.scan ?? 0), resultsPssMB: atResults.pss, resultsPssParts: atResults.parts, resultsPageHeapMB: atResults.page, resultsWorkerHeapMB: atResults.workers, ...(afterGc ? { resultsAfterGcPssMB: afterGc.pss, resultsAfterGcParts: afterGc.parts } : {}), ...(process.env.PERF_MEMDUMP ? { memdumps } : {}) };
+  }
+  if (process.env.PERF_HEAPSNAP) await heapSnapshots(dt, process.env.PERF_HEAPSNAP, n);
   phase = 'timeline';
   const tReview0 = await page.evaluate(() => performance.now());
   await page.getByRole('button', { name: /^Review my/ }).click();
@@ -310,6 +361,8 @@ async function run(n) {
     copiesSec: copiesAt ? +((tResults - copiesAt) / 1000).toFixed(1) : null,
     firstPreviewSec: +((tFirstImg - t0) / 1000).toFixed(1),
     ledger,
+    // Memory on the results screen, just before Review opens (T57): all processes, by type, and JS heaps.
+    resultsPssMB: atResults.pss, resultsPssParts: atResults.parts, resultsPageHeapMB: atResults.page, resultsWorkerHeapMB: atResults.workers, ...(afterGc ? { resultsAfterGcPssMB: afterGc.pss, resultsAfterGcParts: afterGc.parts } : {}),
     peakPssMB: MB(peak.pss), peakPssPhase: peak.pssAt, peakPssParts: peak.parts, peakScanPssMB: MB(peak.byPhase.scan ?? 0), peakReviewPssMB: MB(peak.byPhase.timeline ?? 0), peakPssByPhaseMB: Object.entries(peak.byPhase).map(([k, v]) => `${k} ${MB(v)}`).join(', '), peakPageHeapMB: MB(peak.page), peakWorkerHeapMB: MB(peak.worker),
     scanLongTop: ltScan.sort((a, b) => b[1] - a[1]).slice(0, 3).map(([st, d]) => `${Math.round(d)}ms@${((st - t0) / 1000).toFixed(1)}s`).join(' '),
     scanLongTasks: ltScan.length, scanLongMaxMs: Math.round(Math.max(0, ...ltScan.map(([, d]) => d))), scanLongTotalMs: Math.round(sum(ltScan)),

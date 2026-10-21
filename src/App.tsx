@@ -123,8 +123,17 @@ export default function App() {
       setScreen({ name: 'error' });
     } finally {
       run.stopped = true; // a scan that failed sends no more batches
+      // The worker's copies of the picked File objects, and what it read, hold renderer memory
+      // as long as the worker lives, garbage or not (~45 MB for 40,000 files, T57). The next
+      // scan starts a new worker.
+      if (runRef.current === run) retireWorker();
     }
   }
+
+  const retireWorker = () => {
+    workerRef.current?.raw.terminate();
+    workerRef.current = null;
+  };
 
   const toggleGroup = (g: SetAsideGroup) =>
     setMovedBack((prev) => {
@@ -146,7 +155,7 @@ export default function App() {
       <Header current={step} done={done} />
       <div id="main" ref={headingRef}>
         {screen.name === 'start' && <Start note={screen.note} onChoose={chooseFolder} onSamples={SAMPLES_ENABLED ? trySamples : undefined} />}
-        {screen.name === 'scanning' && <Scanning progress={screen.progress} onStop={() => { runRef.current.stopped = true; getWorker().cancel(); }} />}
+        {screen.name === 'scanning' && <Scanning progress={screen.progress} onStop={() => { runRef.current.stopped = true; workerRef.current?.api.cancel(); }} />}
         {screen.name === 'results' && (
           <Results
             records={records}

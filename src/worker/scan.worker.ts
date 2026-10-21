@@ -32,7 +32,8 @@ const api = {
     const files = feed<File>(paths, fromFile);
     const run = (current = { id, cancelled: false, files });
     try {
-      return await scanAll(files.sources, { onProgress, isCancelled: () => run.cancelled, ready: files.ready });
+      // Set-aside files are never read again, so the worker lets go of them as it goes (T57).
+      return await scanAll(files.sources, { onProgress, isCancelled: () => run.cancelled, ready: files.ready, setAside: files.release });
     } finally {
       if (current === run) current.files = undefined; // let go of the files once done
     }
