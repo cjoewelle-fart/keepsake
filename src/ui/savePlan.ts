@@ -281,7 +281,7 @@ export function receiptText(r: Receipt): string {
     [s.rSavedTo, r.savedTo],
     [s.rSorted, s.rSortedValue(r.sorted.years, r.sorted.months, r.sorted.noDate)],
     [s.rRecovery, s.rRecoveryValue],
-    [copy.results.ledgerSafe, copy.results.ledgerSafeValue],
+    [s.rSafe, copy.results.ledgerSafeValue],
   ];
   const w = Math.max(...rows.map(([k]) => k.length));
   const lines = [

@@ -74,7 +74,8 @@ export const copy = {
     progress: (done: number, total: number) => `Checked ${n(done)} of ${n(total)} files`,
     copiesProgress: (done: number, total: number) => `Compared ${n(done)} of ${n(total)} possible copies`,
     reassure: 'This happens on your computer. Nothing is uploaded, and you can stop any time.',
-    deleted: 'Deleted: 0',
+    // “Your files”: Save may remove an empty file it made itself (D17), never one of yours (T58).
+    deleted: 'Your files deleted: 0',
     stagesLabel: 'Scan stages',
     stages: ['Check every file', 'Spot exact copies', 'Sort them by date'],
     stageDone: '(done)',
@@ -369,6 +370,8 @@ export const copy = {
     },
     rRecovery: 'Recovery folder',
     rRecoveryValue: 'Untouched',
+    /** Receipt row (T58, D17): about the person's files, not the empty file Save may remove. */
+    rSafe: 'Your files deleted · uploaded',
     receiptNote: 'Save or print this so you can find your photos later.',
     saveReceipt: 'Save receipt',
     print: 'Print',

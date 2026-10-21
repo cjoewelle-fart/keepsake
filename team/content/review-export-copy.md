@@ -12,6 +12,7 @@ Same words as the results screen and `src/ui/copy.ts`:
 - **No date**: photos without a date taken. Not "Undated". (Change `copy.ts` `results.undatedMore`, which still says "Undated".)
 - **save / copies**: what the last step does. Not "export". The step is called **Save** (change `copy.ts` `steps[4]` from "Export" to "Save" so it matches the mockups' "Step 5 of 5 · Save").
 - **Deleted · Uploaded 0 · 0**: the same box everywhere, with the same screen-reader text as results (`ledgerSafeSr`, `ledgerSafeValueSr`).
+- **Your files deleted: 0** (T58, owner's D17): while scanning and saving, and on the receipt ("Your files deleted · uploaded 0 · 0"), the count is about *your* files. Saving may remove an empty file it made itself, so a bare "Deleted: 0" wouldn't be strictly true. Same idea as "None of your files were deleted".
 
 ---
 
@@ -139,6 +140,7 @@ Same words as the results screen and `src/ui/copy.ts`:
 | Progress | Saved {done} of 2,224 | Same pattern as "Checked {n} of {total} files". |
 | Zip progress | Making zip file {i} of 5… · Saved {done} of 2,224 | |
 | Reassurance | This happens on your computer. Nothing is uploaded, and your recovery folder isn't changed. | |
+| Safe count | Your files deleted: 0 | Was "Deleted: 0" (T58, D17). Same string on the scanning screen. |
 | Tip | Keep this tab open until it's done. If you can, keep the computer plugged in so it doesn't go to sleep. | |
 | Button | Stop saving / Stopping… | |
 | Announcements | Saved {done} of 2,224. | Polite, about every 10%. |
@@ -174,7 +176,7 @@ Same words as the results screen and `src/ui/copy.ts`:
 | Button | Show me where they are | Remove. Line: "To see them, open {folder} › Keepsake photos in File Explorer (Windows) or Finder (Mac)." | A browser can't open the folder. |
 | Line | You can close Keepsake now. Nothing else needs doing. | You can close Keepsake now. There's nothing else to do. | |
 | **new** Tip | (none) | If you can, keep a second copy too, on a USB drive or a backup you already use. | |
-| Receipt | Your receipt / date / Saved / Couldn't save / Saved to / Sorted into / Recovery folder · Untouched / Deleted · Uploaded | keep | |
+| Receipt | Your receipt / date / Saved / Couldn't save / Saved to / Sorted into / Recovery folder · Untouched / Deleted · Uploaded | Last row: Your files deleted · uploaded · 0 · 0 (screen reader unchanged: "Your files deleted and uploaded" / "None deleted, none uploaded") | T58, D17: Save may remove an empty file it made itself; none of *your* files. |
 | Note | Keep this so you can find your photos later, even after closing Keepsake. | Save or print this so you can find your photos later. | |
 | Button | Save this receipt | Save receipt | |
 | Button | Print | keep | |
