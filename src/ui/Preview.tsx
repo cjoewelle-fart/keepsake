@@ -47,7 +47,11 @@ function watch(el: Element, cb: (near: boolean, tilePx: number) => void) {
  * is given back (to a capped cache) when the tile goes away. The full-size photo is never kept
  * in the page. HEIC photos the browser can't read are decoded by our own worker instead.
  */
-export function Preview({ file, record, size = 'md' }: { file: File; record: FileRecord; size?: 'md' | 'sm' | 'xs' | 'fill' }) {
+export function Preview({ file, record, size = 'md', note }: {
+  file: File; record: FileRecord; size?: 'md' | 'sm' | 'xs' | 'fill';
+  /** A short line under the file type when there's no picture (e.g. "Can't play here"). Hidden from screen readers: say it in the tile's name too. */
+  note?: string;
+}) {
   const [stage, setStage] = useState<Stage>(() => firstStage(record));
   const [url, setUrl] = useState<string>();
   /** A small copy has been drawn into the canvas. */
@@ -75,7 +79,8 @@ export function Preview({ file, record, size = 'md' }: { file: File; record: Fil
     let side = 0;
     let lease: Lease | undefined;
     const wanted = () => alive && near;
-    // Small copies are sized to the tile on this screen; HEIC decodes keep their own size (T54).
+    // Small copies are sized to the tile on this screen. HEIC decodes stay 320 px on the longer
+    // side: the size of the copy iPhones store in the file, which is what makes them quick (T54).
     const make = () => stage === 'thumb' ? thumbnail(file, wanted, side) : heicPreview(file, wanted);
     const start = () => {
       if (!alive || !near || started) return;
@@ -132,6 +137,7 @@ export function Preview({ file, record, size = 'md' }: { file: File; record: Fil
       {small && <canvas ref={canvas} aria-hidden="true" style={drawn ? undefined : { display: 'none' }} />}
       {stage === 'native' && url && <img src={url} alt="" loading="lazy" decoding="async" onError={onError} />}
       {!showing && <span className="tile-label" title={stage === 'none' ? copy.results.previewUnavailable : undefined}>{ext || '—'}</span>}
+      {!showing && note && <span className="tile-note" aria-hidden="true">{note}</span>}
     </div>
   );
 }

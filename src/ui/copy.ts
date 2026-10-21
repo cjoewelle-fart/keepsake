@@ -228,15 +228,22 @@ export const copy = {
     daySelected: (sel: number, total: number) =>
       sel === 0 ? 'none selected' : sel === total ? (total === 1 ? '1 selected' : `all ${n(total)} selected`) : `${n(sel)} of ${n(total)} selected`,
     /** Checkbox names. "Save …" says what ticking does. */
-    tileLabel: (type: 'photo' | 'video' | 'other', takenAt: string | undefined, pos: number, of: number, durationSec?: number) => {
+    tileLabel: (type: 'photo' | 'video' | 'other', takenAt: string | undefined, pos: number, of: number, durationSec?: number, cantPlay = false) => {
       const what = type === 'other' ? 'file' : type;
       // Video length (not in T22: needs UX writer review). Mockup TL: "…, video, 0:42".
       const long = type === 'video' && durationSec !== undefined ? `, ${runTimeWords(durationSec)} long` : '';
+      // T61, needs UX writer review: same words as the note on the tile.
+      const note = cantPlay ? `. ${copy.timeline.cantPlay}` : '';
       return takenAt
-        ? `Save ${what} from ${Number(takenAt.slice(8, 10))} ${monthYear(takenAt.slice(0, 7))}, ${takenAt.slice(11, 16)}${long}`
-        : `Save ${what} with no date (${n(pos)} of ${n(of)})${long}`;
+        ? `Save ${what} from ${Number(takenAt.slice(8, 10))} ${monthYear(takenAt.slice(0, 7))}, ${takenAt.slice(11, 16)}${long}${note}`
+        : `Save ${what} with no date (${n(pos)} of ${n(of)})${long}${note}`;
     },
     video: 'Video',
+    /**
+     * On a video tile when this browser can't play the video (old phone 3GP, HEVC in a browser
+     * without it, AVI). T61, needs UX writer review. It's still selected and saved as it is.
+     */
+    cantPlay: 'Can’t play here; it’ll still be saved',
     emptyFilter: {
       photos: 'There are no photos to show.',
       videos: 'There are no videos to show.',

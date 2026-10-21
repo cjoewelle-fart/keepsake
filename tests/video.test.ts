@@ -1,6 +1,7 @@
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { inspect } from '../src/engine/scan';
-import { mvhdDate, mvhdDuration, quicktimeDate, videoDate, videoInfo } from '../src/engine/video';
+import { codecString, mvhdDate, mvhdDuration, quicktimeDate, videoDate, videoInfo } from '../src/engine/video';
 import type { FileSource } from '../src/engine/types';
 
 // Tiny synthetic MP4/MOV files built box by box.
@@ -242,5 +243,79 @@ describe('video length', () => {
     expect((await inspect(mem(whole).src, 0)).durationSec).toBe(10);
     const r = await inspect(mem(whole.slice(0, 25_000)).src, 0);
     expect([r.group, r.durationSec]).toEqual(['damaged', undefined]);
+  });
+});
+
+// T61: the picture track's codec, so the page can ask the browser whether it can play it.
+describe('video codec', () => {
+  /** A VisualSampleEntry of `type` holding `config` boxes. */
+  const entry = (type: string, ...config: Uint8Array[]) => box(type, new Uint8Array(78), ...config);
+  const videoTrak = (e: Uint8Array, handler = 'vide') => box('trak', box('tkhd', new Uint8Array(84)),
+    box('mdia', box('mdhd', new Uint8Array(24)), box('hdlr', new Uint8Array(4), be32(0), enc(handler), new Uint8Array(13)),
+      box('minf', box('vmhd', new Uint8Array(12)), box('stbl', box('stsd', new Uint8Array(4), be32(1), e), box('stts', new Uint8Array(8))))));
+  const t = secs1904('2017-06-01T10:00:00');
+  const codecOf = async (...traks: Uint8Array[]) => {
+    const f = cat(ftyp(), box('moov', mvhd0(t), ...traks), mdat(30_000));
+    return (await videoInfo((s, e) => Promise.resolve(f.slice(s, e)), f.length, f.slice(0, 64), NOW)).codec;
+  };
+
+  it('builds RFC 6381 strings from the configuration boxes', () => {
+    expect(codecString(entry('avc1', box('avcC', new Uint8Array([1, 0x64, 0x00, 0x1f, 0xff]))))).toBe('avc1.64001F');
+    // hvcC: Main 10 (profile 2), compatibility 0x20000000 (written reversed: 4), main tier, level 123 (4.1), constraint 0xB0.
+    const hvcC = box('hvcC', new Uint8Array([1, 0x02, 0x20, 0, 0, 0, 0xb0, 0, 0, 0, 0, 0, 123, 0xf0]));
+    expect(codecString(entry('hvc1', hvcC))).toBe('hvc1.2.4.L123.B0');
+    expect(codecString(entry('hev1', hvcC))).toBe('hev1.2.4.L123.B0');
+    // av1C: profile 0, level 8, main tier, 10-bit.
+    expect(codecString(entry('av01', box('av1C', new Uint8Array([0x81, 0x08, 0x40, 0]))))).toBe('av01.0.08M.10');
+    expect(codecString(entry('vp09', box('vpcC', new Uint8Array([1, 0, 0, 0, 0, 31, 0x80]))))).toBe('vp09.00.31.08');
+    // esds: ES_Descriptor (tag 3) > DecoderConfigDescriptor (tag 4) with objectTypeIndication 0x20.
+    expect(codecString(entry('mp4v', box('esds', new Uint8Array([0, 0, 0, 0, 3, 0x80, 0x80, 0x80, 20, 0, 1, 0, 4, 13, 0x20, 0x11]))))).toBe('mp4v.20');
+  });
+
+  it('gives the bare type for other codecs, and nothing for protected or unreadable entries', () => {
+    expect(codecString(entry('s263'))).toBe('s263');
+    expect(codecString(entry('jpeg'))).toBe('jpeg');
+    expect(codecString(entry('avc1'))).toBe('avc1'); // no avcC
+    expect(codecString(entry('encv'))).toBeUndefined();
+    expect(codecString(new Uint8Array([0, 0, 0, 8, 0, 1, 2, 3]))).toBeUndefined();
+    expect(codecString(new Uint8Array(4))).toBeUndefined();
+  });
+
+  it('finds the first video track, skipping sound tracks', async () => {
+    const sound = videoTrak(box('mp4a', new Uint8Array(28)), 'soun');
+    const avc = videoTrak(entry('avc1', box('avcC', new Uint8Array([1, 0x42, 0xc0, 0x1e]))));
+    expect(await codecOf(sound, avc)).toBe('avc1.42C01E');
+    expect(await codecOf(sound)).toBeUndefined();
+    expect(await codecOf(trak)).toBeUndefined(); // a track with no 'mdia'
+  });
+
+  it('survives broken sample descriptions', async () => {
+    const broken = box('trak', box('mdia', box('hdlr', new Uint8Array(4), be32(0), enc('vide'), new Uint8Array(13)),
+      box('minf', box('stbl', box('stsd', new Uint8Array(4), be32(1), cat(be32(9999), enc('avc1')))))));
+    expect(await codecOf(broken)).toBeUndefined();
+    const none = box('trak', box('mdia', box('hdlr', new Uint8Array(4), be32(0), enc('vide'), new Uint8Array(13)),
+      box('minf', box('stbl', box('stsd', new Uint8Array(4), be32(0))))));
+    expect(await codecOf(none)).toBeUndefined();
+  });
+
+  // tests/videos/ is made by scripts/make_video_samples.py (ffmpeg); codecs checked with ffprobe.
+  it.each([
+    ['old-phone.3gp', '3gp', 's263'],
+    ['hevc.mp4', 'mp4', 'hvc1.1.6.L60.90'],
+    ['hevc.mov', 'mov', 'hvc1.1.6.L60.90'],
+    ['mpeg4-part2.mp4', 'mp4', 'mp4v.20'],
+    ['camera-mjpeg.mov', 'mov', 'jpeg'],
+  ])('%s is kept, with its codec', async (name, kind, codec) => {
+    const data = new Uint8Array(readFileSync(new URL(`./videos/${name}`, import.meta.url)));
+    const r = await inspect(mem(data, name).src, 0);
+    expect(r).toMatchObject({ kind, codec, group: 'keep', reason: 'video', takenAt: '2009-08-15T10:20:30' });
+    expect(r.durationSec).toBeCloseTo(2, 0); // about 2 s (the 8 fps Motion JPEG one is 2.25 s)
+  });
+
+  it('keeps an AVI (no codec read from it)', async () => {
+    const data = new Uint8Array(readFileSync(new URL('./videos/camera.avi', import.meta.url)));
+    const r = await inspect(mem(data, 'camera.avi').src, 0);
+    expect(r).toMatchObject({ kind: 'avi', group: 'keep', reason: 'video' });
+    expect(r.codec).toBeUndefined();
   });
 });

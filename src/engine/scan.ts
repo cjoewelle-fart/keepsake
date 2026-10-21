@@ -91,13 +91,13 @@ export async function inspect(src: FileSource, index: number, rules: Rules = DEF
 
   if (VIDEO_KINDS.has(kind)) {
     if (src.size < rules.smallBytes) return { ...base, kind, group: 'damaged', reason: 'cut-off' };
-    const { takenAt, durationSec, cutOff } = BOX_VIDEO_KINDS.has(kind) ? await readVideo(src, head) : {};
+    const { takenAt, durationSec, cutOff, codec } = BOX_VIDEO_KINDS.has(kind) ? await readVideo(src, head) : {};
     const dated = takenAt ? { takenAt } : {};
     // Cut off: the boxes stop before the file says they should, or there's no 'moov' at all.
     // The date (if 'moov' survived) stays so a video someone keeps anyway still lands on its day;
     // the length doesn't, because it describes the whole video, not what's left of it.
     if (cutOff) return { ...base, kind, ...dated, group: 'damaged', reason: 'cut-off' };
-    return { ...base, kind, ...dated, ...(durationSec !== undefined ? { durationSec } : {}), group: 'keep', reason: 'video' };
+    return { ...base, kind, ...dated, ...(durationSec !== undefined ? { durationSec } : {}), ...(codec ? { codec } : {}), group: 'keep', reason: 'video' };
   }
   if (!PHOTO_KINDS.has(kind)) return { ...base, kind, group: 'system', reason: 'not-media' };
 

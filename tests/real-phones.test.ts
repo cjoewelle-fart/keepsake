@@ -27,11 +27,12 @@ const EXPECTED: Record<string, Expect & { size: number }> = {
   'samsung-galaxy-s4_GT-I9505.jpg': { size: 1_936_020, kind: 'jpeg', group: 'keep', reason: 'photo', width: 4128, height: 2322, camera: 'SAMSUNG GT-I9505', takenAt: '2014-11-27T17:52:49' },
   'samsung-galaxy-j3_SM-J327T1.jpg': { size: 945_207, kind: 'jpeg', group: 'keep', reason: 'photo', width: 2576, height: 1932, camera: 'samsung SM-J327T1', takenAt: '2019-09-26T16:38:00' },
   // creationdate 2019-07-24T11:25:40+0300 (local time wins over mvhd's UTC).
+  // Codecs (T61) checked with ffprobe: H.264 Baseline 3.0 and High 4.0.
   // mvhd: 2401 / 600 = 4.0 s.
-  'iphone-6_video.mov': { size: 439_391, kind: 'mov', group: 'keep', reason: 'video', takenAt: '2019-07-24T11:25:40', durationSec: 2401 / 600 },
+  'iphone-6_video.mov': { size: 439_391, kind: 'mov', group: 'keep', reason: 'video', takenAt: '2019-07-24T11:25:40', durationSec: 2401 / 600, codec: 'avc1.42001E' },
   // No local-time tag: mvhd (UTC). metadata-extractor shows it as 19:20:28 AEDT = 08:20:28 UTC.
   // mvhd: 171 / 1000 s (a few frames, which fits its 241 KB of video data).
-  'samsung-android_video.mp4': { size: 242_752, kind: 'mp4', group: 'keep', reason: 'video', takenAt: '2017-02-22T08:20:28', durationSec: 0.171 },
+  'samsung-android_video.mp4': { size: 242_752, kind: 'mp4', group: 'keep', reason: 'video', takenAt: '2017-02-22T08:20:28', durationSec: 0.171, codec: 'avc1.640028' },
 };
 
 const mem = (path: string, data: Uint8Array): FileSource => ({ path, size: data.length, read: async (s, e) => data.slice(s, e) });

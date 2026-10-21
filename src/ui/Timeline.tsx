@@ -4,6 +4,7 @@ import type { CSSProperties, ReactNode } from 'react';
 import type { FileRecord } from '../engine/types';
 import { bytes, clock, copy, monthName, monthYear, n, runTime, weekdayDayMonth } from './copy';
 import { Preview } from './Preview';
+import { playableHere } from './playable';
 import { NO_DATE, blocksOf, buildTimeline, columnsFor, inPlay, mediaType, selectedIds, tally } from './timeline';
 import type { Block, Filter, Month, Selection, TriState } from './timeline';
 import type { SetAsideGroup } from '../engine/summary';
@@ -351,11 +352,13 @@ function DayHead({ ymd, state, count, total, onToggle }: { ymd: string; state: T
 type TileProps = { r: FileRecord; file: File; pos: number; of: number; on: boolean; onChange: (on: boolean) => void };
 function Tile({ r, file, pos, of, on, onChange }: TileProps) {
   const type = mediaType(r);
+  // Only a label: a video this browser can't play is selected and saved like any other (T61).
+  const cantPlay = type === 'video' && playableHere(r) === false;
   return (
     <figure className={`print tl-tile${on ? '' : ' off'}`}>
-      <Preview file={file} record={r} size="fill" />
+      <Preview file={file} record={r} size="fill" note={cantPlay ? t.cantPlay : undefined} />
       <label className="chk">
-        <input type="checkbox" checked={on} onChange={(e) => onChange(e.target.checked)} aria-label={t.tileLabel(type, r.takenAt, pos, of, r.durationSec)} />
+        <input type="checkbox" checked={on} onChange={(e) => onChange(e.target.checked)} aria-label={t.tileLabel(type, r.takenAt, pos, of, r.durationSec, cantPlay)} />
         <span className="dot" aria-hidden="true">
           {on && <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7.2l2.6 2.6L11 4.4" stroke="#FFFFFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>}
         </span>
