@@ -321,6 +321,11 @@ export type ScanOptions = {
   concurrency?: number;
   /** Copy suspects fingerprinted at once; each holds at most 16 MB in memory. */
   copyConcurrency?: number;
+  /**
+   * Waited on before file `i` is looked at, for files still arriving (T52). Rejects when no more
+   * files will come; the scan then ends with null.
+   */
+  ready?: (i: number) => Promise<void>;
 };
 
 /** How often scanAll checks for Stop while it waits on a slow read. */
@@ -334,9 +339,9 @@ const STOP_POLL_MS = 25;
  * its next check (between files or 1 MB pieces) and ends without reporting progress.
  */
 export async function scanAll(sources: FileSource[], opts: ScanOptions = {}): Promise<FileRecord[] | null> {
-  const { rules = DEFAULT_RULES, isCancelled, concurrency = 6, copyConcurrency = 4 } = opts;
+  const { rules = DEFAULT_RULES, isCancelled, concurrency = 6, copyConcurrency = 4, ready } = opts;
   const onProgress = opts.onProgress && ((p: Progress) => { if (!isCancelled?.()) opts.onProgress!(p); });
-  const work = scanWork(sources, rules, onProgress, isCancelled, concurrency, copyConcurrency);
+  const work = scanWork(sources, rules, onProgress, isCancelled, concurrency, copyConcurrency, ready);
   if (!isCancelled) return work;
   work.catch(() => {}); // if Stop wins the race, a later failure of the abandoned work isn't an error
   let timer: ReturnType<typeof setInterval> | undefined;
@@ -357,9 +362,11 @@ async function scanWork(
   isCancelled: (() => boolean) | undefined,
   concurrency: number,
   copyConcurrency: number,
+  ready: ((i: number) => Promise<void>) | undefined,
 ): Promise<FileRecord[] | null> {
   const records: FileRecord[] = new Array(sources.length);
   let next = 0;
+  let abandoned = false; // files stopped arriving
   let done = 0;
   let lastReport = 0;
   const report = (force = false) => {
@@ -373,6 +380,10 @@ async function scanWork(
     while (next < sources.length) {
       if (isCancelled?.()) return;
       const i = next++;
+      if (ready) {
+        try { await ready(i); } catch { abandoned = true; return; }
+        if (isCancelled?.()) return;
+      }
       try {
         records[i] = await inspect(sources[i], i, rules);
       } catch {
@@ -389,7 +400,7 @@ async function scanWork(
     }
   };
   await Promise.all(Array.from({ length: Math.min(concurrency, sources.length) }, worker));
-  if (isCancelled?.()) return null;
+  if (isCancelled?.() || abandoned) return null;
   report(true);
   await markCopies(records, sources, onProgress, isCancelled, copyConcurrency);
   if (isCancelled?.()) return null;
