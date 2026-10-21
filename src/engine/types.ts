@@ -31,6 +31,11 @@ export type FileRecord = {
   takenAt?: string;
   /** Videos: length in seconds, from the container's 'mvhd' (or 'mehd'). Not set for cut-off videos. */
   durationSec?: number;
+  /**
+   * Videos: the codec of the picture track, as a 'codecs' string (RFC 6381) the page can pass
+   * to the browser's canPlayType, e.g. 'avc1.64001F' or 'hvc1.2.4.L123.B0' (T61).
+   */
+  codec?: string;
   group: Group;
   reason: Reason;
   /** For copies: the index of the file that was kept. */

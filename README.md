@@ -11,6 +11,7 @@ PhotoRec recovers files well but loses their names and folders, leaving thousand
 - Fonts are bundled; no analytics or third-party scripts.
 - Photo tiles show small copies (shorter side 160–480 px, sized to the tile and the screen), made on your computer by the browser's own decoder in two or three background workers (`src/worker/thumb.worker.ts`), only for tiles near the screen, and drawn into a canvas that is emptied when the tile scrolls away. JPEGs are decoded straight to 1/2–1/8 size where the browser supports it (WebCodecs `ImageDecoder`), and turned upright by their Exif orientation. At most 300 copies (a few MB) are kept for scrolling back. Browsers without `OffscreenCanvas` show the photo file itself, as before.
 - iPhone (HEIC) previews in Chrome, Edge and Firefox are decoded on your computer by libheif compiled to WebAssembly and bundled with the app (nothing is downloaded at runtime). Safari shows HEIC itself. Phones store a small copy (about 320 px) inside each HEIC; when it's there and shaped like the photo, that copy is decoded instead of the full 12 MP picture (about 15 ms instead of 1–1.5 s). Photos without one (often edited or exported ones) are decoded in full and scaled down. One decoding worker, or two on computers with 4+ cores and 4+ GB of memory. A decode that takes over 15 seconds is abandoned (its worker is replaced) and the tile shows the file type instead; at most 200 decoded previews are kept in memory.
+- Videos this browser can't play (old phone 3GP, HEVC in a browser without it, AVI, Motion JPEG) say "Can't play here; it'll still be saved" on their tile. The scan reads each video's codec from its 'stsd' box and the page asks the browser's `canPlayType`; the video itself isn't loaded or decoded. They stay selected and are saved like any other.
 - The recovery folder is opened read-only.
 - Works offline: after the first visit a service worker keeps a copy of the app's own files (never your photos), so you can turn off your Wi-Fi and it still works. It only stores files that are part of the app and never contacts any other site.
 
@@ -42,6 +43,7 @@ npm test           # unit and regression tests
 npm run fixture    # make a synthetic PhotoRec-style folder in fixtures/ (needs Python 3 + Pillow; HEIC files are included when pillow-heif is installed)
 npm run eval       # score the engine against the fixture's answer key
 python3 scripts/make_heic_samples.py tests/heic   # remake the HEIC test files (needs pillow-heif)
+python3 scripts/make_video_samples.py tests/videos   # remake the hard-to-play video test files (needs ffmpeg with libx265)
 npm run build && node scripts/e2e.mjs <path-to-chromium>   # full flow in a real browser
 npm run build && npm run offline-check -- <path-to-chromium>   # installs the app, cuts the network, then scans the fixture offline
 node scripts/bench_copies.mjs --files 40000 --concurrency 1,4   # times a 40,000-file scan (12 GB in a temp dir, deleted after)

@@ -1,17 +1,19 @@
 // End-to-end check of the built app in a real browser.
-// Usage: npm run build && node scripts/e2e.mjs [chromiumPath]
+// Usage: npm run build && node scripts/e2e.mjs [chromiumPath] [--port 4173]
 import { execFileSync, spawn } from 'node:child_process';
 import { mkdirSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { chromium } from 'playwright';
 
-const exe = process.argv[2] || process.env.CHROMIUM_PATH;
+const exe = (process.argv[2]?.startsWith('--') ? undefined : process.argv[2]) || process.env.CHROMIUM_PATH;
+const portAt = process.argv.indexOf('--port');
+const PORT = portAt < 0 ? '4173' : process.argv[portAt + 1];
 const out = 'e2e-shots';
 mkdirSync(out, { recursive: true });
 
-const server = spawn('npx', ['vite', 'preview', '--port', '4173', '--strictPort'], { stdio: 'pipe', detached: true });
-await new Promise((r) => server.stdout.on('data', (d) => String(d).includes('4173') && r()));
+const server = spawn('npx', ['vite', 'preview', '--port', PORT, '--strictPort'], { stdio: 'pipe', detached: true });
+await new Promise((r) => server.stdout.on('data', (d) => String(d).includes(PORT) && r()));
 
 const num = (t) => Number(t.replace(/[^0-9]/g, ''));
 /** The ledger must always add up: kept + set aside = files checked. */
@@ -279,7 +281,7 @@ try {
     const page = await browser.newPage({ viewport, deviceScaleFactor });
     page.on('console', (m) => m.type() === 'error' && problems.push(`[${label}] console: ${m.text()}`));
     page.on('pageerror', (e) => problems.push(`[${label}] page error: ${e.message}`));
-    page.on('request', (r) => { if (!r.url().startsWith('http://localhost:4173') && !r.url().startsWith('blob:') && !r.url().startsWith('data:')) requests.push(r.url()); });
+    page.on('request', (r) => { if (!r.url().startsWith(`http://localhost:${PORT}`) && !r.url().startsWith('blob:') && !r.url().startsWith('data:')) requests.push(r.url()); });
     // Force the file-input fallback (the folder picker dialog can't be automated).
     await page.addInitScript(() => {
       for (const k of ['showDirectoryPicker', 'showOpenFilePicker', 'showSaveFilePicker']) {
@@ -287,7 +289,7 @@ try {
         delete Window.prototype[k];
       }
     });
-    await page.goto('http://localhost:4173/');
+    await page.goto(`http://localhost:${PORT}/`);
     await page.screenshot({ path: `${out}/${label}-1-start.png`, fullPage: true });
     await checkNoSideScroll(page, label, 'start');
 

@@ -12,6 +12,8 @@
 // - 'mvhd' also holds the length (duration / timescale).
 // A recovered video whose boxes stop before the file says they should, or that has no 'moov'
 // at all, can't be played as it is: that's how a cut-off video is told apart from a whole one.
+// - 'trak' > 'mdia' > 'minf' > 'stbl' > 'stsd' names the video's codec (T61), so the page can ask
+//   the browser whether it can play it, without loading the video.
 
 import { readBoxHeader, type BoxHeader } from './heif';
 
@@ -157,6 +159,12 @@ export type VideoInfo = {
    * that tells a player how to play the video). Only set when the walk proves it.
    */
   cutOff?: boolean;
+  /**
+   * The first video track's codec as a 'codecs' parameter (RFC 6381), e.g. 'avc1.64001F' or
+   * 'hvc1.2.4.L123.B0', or the bare sample entry type ('s263', 'mp4v.20', 'jpeg') for codecs
+   * whose string we don't build in full. Undefined when it can't be found.
+   */
+  codec?: string;
 };
 
 /** Longest length we believe (a week): anything bigger is a broken or placeholder value. */
@@ -253,6 +261,7 @@ export async function videoInfo(read: Read, fileSize: number, head: Uint8Array, 
   let timescale = 0;
   let duration: number | undefined;
   let mvex: { at: number; end: number } | undefined;
+  const traks: { at: number; end: number; headerLen: number }[] = [];
   for (let p = moovAt + moov.headerLen, n = 0; p + 8 <= moovEnd && n < MAX_BOXES; n++) {
     const h = await header(p, moov.end);
     if (!h || h.end > moovEnd) break;
@@ -266,6 +275,8 @@ export async function videoInfo(read: Read, fileSize: number, head: Uint8Array, 
       if (text) fromMeta = quicktimeDate(text, now);
     } else if (h.type === 'mvex' && !mvex && h.end - p <= META_MAX) {
       mvex = { at: p, end: h.end };
+    } else if (h.type === 'trak' && traks.length < MAX_TRACKS) {
+      traks.push({ at: p, end: h.end, headerLen: h.headerLen });
     }
     p = h.end;
   }
@@ -277,7 +288,127 @@ export async function videoInfo(read: Read, fileSize: number, head: Uint8Array, 
   const takenAt = fromMeta ?? fromMvhd;
   if (takenAt) info.takenAt = takenAt;
   if (duration !== undefined) info.durationSec = duration;
+  for (const t of traks) {
+    const codec = await trackCodec(t, header, bytesAt);
+    if (codec) { info.codec = codec; break; }
+  }
   return info;
+}
+
+/** Tracks looked at for a codec; real files have 2 to 5 (video, sound, timecode, metadata). */
+const MAX_TRACKS = 16;
+/** Largest sample description we'll read. Real ones are well under 1 KB. */
+const STSD_MAX = 64 * 1024;
+
+/**
+ * The codec of a 'trak' if it's a video track ('vide' handler), from its first sample entry.
+ * Reads only box headers on the way down and the small 'hdlr' and 'stsd' boxes.
+ */
+async function trackCodec(
+  trak: { at: number; end: number; headerLen: number },
+  header: (at: number, limit: number) => Promise<BoxHeader | null>,
+  bytesAt: (s: number, e: number) => Promise<Uint8Array>,
+): Promise<string | undefined> {
+  /** The child box of the given type, between `from` and `to`. */
+  const child = async (from: number, to: number, type: string) => {
+    for (let p = from, n = 0; p + 8 <= to && n < 64; n++) {
+      const h = await header(p, to);
+      if (!h || h.end > to) return undefined;
+      if (h.type === type) return { at: p, body: p + h.headerLen, end: h.end };
+      p = h.end;
+    }
+    return undefined;
+  };
+  const mdia = await child(trak.at + trak.headerLen, trak.end, 'mdia');
+  if (!mdia) return undefined;
+  const hdlr = await child(mdia.body, mdia.end, 'hdlr');
+  // hdlr: version/flags, pre_defined, then the handler type.
+  if (!hdlr || hdlr.body + 12 > hdlr.end) return undefined;
+  const handler = String.fromCharCode(...(await bytesAt(hdlr.body + 8, hdlr.body + 12)));
+  if (handler !== 'vide') return undefined;
+  const minf = await child(mdia.body, mdia.end, 'minf');
+  const stbl = minf && (await child(minf.body, minf.end, 'stbl'));
+  const stsd = stbl && (await child(stbl.body, stbl.end, 'stsd'));
+  if (!stsd || stsd.end - stsd.at > STSD_MAX) return undefined;
+  const b = await bytesAt(stsd.body, stsd.end);
+  // stsd: version/flags, entry_count, then the first sample entry (a box named after its codec).
+  if (b.length < 16 || u32(b, 4) < 1) return undefined;
+  const size = u32(b, 8);
+  if (size < 8 || 8 + size > b.length) return undefined;
+  return codecString(b.subarray(8, 8 + size));
+}
+
+const hex2 = (n: number) => n.toString(16).toUpperCase().padStart(2, '0');
+const pad2 = (n: number) => String(n).padStart(2, '0');
+
+/**
+ * The RFC 6381 codec string for a visual sample entry (the whole box, header included):
+ * the box type plus profile and level from its configuration box, where browsers need them
+ * (H.264, HEVC, AV1, VP9). Other codecs give their bare type. Undefined for protected
+ * ('encv') or unreadable entries.
+ */
+export function codecString(entry: Uint8Array): string | undefined {
+  if (entry.length < 8) return undefined;
+  const type = String.fromCharCode(...entry.subarray(4, 8));
+  if (!/^[\x20-\x7e]{4}$/.test(type) || type === 'encv') return undefined;
+  // VisualSampleEntry: 8 header + 78 bytes of fields, then its child boxes.
+  const config = (name: string) => {
+    for (const k of rawChildren(entry, 86, entry.length)) if (k.type === tag(name)) return entry.subarray(k.body, k.end);
+    return undefined;
+  };
+  const fourcc = type.trim();
+  switch (type) {
+    case 'avc1': case 'avc3': case 'avc2': case 'avc4': {
+      const c = config('avcC');
+      return c && c.length >= 4 ? `${type}.${hex2(c[1])}${hex2(c[2])}${hex2(c[3])}` : type;
+    }
+    case 'hvc1': case 'hev1': {
+      const c = config('hvcC');
+      if (!c || c.length < 13) return type;
+      const space = ['', 'A', 'B', 'C'][c[1] >> 6];
+      const tier = (c[1] >> 5) & 1 ? 'H' : 'L';
+      const profile = c[1] & 31;
+      // general_profile_compatibility_flags, written bit-reversed.
+      let compat = u32(c, 2), reversed = 0;
+      for (let i = 0; i < 32; i++) { reversed = (reversed << 1) | (compat & 1); compat >>>= 1; }
+      const constraints = [...c.subarray(6, 12)];
+      while (constraints.length && constraints[constraints.length - 1] === 0) constraints.pop();
+      return [`${type}`, `${space}${profile}`, (reversed >>> 0).toString(16).toUpperCase(), `${tier}${c[12]}`, ...constraints.map(hex2)].join('.');
+    }
+    case 'av01': {
+      const c = config('av1C');
+      if (!c || c.length < 4) return type;
+      const high = (c[2] >> 6) & 1, twelve = (c[2] >> 5) & 1;
+      return `av01.${c[1] >> 5}.${pad2(c[1] & 31)}${c[2] >> 7 ? 'H' : 'M'}.${pad2(high ? (twelve ? 12 : 10) : 8)}`;
+    }
+    case 'vp08': case 'vp09': {
+      const c = config('vpcC'); // full box: version/flags, then profile, level, bit depth (high 4 bits)
+      return c && c.length >= 7 ? `${type}.${pad2(c[4])}.${pad2(c[5])}.${pad2(c[6] >> 4)}` : type;
+    }
+    case 'mp4v': {
+      const oti = esdsObjectType(config('esds'));
+      return oti === undefined ? type : `mp4v.${oti.toString(16)}`;
+    }
+    default:
+      return fourcc || undefined;
+  }
+}
+
+/** objectTypeIndication from an 'esds' body (0x20 = MPEG-4 Visual), via its ES and DecoderConfig descriptors. */
+function esdsObjectType(esds: Uint8Array | undefined): number | undefined {
+  if (!esds || esds.length < 6) return undefined;
+  let at = 4; // version/flags
+  const len = () => { let n = 0; for (let k = 0; k < 4 && at < esds.length; k++) { const v = esds[at++]; n = (n << 7) | (v & 0x7f); if (!(v & 0x80)) break; } return n; };
+  if (esds[at++] !== 0x03) return undefined; // ES_Descriptor
+  len();
+  at += 2; // ES_ID
+  const flags = esds[at++];
+  if (flags & 0x80) at += 2; // dependsOn_ES_ID
+  if (flags & 0x40) at += 1 + (esds[at] ?? 0); // URL
+  if (flags & 0x20) at += 2; // OCR_ES_Id
+  if (esds[at++] !== 0x04) return undefined; // DecoderConfigDescriptor
+  len();
+  return at < esds.length ? esds[at] : undefined;
 }
 
 /**
