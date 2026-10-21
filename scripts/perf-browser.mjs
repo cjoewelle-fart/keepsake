@@ -81,6 +81,31 @@ async function devtools(pageUrlPrefix) {
   return { send, workers, close: () => ws.close() };
 }
 
+// --- PERF_MEMDUMP=1: Chrome's own memory breakdown (memory-infra) per process, in MB ---
+async function memoryDump(cdp) {
+  const events = [];
+  const onData = (e) => events.push(...e.value);
+  cdp.on('Tracing.dataCollected', onData);
+  await cdp.send('Tracing.start', { transferMode: 'ReportEvents', traceConfig: { includedCategories: ['disabled-by-default-memory-infra'], excludedCategories: ['*'], memoryDumpConfig: { triggers: [] } } });
+  await cdp.send('Tracing.requestMemoryDump', { deterministic: true, levelOfDetail: 'detailed' });
+  const done = new Promise((r) => cdp.once('Tracing.tracingComplete', r));
+  await cdp.send('Tracing.end');
+  await done;
+  cdp.off('Tracing.dataCollected', onData);
+  const out = {};
+  for (const e of events) {
+    const alloc = e.ph === 'v' && e.args?.dumps?.allocators;
+    if (!alloc) continue;
+    const row = (out[e.pid] ??= {});
+    for (const [name, d] of Object.entries(alloc)) {
+      if (name.includes('/')) continue; // top-level allocators only
+      const size = d.attrs?.effective_size?.value ?? d.attrs?.size?.value;
+      if (size) row[name] = (row[name] ?? 0) + MB(parseInt(size, 16));
+    }
+  }
+  return out;
+}
+
 const server = spawn('npx', ['vite', 'preview', '--port', String(PORT), '--strictPort'], { stdio: 'pipe', detached: true });
 const stopServer = () => { try { process.kill(-server.pid); } catch { /* already stopped */ } };
 process.on('exit', stopServer);
@@ -126,12 +151,16 @@ async function run(n) {
   // Sample memory every 250 ms for the whole run.
   const peak = { pss: 0, page: 0, worker: 0, pssAt: '', byPhase: {} };
   let phase = 'start';
+  /** Finer step within a phase, for PERF_TRACE only. */
+  let step = '';
+  const trace = [];
   let sampling = true;
   const sampler = (async () => {
     while (sampling) {
       const types = new Map((await bcdp.send('SystemInfo.getProcessInfo')).processInfo.map((p) => [p.id, p.type]));
       const { total: pss, parts } = treePss(rootPid, types);
       peak.byPhase[phase] = Math.max(peak.byPhase[phase] ?? 0, pss);
+      if (process.env.PERF_TRACE) trace.push([Date.now(), phase, step, MB(pss), MB(parts.renderer ?? 0), MB(parts.browser ?? 0)]);
       if (pss > peak.pss) { peak.pss = pss; peak.pssAt = phase; peak.parts = Object.entries(parts).map(([k, v]) => `${k} ${MB(v)}`).join(', '); }
       const h = await dt.send('Runtime.getHeapUsage');
       if (h.usedSize > peak.page) peak.page = h.usedSize;
@@ -174,7 +203,8 @@ async function run(n) {
     }
   }
   // First preview actually drawn on the results screen.
-  await page.waitForFunction(() => [...document.querySelectorAll('.tile img')].some((i) => i.complete && i.naturalWidth > 0), null, { timeout: 120_000, polling: 50 }).catch(() => {});
+  // (A preview is an <img> pointed at the file, or since T53 a small copy drawn into a <canvas>.)
+  await page.waitForFunction(() => [...document.querySelectorAll('.tile img, .tile canvas')].some((i) => (i instanceof HTMLImageElement ? i.complete && i.naturalWidth > 0 : i.style.display !== 'none')), null, { timeout: 120_000, polling: 50 }).catch(() => {});
   const tFirstImg = await page.evaluate(() => performance.now());
   const h1 = await page.evaluate(() => window.__h1);
   const copiesAt = h1.find(([, t]) => /exact copies/.test(t))?.[0];
@@ -182,11 +212,14 @@ async function run(n) {
   const ltScan = await page.evaluate(([a, b]) => window.__lt.filter(([s]) => s >= a && s <= b), [t0, tResults]);
 
   // Review timeline: open it, then scroll top to bottom, one screen per step.
+  const memdumps = {};
+  if (process.env.PERF_MEMDUMP) memdumps.beforeReview = await memoryDump(bcdp);
   phase = 'timeline';
   const tReview0 = await page.evaluate(() => performance.now());
   await page.getByRole('button', { name: /^Review my/ }).click();
   await page.getByRole('heading', { level: 1, name: /Choose what to save/ }).waitFor();
   const tReview = await page.evaluate(() => performance.now());
+  step = 'scroll';
   const scroll = await page.evaluate(async () => {
     const frame = () => new Promise((r) => requestAnimationFrame(() => r(performance.now())));
     window.scrollTo(0, 0);
@@ -218,6 +251,7 @@ async function run(n) {
   const ltScroll = await page.evaluate((a) => window.__lt.filter(([s]) => s >= a), scroll.from);
   // A person stopping to look: jump to 15 places spread down the page and time until every
   // tile on screen shows its preview (or its file-type label, when there's no preview).
+  step = 'jumps';
   const settle = await page.evaluate(async () => {
     const frame = () => new Promise((r) => requestAnimationFrame(r));
     const PHOTO_EXT = /^(JPE?G|PNG|GIF|WEBP|BMP|HEIC|HEIF)$/;
@@ -232,7 +266,7 @@ async function run(n) {
         const onScreen = [...document.querySelectorAll('.tl-tile .tile')].filter((e) => { const r = e.getBoundingClientRect(); return r.bottom > 0 && r.top < innerHeight; });
         // Done = picture shown, or a file type that never has one (videos). A photo still showing
         // its type label is waiting (its first frame, or a HEIC being decoded).
-        const pending = onScreen.filter((e) => { const i = e.querySelector('img'); return i ? !(i.complete && i.naturalWidth > 0) : PHOTO_EXT.test(e.querySelector('.tile-label')?.textContent ?? ''); });
+        const pending = onScreen.filter((e) => { const i = e.querySelector('img'); return i ? !(i.complete && i.naturalWidth > 0) : PHOTO_EXT.test(e.querySelector('.tile-label')?.textContent ?? ''); }); // a drawn canvas has no label
         heic = Math.max(heic, onScreen.filter((e) => e.querySelector('.tile-label')?.textContent === 'HEIC').length);
         if (onScreen.length && !pending.length) break;
         if (performance.now() - t > 60_000) { out.push({ ms: 60_000, heic, timedOut: true }); break; }
@@ -247,12 +281,18 @@ async function run(n) {
   await page.waitForTimeout(3000);
   const shown = await page.evaluate(() => {
     window.__imgErrAtEnd = window.__imgErr;
-    const imgs = [...document.querySelectorAll('.tl-tile img')].filter((e) => { const r = e.getBoundingClientRect(); return r.bottom > 0 && r.top < innerHeight; });
-    return { errNames: window.__imgErrNames, imgErrors: window.__imgErr, tiles: document.querySelectorAll('.tl-tile').length, imgs: imgs.length, loaded: imgs.filter((i) => i.complete && i.naturalWidth > 0).length };
+    const pics = [...document.querySelectorAll('.tl-tile img, .tl-tile canvas')].filter((i) => i.style.display !== 'none'); // a canvas is hidden until drawn
+    const size = (i) => (i instanceof HTMLImageElement ? (i.complete ? [i.naturalWidth, i.naturalHeight] : [0, 0]) : [i.width, i.height]);
+    const imgs = pics.filter((e) => { const r = e.getBoundingClientRect(); return r.bottom > 0 && r.top < innerHeight; });
+    // Biggest picture any drawn tile holds (T53: small copies, not the full-size photo).
+    const maxPx = Math.max(0, ...pics.map((i) => Math.max(...size(i))));
+    return { errNames: window.__imgErrNames, imgErrors: window.__imgErr, tiles: document.querySelectorAll('.tl-tile').length, imgs: imgs.length, loaded: imgs.filter((i) => size(i)[0] > 0).length, maxPx };
   });
   if (process.env.PERF_DUMP_ERRORS) writeFileSync(process.env.PERF_DUMP_ERRORS, shown.errNames.join('\n'));
+  if (process.env.PERF_MEMDUMP) memdumps.end = await memoryDump(bcdp);
   sampling = false;
   await sampler;
+  if (process.env.PERF_TRACE) writeFileSync(`${process.env.PERF_TRACE}.run${n}.tsv`, trace.map((r) => r.join('\t')).join('\n'));
   dt.close();
   await browser.close();
   const sum = (l) => l.reduce((a, [, d]) => a + d, 0);
@@ -266,7 +306,7 @@ async function run(n) {
     copiesSec: copiesAt ? +((tResults - copiesAt) / 1000).toFixed(1) : null,
     firstPreviewSec: +((tFirstImg - t0) / 1000).toFixed(1),
     ledger,
-    peakPssMB: MB(peak.pss), peakPssPhase: peak.pssAt, peakPssParts: peak.parts, peakScanPssMB: MB(peak.byPhase.scan ?? 0), peakPageHeapMB: MB(peak.page), peakWorkerHeapMB: MB(peak.worker),
+    peakPssMB: MB(peak.pss), peakPssPhase: peak.pssAt, peakPssParts: peak.parts, peakScanPssMB: MB(peak.byPhase.scan ?? 0), peakReviewPssMB: MB(peak.byPhase.timeline ?? 0), peakPssByPhaseMB: Object.entries(peak.byPhase).map(([k, v]) => `${k} ${MB(v)}`).join(', '), peakPageHeapMB: MB(peak.page), peakWorkerHeapMB: MB(peak.worker),
     scanLongTop: ltScan.sort((a, b) => b[1] - a[1]).slice(0, 3).map(([st, d]) => `${Math.round(d)}ms@${((st - t0) / 1000).toFixed(1)}s`).join(' '),
     scanLongTasks: ltScan.length, scanLongMaxMs: Math.round(Math.max(0, ...ltScan.map(([, d]) => d))), scanLongTotalMs: Math.round(sum(ltScan)),
     openReviewMs: Math.round(tReview - tReview0),
@@ -276,8 +316,9 @@ async function run(n) {
     screenSettleMedMs: settleMs[7], screenSettleMaxMs: settleMs.at(-1), screensWithHeic: settle.filter((x) => x.heic).length, screensTimedOut: settle.filter((x) => x.timedOut).length, settleScreensMs: settle.map((x) => `${x.ms}${x.heic ? `(${x.heic}heic)` : ''}`).join(' '), noPreviewTilesAfterSettle: Object.entries(settle.flatMap((x) => x.unavailable ?? []).reduce((c, e) => ({ ...c, [e]: (c[e] ?? 0) + 1 }), {})).map(([e, c]) => `${c} ${e}`).join(', '),
     // Expected: one per HEIC shown (Chromium can't show HEIC, so the tile falls back to decoding it).
     previewLoadErrors: shown.imgErrors, failedLoads: Object.entries(failed).map(([k, v]) => `${v} ${k}`).join(', '),
-    tilesDrawnAtEnd: shown.tiles, previewsOnScreenAtEnd: `${shown.loaded}/${shown.imgs} loaded`,
+    tilesDrawnAtEnd: shown.tiles, previewsOnScreenAtEnd: `${shown.loaded}/${shown.imgs} loaded`, largestTilePicturePx: shown.maxPx,
     errors: errors.length ? errors.slice(0, 3).join(' | ') : '', outsideRequests: outside.length,
+    ...(process.env.PERF_MEMDUMP ? { memdumps } : {}),
   };
 }
 
@@ -293,7 +334,7 @@ try {
 }
 const med = (k) => { const v = rows.map((r) => r[k]).filter((x) => typeof x === 'number').sort((a, b) => a - b); return v.length ? `${v[Math.floor((v.length - 1) / 2)]} (${v[0]}–${v.at(-1)})` : '-'; };
 console.log(`\n${rows.length} runs, median (range):`);
-for (const k of ['scanSec', 'checkSec', 'copiesSec', 'firstPreviewSec', 'peakPssMB', 'peakScanPssMB', 'peakPageHeapMB', 'peakWorkerHeapMB', 'scanLongTasks', 'scanLongMaxMs', 'openReviewMs', 'scrollSec', 'frameP95Ms', 'frameMaxMs', 'scrollLongTasks', 'scrollLongMaxMs', 'screenSettleMedMs', 'screenSettleMaxMs'])
+for (const k of ['scanSec', 'checkSec', 'copiesSec', 'firstPreviewSec', 'peakPssMB', 'peakScanPssMB', 'peakReviewPssMB', 'peakPageHeapMB', 'peakWorkerHeapMB', 'scanLongTasks', 'scanLongMaxMs', 'openReviewMs', 'scrollSec', 'frameP95Ms', 'frameMaxMs', 'scrollLongTasks', 'scrollLongMaxMs', 'screenSettleMedMs', 'screenSettleMaxMs'])
   console.log(`  ${k.padEnd(18)} ${med(k)}`);
 const worst = Math.max(...rows.map((r) => r.scanSec));
 console.log(`Gate 4 (40,000 files in under 5 minutes): ${worst < 300 ? 'PASS' : 'FAIL'} (slowest run ${worst}s)`);
