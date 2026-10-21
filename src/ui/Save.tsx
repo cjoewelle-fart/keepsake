@@ -6,10 +6,10 @@ import type { FileRecord } from '../engine/types';
 import type { SaveApi } from '../worker/save.worker';
 import SaveWorker from '../worker/save.worker.ts?worker&inline';
 import { bytes, copy, n } from './copy';
-import { ZIP_LIMITS, inRecoveryFolder, insideRecovery, planNames, receiptText, scanFolders, sortedInto, splitParts, zipPath } from './savePlan';
-import type { Planned, RecoveryRootDir, ResolvingDir } from './savePlan';
+import { ZIP_LIMITS, checkRecoveryFolder, insideRecovery, planNames, receiptText, scanFolders, sortedInto, splitParts, zipPath } from './savePlan';
+import type { FolderCheck, Planned, RecoveryRootDir, ResolvingDir } from './savePlan';
 import type { RecoveryRoot } from './recoveryFolder';
-import { canPickFolder, download, ensureWritable, hasRoot, newFolderSession, pickFolder, saveAsZip, saveToFolder } from './saveRun';
+import { canSaveToFolder, download, ensureWritable, hasRoot, newFolderSession, pickFolder, saveAsZip, saveToFolder } from './saveRun';
 import type { DirHandle, FolderSession, RunEnd } from './saveRun';
 import { END_COST, entryCost } from './zip';
 import { mediaType } from './timeline';
@@ -27,16 +27,24 @@ type Props = {
 };
 
 type Phase =
-  | { k: 'choose'; problem?: 'denied' | 'recovery' }
+  | { k: 'choose'; problem?: 'denied' | 'recovery' | 'unchecked' | 'unsupported' }
   | { k: 'saving' }
-  | { k: 'ended'; end: Exclude<RunEnd, 'done'> }
+  | { k: 'ended'; end: Exclude<RunEnd, 'done' | 'unsupported'> }
   | { k: 'done'; when: Date };
 
 const s = copy.save;
+const problemText = {
+  denied: [s.deniedH, s.deniedBody],
+  recovery: [s.recoveryH, s.recoveryBody],
+  unchecked: [s.uncheckedH, s.uncheckedBody],
+  unsupported: [s.unsupportedH, s.unsupportedBody],
+} as const;
 const split = (list: readonly Planned[]) => splitParts(list, (p) => entryCost(zipPath(p), p.size), END_COST);
 
 export function Save({ records, files, ids, recoveryRoot, onBack, onDone }: Props) {
-  const folderMode = useMemo(() => canPickFolder(), []);
+  // Zip downloads where the browser can't save into a folder safely (no folder picker, or no
+  // move()); also if move() turns out not to work for the chosen folder.
+  const [folderMode, setFolderMode] = useState(() => canSaveToFolder());
   const byIndex = useMemo(() => {
     const a: FileRecord[] = [];
     for (const r of records) a[r.index] = r;
@@ -96,11 +104,11 @@ export function Save({ records, files, ids, recoveryRoot, onBack, onDone }: Prop
   /**
    * Is the chosen folder the recovery folder or inside it (T55)? With the recovery folder's own
    * handle this is exact; without one (it came from the file-input fallback) it's the best-effort
-   * check from the scanned files' folders. Any error counts as "inside".
+   * check from the scanned files' folders. An error is 'unknown', and that folder is refused too.
    */
-  const isRecovery = (chosen: DirHandle) => (recoveryRoot
-    ? inRecoveryFolder(recoveryRoot as unknown as RecoveryRootDir, chosen as unknown as ResolvingDir)
-    : insideRecovery(chosen as unknown as ResolvingDir, scanFolders(files)).catch(() => true));
+  const checkFolder = (chosen: DirHandle): Promise<FolderCheck> => (recoveryRoot
+    ? checkRecoveryFolder(recoveryRoot as unknown as RecoveryRootDir, chosen as unknown as ResolvingDir)
+    : insideRecovery(chosen as unknown as ResolvingDir, scanFolders(files)).then((inside): FolderCheck => (inside ? 'inside' : 'outside'), (): FolderCheck => 'unknown'));
 
   const remaining = () => items.filter((r) => !sess.saved.has(r.index));
 
@@ -109,6 +117,10 @@ export function Save({ records, files, ids, recoveryRoot, onBack, onDone }: Prop
     setStopping(false);
     if (end === 'done') {
       setPhase({ k: 'done', when: new Date() });
+    } else if (end === 'unsupported') {
+      // Nothing was written: offer zip downloads instead.
+      setFolderMode(false);
+      setPhase({ k: 'choose', problem: 'unsupported' });
     } else {
       setPhase({ k: 'ended', end });
     }
@@ -131,7 +143,7 @@ export function Save({ records, files, ids, recoveryRoot, onBack, onDone }: Prop
       onSaved: (id) => { ev.onSaved(id); setProgress((p) => ({ ...p, done: sess.saved.size })); },
       onFailed: (id) => { ev.onFailed(id); rerender(); },
     });
-    if (!sess.savedTo.includes(session.chosen.name)) sess.savedTo.push(session.chosen.name);
+    if (end !== 'unsupported' && !sess.savedTo.includes(session.chosen.name)) sess.savedTo.push(session.chosen.name);
     await finish(end);
   }
 
@@ -144,8 +156,9 @@ export function Save({ records, files, ids, recoveryRoot, onBack, onDone }: Prop
       setPhase({ k: 'choose', problem: 'denied' });
       return;
     }
-    if (await isRecovery(chosen)) {
-      setPhase({ k: 'choose', problem: 'recovery' });
+    const where = await checkFolder(chosen);
+    if (where !== 'outside') {
+      setPhase({ k: 'choose', problem: where === 'inside' ? 'recovery' : 'unchecked' });
       return;
     }
     if (!(await ensureWritable(chosen))) {
@@ -284,8 +297,8 @@ export function Save({ records, files, ids, recoveryRoot, onBack, onDone }: Prop
       <div className="sheet-col save-col">
         {phase.problem && (
           <section className="card card-problem" role="alert" aria-labelledby="problem-h">
-            <h2 id="problem-h">{phase.problem === 'denied' ? s.deniedH : s.recoveryH}</h2>
-            <p className="sub">{phase.problem === 'denied' ? s.deniedBody : s.recoveryBody}</p>
+            <h2 id="problem-h">{problemText[phase.problem][0]}</h2>
+            <p className="sub">{problemText[phase.problem][1]}</p>
           </section>
         )}
         {folderMode ? (

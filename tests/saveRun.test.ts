@@ -200,28 +200,19 @@ class FailsPartway extends File {
   }
 }
 
-/**
- * With move(): the one removal is the stopped/failed copy's own temporary file. Without it: the
- * empty probe file from the first copy (temporary), plus the stopped/failed copy's own new file.
- */
-function expectOnlyOwnRemoved(removed: string[], noMove: boolean) {
-  const named = removed.filter((p) => !isTemp(p));
-  if (noMove) {
-    expect(named).toHaveLength(1);
-    expect(removed.filter(isTemp)).toHaveLength(1);
-  } else {
-    expect(removed).toHaveLength(1);
-    expect(named).toEqual([]);
-  }
+/** The one removal is the stopped/failed copy's own temporary file. */
+function expectOnlyOwnRemoved(removed: string[]) {
+  expect(removed).toHaveLength(1);
+  expect(removed.filter((p) => !isTemp(p))).toEqual([]);
 }
 
 describe('saving to a folder: only ever removing the empty file this save made (T56)', () => {
-  for (const noMove of [false, true]) {
-    const how = noMove ? 'without move()' : 'temporary name, then move';
+  {
+    const how = 'temporary name, then move';
     it(`${how}: Stop partway through a big file leaves nothing of it, and removes only its own file`, async () => {
       let stop = false;
       // The first two save normally (one slice each); the third is 2½ slices and is stopped after its first.
-      const t = setup(3, { noMove, onWrite: () => { if (t.saved.length === 2) stop = true; } });
+      const t = setup(3, { onWrite: () => { if (t.saved.length === 2) stop = true; } });
       t.items[2].file = new File([new Uint8Array(2 * 8 * MB + MB / 2)], 'big.mov');
       const ev = { ...t.ev, shouldStop: () => stop };
       expect(await saveToFolder(t.session, t.items, ev)).toBe('stopped');
@@ -230,18 +221,18 @@ describe('saving to a folder: only ever removing the empty file this save made (
         'Keepsake photos/2024/06 June/2024-06-28 14.32 (2).jpg',
         FINAL,
       ]);
-      expectOnlyOwnRemoved(t.fs.used.removed, noMove);
+      expectOnlyOwnRemoved(t.fs.used.removed);
     });
 
     it(`${how}: a read error partway through a file skips it, removes only its own file, saving goes on`, async () => {
-      const t = setup(3, { noMove });
+      const t = setup(3);
       t.items[1].file = new FailsPartway([new Uint8Array(2 * 8 * MB)], 'bad.jpg', 8 * MB);
       expect(await saveToFolder(t.session, t.items, t.ev)).toBe('done');
       expect(t.failed).toEqual([t.items[1].r.index]);
       expect(t.saved).toEqual([t.items[0].r.index, t.items[2].r.index]);
       expect(t.fs.files.size).toBe(2);
       for (const [k, v] of t.fs.files) { expect(isTemp(k)).toBe(false); expect(v.length).toBeGreaterThan(0); }
-      expectOnlyOwnRemoved(t.fs.used.removed, noMove);
+      expectOnlyOwnRemoved(t.fs.used.removed);
     });
   }
 
@@ -254,9 +245,9 @@ describe('saving to a folder: only ever removing the empty file this save made (
     expect([...t.fs.files.keys()].some(isTemp)).toBe(false);
   });
 
-  for (const noMove of [false, true]) {
-    it(`a name that appears after the folder was listed is never written to${noMove ? ' (without move())' : ''}`, async () => {
-      const t = setup(2, { noMove });
+  {
+    it('a name that appears after the folder was listed is never written to', async () => {
+      const t = setup(2);
       const second = 'Keepsake photos/2024/06 June/2024-06-28 14.32 (2).jpg';
       let calls = 0;
       // Between the first and second copy (after the listing), another program makes the next planned name.
@@ -287,7 +278,7 @@ describe('saving to a folder: only ever removing the empty file this save made (
     expect(t.session.canMove).toBe(true);
   });
 
-  it('move() that isn’t supported here: falls back to the old way, leaving no temporary file', async () => {
+  it('move() that isn’t supported here: nothing is saved, the save ends "unsupported" (zip downloads instead), no temporary file left', async () => {
     const t = setup(2);
     // Wrap every file handle so move() throws NotSupportedError, as a browser without it for this folder would.
     const wrap = (d: DirHandle): DirHandle => new Proxy(d, {
@@ -304,10 +295,12 @@ describe('saving to a folder: only ever removing the empty file this save made (
       },
     });
     const session = newFolderSession(wrap(t.fs.root));
-    expect(await saveToFolder(session, t.items, t.ev)).toBe('done');
+    expect(await saveToFolder(session, t.items, t.ev)).toBe('unsupported');
     expect(session.canMove).toBe(false);
-    expect([...t.fs.files.keys()].sort()).toEqual(['Keepsake photos/2024/06 June/2024-06-28 14.32 (2).jpg', FINAL]);
-    expect(t.fs.used.removed.every(isTemp)).toBe(true); // only the empty probe file
+    expect(t.saved).toEqual([]);
+    expect([...t.fs.files.keys()]).toEqual([]);
+    expect(t.fs.used.removed).toHaveLength(1); // only the empty probe file
+    expect(t.fs.used.removed.every(isTemp)).toBe(true);
   });
 });
 

@@ -47,6 +47,8 @@ try {
     console.log(s, JSON.stringify(saves[s]));
     const after = saves[s].after;
     expect(after.includes('Keepsake photos/2024/06 June/2024-06-28 14.32.jpg:3') && after.includes('Keepsake photos/2024/06 June/empty-theirs.jpg:0'), `${s}: a file that was there before changed or went`);
+    expect(!after.some((x) => x.includes('.keepsake-partial-')), `${s}: a temporary file was left behind`);
+    if (s.startsWith('no-move') || s === 'move-unsupported') expect(saves[s].end === 'unsupported' && saves[s].saved.length === 0, `${s}: without move() the save should end 'unsupported' with nothing written`);
   }
 
   // Part 2: the built app.
@@ -84,7 +86,9 @@ try {
   for (const [path, throws] of [['home/rec'], ['home/rec/recup_dir.2'], ['home/rec/a/b/c/d/e'], ['home/rec/empty'], ['usb', true]]) {
     const r = await tryFolder(path, throws);
     console.log(`app: save to ${path}${throws ? ' (check throws)' : ''}:`, JSON.stringify(r));
-    expect(/Where should we save/.test(r.h1) && /recovery folder/.test(r.alert), `app did not refuse ${path}`);
+    // A folder whose check threw is refused with its own message, not "That's your recovery folder."
+    const want = throws ? /couldn’t check that folder/ : /recovery folder/;
+    expect(/Where should we save/.test(r.h1) && want.test(r.alert), `app did not refuse ${path} with the right message`);
   }
   const r = await tryFolder('home');
   console.log('app: save to home (contains rec):', JSON.stringify(r));

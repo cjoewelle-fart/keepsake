@@ -303,6 +303,12 @@ export const copy = {
     chooseDifferent: 'Choose a different folder',
     recoveryH: 'That’s your recovery folder.',
     recoveryBody: 'To keep it exactly as it was, Keepsake won’t save there. Please choose a different folder.',
+    // New (T25 QA follow-up), needs UX writer review: the safety check itself failed.
+    uncheckedH: 'We couldn’t check that folder is safe to use.',
+    uncheckedBody: 'Nothing was saved there. Please choose a different folder.',
+    // New (T25 QA follow-up), needs UX writer review: this browser can't save into a folder safely after all.
+    unsupportedH: 'This browser can’t save straight into a folder.',
+    unsupportedBody: 'Nothing was saved there. You can download your photos and videos as zip files instead.',
     // T22 proposed a new "Keepsake photos (2)" folder; T25 adds to the existing one instead. New, needs UX writer review.
     existsNote: 'There’s already a Keepsake photos folder here, so we’re adding to it. Nothing in it is changed or replaced. If a name is already taken, the new copy gets (2) at the end.',
 

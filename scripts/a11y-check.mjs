@@ -47,7 +47,13 @@ function fakeFolder() {
   window.__save = { delay: 0, failAfter: Infinity, failName: '' };
   const sleep = (ms) => new Promise((r) => setTimeout(r, ms));
   class FFile {
-    constructor(name) { this.kind = 'file'; this.name = name; this.data = []; }
+    constructor(name, dir) { this.kind = 'file'; this.name = name; this.dir = dir; this.data = []; }
+    // Like Chromium: rename in the same folder, replacing a file already there (Save needs move()).
+    async move(n) {
+      if (this.dir.m.get(n)?.kind === 'directory') throw new DOMException('dir', 'InvalidModificationError');
+      this.dir.m.delete(this.name); this.name = n; this.dir.m.set(n, this);
+    }
+    async remove() { if (this.dir.m.get(this.name) === this) this.dir.m.delete(this.name); }
     async getFile() { return new File(this.data, this.name); }
     async createWritable() {
       const f = this; const parts = [];
@@ -76,7 +82,7 @@ function fakeFolder() {
       if (h?.kind === 'file') return h;
       if (h) throw new DOMException('dir', 'TypeMismatchError');
       if (!o.create) throw new DOMException('missing', 'NotFoundError');
-      const f = new FFile(n); this.m.set(n, f); return f;
+      const f = new FFile(n, this); this.m.set(n, f); return f;
     }
     async removeEntry(n) { this.m.delete(n); }
     async *keys() { yield* this.m.keys(); }

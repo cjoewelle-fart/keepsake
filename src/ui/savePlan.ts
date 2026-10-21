@@ -104,6 +104,15 @@ export class NameBook {
   take(dir: string, name: string): void {
     this.names(dir).add(key(name));
   }
+  /**
+   * Give back a name handed out for a copy that didn't get it (its move failed), so the retry
+   * doesn't skip a number. Callers still check the disk before using a name.
+   */
+  release(dir: string, name: string): void {
+    this.dirs.get(dir)?.delete(key(name));
+    const pre = `${dir}\u0000`;
+    for (const h of [...this.next.keys()]) if (h.startsWith(pre)) this.next.delete(h);
+  }
   claim(dir: string, base: string, ext: string): string {
     const s = this.names(dir);
     const make = (k: number) => `${base}${k > 1 ? ` (${k})` : ''}${ext ? `.${ext}` : ''}`;
@@ -214,21 +223,31 @@ export type ResolvingDir = { resolve(possibleDescendant: ResolvingDir): Promise<
 /** The recovery folder's own handle, kept from when it was picked (see recoveryFolder.ts). */
 export type RecoveryRootDir = ResolvingDir & { isSameEntry(other: ResolvingDir): Promise<boolean> };
 
+/** The answer to "is this the recovery folder or inside it?": 'unknown' if the browser couldn't tell. */
+export type FolderCheck = 'inside' | 'outside' | 'unknown';
+
 /**
- * Must Keepsake refuse to save into `chosen`? (T55) Yes if it's the recovery folder or anywhere
- * inside it, at any depth, empty subfolders included. Also yes if the recovery folder is inside
- * "<chosen>/Keepsake photos", where the copies would go. If the browser can't answer, the
- * answer is yes: a folder we can't check is never written to.
+ * Is `chosen` the recovery folder or anywhere inside it (T55), at any depth, empty subfolders
+ * included? Also 'inside' if the recovery folder is inside "<chosen>/Keepsake photos", where the
+ * copies would go. 'unknown' if the browser couldn't answer.
+ */
+export async function checkRecoveryFolder(root: RecoveryRootDir, chosen: ResolvingDir): Promise<FolderCheck> {
+  try {
+    if (await root.isSameEntry(chosen)) return 'inside';
+    if ((await root.resolve(chosen)) !== null) return 'inside';
+    const down = await chosen.resolve(root);
+    return down !== null && down.length > 0 && key(down[0]) === key(copy.save.rootFolder) ? 'inside' : 'outside';
+  } catch {
+    return 'unknown';
+  }
+}
+
+/**
+ * Must Keepsake refuse to save into `chosen`? Yes if it's inside the recovery folder (above), and
+ * yes if the browser can't answer: a folder we can't check is never written to.
  */
 export async function inRecoveryFolder(root: RecoveryRootDir, chosen: ResolvingDir): Promise<boolean> {
-  try {
-    if (await root.isSameEntry(chosen)) return true;
-    if ((await root.resolve(chosen)) !== null) return true;
-    const down = await chosen.resolve(root);
-    return down !== null && down.length > 0 && key(down[0]) === key(copy.save.rootFolder);
-  } catch {
-    return true;
-  }
+  return (await checkRecoveryFolder(root, chosen)) !== 'outside';
 }
 
 type ScannedFile = { directoryHandle?: unknown; webkitRelativePath?: string };

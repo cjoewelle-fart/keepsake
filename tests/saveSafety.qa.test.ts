@@ -11,7 +11,7 @@ import { describe, expect, it } from 'vitest';
 import type { FileRecord } from '../src/engine/types';
 import { inRecoveryFolder, insideRecovery, scanFolders } from '../src/ui/savePlan';
 import type { RecoveryRootDir } from '../src/ui/savePlan';
-import { TEMP_PREFIX, newFolderSession, saveToFolder } from '../src/ui/saveRun';
+import { TEMP_PREFIX, canSaveToFolder, newFolderSession, saveToFolder } from '../src/ui/saveRun';
 import type { DirHandle } from '../src/ui/saveRun';
 
 // ---------- refusing the recovery folder ----------
@@ -192,7 +192,7 @@ function setup(n: number, h?: Hooks) {
 }
 
 describe('QA T56: nothing that was there before is changed or removed', () => {
-  for (const noMove of [false, true]) {
+  for (const noMove of [false]) {
     const how = noMove ? ' (no move())' : '';
     it(`normal save${how}`, async () => {
       const t = setup(3, { noMove });
@@ -242,8 +242,10 @@ describe('QA T56: nothing that was there before is changed or removed', () => {
     expect(t.fs.dirs.has(N2)).toBe(true);
   });
 
-  // Residual race: Chromium's move() replaces a file already at the new name, and there is no
-  // "only if free" option, so a file made in the instant between the last check and move() is lost.
+  // Residual race (known limit, in README): Chromium's move() replaces a file already at the new
+  // name, and there is no "only if free" option, so a file made in the instant between the last
+  // check and move() is lost. The window is as small as the API allows (no await between them).
+  // The fake makes the file inside move() itself, which no check can see, so this stays a known gap.
   it.fails('a file that appears between the last name check and move() is never replaced', async () => {
     const theirs = new Uint8Array([9, 9]);
     const t = setup(1, { beforeMove: (to) => { if (to === N2) t.fs.files.set(N2, theirs); } });
@@ -251,19 +253,39 @@ describe('QA T56: nothing that was there before is changed or removed', () => {
     expect(t.fs.files.get(N2)).toBe(theirs);
   });
 
-  // Without move(): getFileHandle({create:true}) on a name another program just made opens THEIR file.
-  it.fails('no move(): a file made between the check and the create is never written over', async () => {
+  // Without move(), getFileHandle({create:true}) on a name another program just made would open
+  // THEIR file. Fixed (QA follow-up): without move() nothing is written into folders; the save
+  // ends 'unsupported' and the screen offers zip downloads instead.
+  it('no move(): a file made between the check and the create is never written over', async () => {
     const theirs = new Uint8Array([4, 4, 4, 4]);
-    const t = setup(1, { noMove: true, beforeCreate: (p) => { if (p === N2) t.fs.files.set(N2, theirs); } });
-    await saveToFolder(t.session, t.items, t.ev);
+    // Another program makes the planned name as soon as Save creates anything (it never creates N2 itself now).
+    const t = setup(1, { noMove: true, beforeCreate: () => { if (!t.fs.files.has(N2)) t.fs.files.set(N2, theirs); } });
+    expect(await saveToFolder(t.session, t.items, t.ev)).toBe('unsupported');
     expect(t.fs.files.get(N2)).toBe(theirs);
   });
-  it.fails('no move(): Stop never removes an empty file another program made under the planned name', async () => {
+  it('no move(): Stop never removes an empty file another program made under the planned name', async () => {
     let stop = false;
-    const t = setup(1, { noMove: true, beforeCreate: (p) => { if (p === N2) t.fs.files.set(N2, new Uint8Array(0)); }, onWrite: () => { stop = true; } });
+    const t = setup(1, { noMove: true, beforeCreate: () => { if (!t.fs.files.has(N2)) t.fs.files.set(N2, new Uint8Array(0)); }, onWrite: () => { stop = true; } });
     t.items[0].file = new File([new Uint8Array(8 * MB + 1)], 'big.jpg');
-    expect(await saveToFolder(t.session, t.items, { ...t.ev, shouldStop: () => stop })).toBe('stopped');
+    expect(await saveToFolder(t.session, t.items, { ...t.ev, shouldStop: () => stop })).toBe('unsupported');
     expect(t.fs.files.has(N2)).toBe(true);
+  });
+  it('no move(): nothing is written, nothing of theirs is touched, and the session stays unsupported', async () => {
+    const t = setup(3, { noMove: true });
+    expect(await saveToFolder(t.session, t.items, t.ev)).toBe('unsupported');
+    t.untouched();
+    expect(t.fs.files.size).toBe(2); // theirs only: no copies, no temporary files
+    expect(t.saved).toEqual([]);
+    expect(await saveToFolder(t.session, t.items, t.ev)).toBe('unsupported');
+    expect(t.fs.files.size).toBe(2);
+  });
+  it('no move() in the browser: no folder saving offered (zip downloads instead)', () => {
+    const picker = { showDirectoryPicker() {} };
+    expect(canSaveToFolder({ ...picker, FileSystemFileHandle: { prototype: { move() {} } } })).toBe(true);
+    expect(canSaveToFolder({ ...picker, FileSystemFileHandle: { prototype: {} } })).toBe(false);
+    expect(canSaveToFolder({ ...picker })).toBe(false);
+    expect(canSaveToFolder({ FileSystemFileHandle: { prototype: { move() {} } } })).toBe(false);
+    expect(canSaveToFolder(undefined)).toBe(false);
   });
 });
 
@@ -277,23 +299,24 @@ describe('QA T56: move() failing after the copy is fully written', () => {
       expect(t.failed).toEqual([]);
     });
   }
-  it.fails('leaves no full temporary copy behind (today: a hidden .keepsake-partial-*.tmp with the whole file)', async () => {
+  it('leaves no full temporary copy behind (removed through its own handle)', async () => {
     const t = setup(1, { finalMoveThrows: 'InvalidStateError' });
     await saveToFolder(t.session, t.items, t.ev);
     expect([...t.fs.files.keys()].filter(isTemp)).toEqual([]);
+    t.untouched();
+    expect(t.fs.removed).toHaveLength(1);
+    expect(isTemp(t.fs.removed[0])).toBe(true);
   });
-  it('"Save the rest" afterwards saves the file under the next free name (the earlier temporary copy stays)', async () => {
+  it('"Save the rest" afterwards saves the file under the name the failed attempt would have had', async () => {
     const hooks: Hooks = { finalMoveThrows: 'InvalidStateError' };
     const t = setup(1, hooks);
     expect(await saveToFolder(t.session, t.items, t.ev)).toBe('broken');
     hooks.finalMoveThrows = undefined;
     expect(await saveToFolder(t.session, t.items, t.ev)).toBe('done');
     t.untouched();
-    // (2) was claimed by the failed attempt, so the retry gets (3); (2) stays free.
-    expect(t.fs.files.has(N2)).toBe(false);
-    expect(t.fs.files.get(`${DAY}/2024-06-28 14.32 (3).jpg`)).toEqual(bytes(1000, 0));
-    const temps = [...t.fs.files].filter(([k]) => isTemp(k));
-    expect(temps).toHaveLength(1);
-    expect(temps[0][1]).toEqual(bytes(1000, 0));
+    // The failed attempt gave (2) back, so the retry gets it; no number is skipped, no temporary copy left.
+    expect(t.fs.files.get(N2)).toEqual(bytes(1000, 0));
+    expect(t.fs.files.has(`${DAY}/2024-06-28 14.32 (3).jpg`)).toBe(false);
+    expect([...t.fs.files.keys()].filter(isTemp)).toEqual([]);
   });
 });
