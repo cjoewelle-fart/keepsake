@@ -49,7 +49,7 @@ python3 scripts/make_perf_folder.py /tmp/perf/recovery   # a realistic 40,000-fi
 npm run build && node scripts/perf-browser.mjs <path-to-chromium> /tmp/perf/recovery --runs 3   # full scan + review timeline in the built app: times, memory, long tasks, scroll smoothness
 ```
 
-`perf-browser.mjs` serves the production build on port 4175 (`--port`), runs each pass in a fresh browser, and prints one line per run plus the median and range. Add `--profile <dir>` to save CPU profiles of the page and the scan worker (open them in Chrome DevTools' Performance panel), or `--no-previews` to replace every preview with a blank image (tells picture decoding apart from the page's own work). Timings depend on the machine and on anything else running; the load average is printed with each run.
+`perf-browser.mjs` serves the production build on port 4175 (`--port`), runs each pass in a fresh browser, and prints one line per run plus the median and range. Add `--profile <dir>` to save CPU profiles of the page and the scan worker (open them in Chrome DevTools' Performance panel), or `--no-previews` to replace every preview with a blank image (tells picture decoding apart from the page's own work). `--handoff` measures only the seconds after picking (T52): the longest time the page is blocked, when progress first moves, and how fast Stop answers. Timings depend on the machine and on anything else running; the load average is printed with each run.
 
 The exact-copy check fingerprints 4 files at a time (`copyConcurrency` in `scanAll`), so at most 4 whole files (each up to 64 MB) are in memory at once.
 

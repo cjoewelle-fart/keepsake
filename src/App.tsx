@@ -4,6 +4,7 @@ import { directoryOpen } from 'browser-fs-access';
 import type { FileRecord, Progress } from './engine/types';
 import type { SetAsideGroup } from './engine/summary';
 import { summarize } from './engine/summary';
+import { handOver } from './engine/handoff';
 import type { ScanApi } from './worker/scan.worker';
 // Bundled into the page itself, so the app is a single self-contained file set.
 import ScanWorker from './worker/scan.worker.ts?worker&inline';
@@ -39,6 +40,8 @@ export default function App() {
   const [selection, setSelection] = useState(() => new Selection(0));
   const setAside = useMemo(() => summarize(records, movedBack).setAside, [records, movedBack]);
   const workerRef = useRef<{ raw: Worker; api: Comlink.Remote<ScanApi> } | null>(null);
+  // The scan in progress: its id (so the worker can drop batches from a stopped scan) and Stop.
+  const runRef = useRef({ id: 0, stopped: false });
   const headingRef = useRef<HTMLHeadingElement>(null);
   const [saveDone, setSaveDone] = useState(false);
 
@@ -84,8 +87,24 @@ export default function App() {
     setFiles(list);
     setMovedBack(new Set());
     setScreen({ name: 'scanning', progress: { stage: 'checking', done: 0, total: list.length } });
+    runRef.current.stopped = true;
+    const run: { id: number; stopped: boolean } = { id: runRef.current.id + 1, stopped: false };
+    runRef.current = run;
     try {
-      const result = await getWorker().scan(list, paths, Comlink.proxy((p: Progress) => setScreen({ name: 'scanning', progress: p })));
+      const api = getWorker();
+      // Paths first, so the scan starts at once; the files and their sizes follow in small
+      // batches so the page keeps answering (all at once froze it for seconds on 40,000 files, T52).
+      const scanning = api.scan(run.id, paths, Comlink.proxy((p: Progress) => setScreen({ name: 'scanning', progress: p })));
+      let fedOk = true;
+      const send = (start: number, batch: File[], sizes: number[]) => api.add(run.id, start, batch, sizes);
+      // The first batch waits for the next task, so it doesn't add to the browser's own
+      // (long) task of listing the folder and the scan screen can draw first.
+      const fed = new Promise((r) => setTimeout(r, 0))
+        .then(() => handOver(list, (f) => f.size, send, () => run.stopped))
+        .catch(() => { fedOk = false; api.cancel(); });
+      const result = await scanning;
+      await fed;
+      if (!fedOk) throw new Error('hand-over failed');
       if (!result) {
         setScreen({ name: 'start', note: copy.start.stopped });
         return;
@@ -95,6 +114,8 @@ export default function App() {
       setScreen({ name: 'results' });
     } catch {
       setScreen({ name: 'error' });
+    } finally {
+      run.stopped = true; // a scan that failed sends no more batches
     }
   }
 
@@ -118,7 +139,7 @@ export default function App() {
       <Header current={step} done={done} />
       <div id="main" ref={headingRef}>
         {screen.name === 'start' && <Start note={screen.note} onChoose={chooseFolder} onSamples={SAMPLES_ENABLED ? trySamples : undefined} />}
-        {screen.name === 'scanning' && <Scanning progress={screen.progress} onStop={() => getWorker().cancel()} />}
+        {screen.name === 'scanning' && <Scanning progress={screen.progress} onStop={() => { runRef.current.stopped = true; getWorker().cancel(); }} />}
         {screen.name === 'results' && (
           <Results
             records={records}

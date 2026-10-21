@@ -3,6 +3,7 @@
 //   python3 scripts/make_perf_folder.py <dir>/recovery     # ~40,000 files, ~5.3 GB (delete after)
 //   npm run build
 //   node scripts/perf-browser.mjs <chromium> <dir>/recovery [--runs 3] [--port 4175] [--profile <out-dir>] [--no-previews]
+//   node scripts/perf-browser.mjs <chromium> <dir>/recovery --handoff   # only the seconds after picking (T52)
 //
 // Each run starts a fresh browser, feeds the folder through the app's folder-upload fallback
 // (as scripts/e2e.mjs does), and measures: scan time (to the results screen), time to the first
@@ -25,6 +26,8 @@ const PORT = Number(opt('port', 4175));
 const PROFILE = opt('profile', null);
 // Diagnostic: every preview is a 1-pixel image, to tell picture decoding apart from the page's own work.
 const NO_PREVIEWS = process.argv.includes('--no-previews');
+// Only the first seconds after picking (T52): is the page responsive, does progress show, does Stop work?
+const HANDOFF = process.argv.includes('--handoff');
 const DEBUG_PORT = 9400 + (PORT % 100);
 const MB = (b) => Math.round(b / 2 ** 20);
 
@@ -121,6 +124,7 @@ async function run(n) {
   });
   if (NO_PREVIEWS) await page.addInitScript(() => { URL.createObjectURL = () => 'data:image/gif;base64,R0lGODlhAQABAAAAACw='; URL.revokeObjectURL = () => {}; });
   await page.goto(URL_);
+  if (HANDOFF) { const r = await handoff(page, n); await browser.close(); return r; }
   const dt = await devtools(URL_);
 
   // Sample memory every 250 ms for the whole run.
@@ -281,6 +285,77 @@ async function run(n) {
   };
 }
 
+/**
+ * The moments right after picking a folder (T52). Times count from the file input's change
+ * event (when the browser hands the page the file list; listing the folder before that is the
+ * browser's own work). Two passes on one page load:
+ *  1. watch for WATCH_MS: the longest main-thread block (long tasks, and gaps in a 20 ms timer)
+ *     and when "Checked N of M" first shows N > 0;
+ *  2. pick again and press Stop as soon as the button is there: how long until the click is
+ *     handled and the start screen says the scan stopped.
+ */
+async function handoff(page, n) {
+  const WATCH_MS = 8000;
+  await page.evaluate(() => {
+    window.__change = [];
+    addEventListener('change', () => window.__change.push(performance.now()), true);
+    // A 20 ms timer: any gap much longer than that is time the page couldn't answer input.
+    window.__gaps = [];
+    let last = performance.now();
+    setInterval(() => { const t = performance.now(); if (t - last > 60) window.__gaps.push([last, t - last]); last = t; }, 20);
+    window.__firstProgress = 0;
+    new MutationObserver(() => {
+      if (window.__firstProgress) return;
+      const p = document.querySelector('main progress');
+      if (p && p.value > 0) window.__firstProgress = performance.now();
+    }).observe(document, { subtree: true, childList: true, attributes: true, attributeFilter: ['value'] });
+  });
+  const pick = async () => {
+    const [chooser] = await Promise.all([page.waitForEvent('filechooser'), page.getByRole('button', { name: 'Choose recovery folder' }).click()]);
+    await chooser.setFiles(dir);
+  };
+  // Blocking between a and b, counting only the part of each block after a. The part before
+  // (the browser building its list of 40,000 files before the change event) is reported apart:
+  // the page's code can't run then.
+  const block = (from, to) => page.evaluate(([a, b]) => {
+    const clip = ([s, d]) => [Math.max(s, a), Math.min(s + d, b) - Math.max(s, a)];
+    const lt = window.__lt.filter(([s, d]) => s + d > a && s <= b);
+    const gaps = window.__gaps.filter(([s, d]) => s + d > a && s <= b);
+    const after = [...lt, ...gaps].map(clip).map(([, d]) => d);
+    const before = [...lt, ...gaps].filter(([s]) => s < a).map(([s]) => a - s);
+    return { longMax: Math.round(Math.max(0, ...lt.map(clip).map(([, d]) => d))), longCount: lt.length, longTotal: Math.round(lt.map(clip).reduce((x, [, d]) => x + d, 0)), gapMax: Math.round(Math.max(0, ...after)), beforeChange: Math.round(Math.max(0, ...before)) };
+  }, [from, to]);
+
+  // 1. Responsiveness and first progress.
+  await pick();
+  const tChange = await page.evaluate(() => window.__change.at(-1));
+  await page.waitForTimeout(WATCH_MS);
+  const a = await block(tChange, tChange + WATCH_MS);
+  const firstProgress = await page.evaluate(() => window.__firstProgress);
+
+  // 2. Stop at once.
+  const stopBtn = page.getByRole('button', { name: 'Stop scanning' });
+  await stopBtn.click();
+  await page.getByText('Scan stopped').waitFor({ timeout: 120_000 });
+  await pick();
+  const tChange2 = await page.evaluate(() => window.__change.at(-1));
+  await stopBtn.click({ timeout: 120_000 });
+  const tClicked = await page.evaluate(() => performance.now());
+  await page.getByText('Scan stopped').waitFor({ timeout: 120_000 });
+  const tStopped = await page.evaluate(() => performance.now());
+  const b = await block(tChange2, tStopped);
+  return {
+    run: n,
+    loadAvg: loadavg().map((x) => x.toFixed(1)).join(' '),
+    blockMaxMs: Math.max(a.longMax, a.gapMax), longTasks: a.longCount, longTotalMs: a.longTotal,
+    firstProgressSec: firstProgress ? +((firstProgress - tChange) / 1000).toFixed(2) : null,
+    stopClickSec: +((tClicked - tChange2) / 1000).toFixed(2),
+    stoppedSec: +((tStopped - tChange2) / 1000).toFixed(2),
+    stopPassBlockMaxMs: Math.max(b.longMax, b.gapMax),
+    browserListMs: a.beforeChange,
+  };
+}
+
 const rows = [];
 try {
   for (let n = 1; n <= RUNS; n++) {
@@ -293,6 +368,12 @@ try {
 }
 const med = (k) => { const v = rows.map((r) => r[k]).filter((x) => typeof x === 'number').sort((a, b) => a - b); return v.length ? `${v[Math.floor((v.length - 1) / 2)]} (${v[0]}–${v.at(-1)})` : '-'; };
 console.log(`\n${rows.length} runs, median (range):`);
+if (HANDOFF) {
+  for (const k of ['blockMaxMs', 'longTasks', 'longTotalMs', 'firstProgressSec', 'stopClickSec', 'stoppedSec', 'stopPassBlockMaxMs', 'browserListMs']) console.log(`  ${k.padEnd(18)} ${med(k)}`);
+  const worst = Math.max(...rows.map((r) => Math.max(r.blockMaxMs, r.stopPassBlockMaxMs)));
+  console.log(`T52 (main thread never blocked over ~200 ms after the folder arrives): ${worst <= 250 ? 'PASS' : 'FAIL'} (worst ${worst} ms; browserListMs is the browser's own listing before that)`);
+  process.exit(0);
+}
 for (const k of ['scanSec', 'checkSec', 'copiesSec', 'firstPreviewSec', 'peakPssMB', 'peakScanPssMB', 'peakPageHeapMB', 'peakWorkerHeapMB', 'scanLongTasks', 'scanLongMaxMs', 'openReviewMs', 'scrollSec', 'frameP95Ms', 'frameMaxMs', 'scrollLongTasks', 'scrollLongMaxMs', 'screenSettleMedMs', 'screenSettleMaxMs'])
   console.log(`  ${k.padEnd(18)} ${med(k)}`);
 const worst = Math.max(...rows.map((r) => r.scanSec));
