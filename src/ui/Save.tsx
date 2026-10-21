@@ -6,8 +6,9 @@ import type { FileRecord } from '../engine/types';
 import type { SaveApi } from '../worker/save.worker';
 import SaveWorker from '../worker/save.worker.ts?worker&inline';
 import { bytes, copy, n } from './copy';
-import { ZIP_LIMITS, insideRecovery, planNames, receiptText, sortedInto, splitParts, zipPath } from './savePlan';
-import type { Planned, ResolvingDir } from './savePlan';
+import { ZIP_LIMITS, inRecoveryFolder, insideRecovery, planNames, receiptText, scanFolders, sortedInto, splitParts, zipPath } from './savePlan';
+import type { Planned, RecoveryRootDir, ResolvingDir } from './savePlan';
+import type { RecoveryRoot } from './recoveryFolder';
 import { canPickFolder, download, ensureWritable, hasRoot, newFolderSession, pickFolder, saveAsZip, saveToFolder } from './saveRun';
 import type { DirHandle, FolderSession, RunEnd } from './saveRun';
 import { END_COST, entryCost } from './zip';
@@ -18,6 +19,8 @@ type Props = {
   files: File[];
   /** Selected FileRecord indices, from the review timeline. */
   ids: number[];
+  /** The recovery folder's own handle, when it was picked with the browser's folder picker. */
+  recoveryRoot?: RecoveryRoot;
   onBack: () => void;
   /** The header says "Done" on the receipt. */
   onDone: (done: boolean) => void;
@@ -32,7 +35,7 @@ type Phase =
 const s = copy.save;
 const split = (list: readonly Planned[]) => splitParts(list, (p) => entryCost(zipPath(p), p.size), END_COST);
 
-export function Save({ records, files, ids, onBack, onDone }: Props) {
+export function Save({ records, files, ids, recoveryRoot, onBack, onDone }: Props) {
   const folderMode = useMemo(() => canPickFolder(), []);
   const byIndex = useMemo(() => {
     const a: FileRecord[] = [];
@@ -90,16 +93,14 @@ export function Save({ records, files, ids, onBack, onDone }: Props) {
     onDone(phase.k === 'done');
   }, [phase.k, onDone]);
 
-  /** The folders the scan's files are in, with their depth below the recovery folder. */
-  const recoveryDirs = () => {
-    const m = new Map<object, number>();
-    for (const f of files) {
-      const d = (f as File & { directoryHandle?: object }).directoryHandle;
-      if (d && !m.has(d)) m.set(d, Math.max(0, ((f as File & { webkitRelativePath?: string }).webkitRelativePath || '').split('/').length - 2));
-      if (m.size > 200) break;
-    }
-    return [...m].map(([dir, depth]) => ({ dir: dir as ResolvingDir, depth }));
-  };
+  /**
+   * Is the chosen folder the recovery folder or inside it (T55)? With the recovery folder's own
+   * handle this is exact; without one (it came from the file-input fallback) it's the best-effort
+   * check from the scanned files' folders. Any error counts as "inside".
+   */
+  const isRecovery = (chosen: DirHandle) => (recoveryRoot
+    ? inRecoveryFolder(recoveryRoot as unknown as RecoveryRootDir, chosen as unknown as ResolvingDir)
+    : insideRecovery(chosen as unknown as ResolvingDir, scanFolders(files)).catch(() => true));
 
   const remaining = () => items.filter((r) => !sess.saved.has(r.index));
 
@@ -143,7 +144,7 @@ export function Save({ records, files, ids, onBack, onDone }: Props) {
       setPhase({ k: 'choose', problem: 'denied' });
       return;
     }
-    if (await insideRecovery(chosen as unknown as ResolvingDir, recoveryDirs()).catch(() => false)) {
+    if (await isRecovery(chosen)) {
       setPhase({ k: 'choose', problem: 'recovery' });
       return;
     }

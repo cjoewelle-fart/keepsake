@@ -211,12 +211,46 @@ export function classifyWriteError(e: unknown): WriteProblem {
 
 /** The parts of a FileSystemDirectoryHandle the recovery-folder check needs. */
 export type ResolvingDir = { resolve(possibleDescendant: ResolvingDir): Promise<string[] | null> };
+/** The recovery folder's own handle, kept from when it was picked (see recoveryFolder.ts). */
+export type RecoveryRootDir = ResolvingDir & { isSameEntry(other: ResolvingDir): Promise<boolean> };
 
 /**
- * Is `chosen` the recovery folder or inside it? The scan's files only know the folder they're
+ * Must Keepsake refuse to save into `chosen`? (T55) Yes if it's the recovery folder or anywhere
+ * inside it, at any depth, empty subfolders included. Also yes if the recovery folder is inside
+ * "<chosen>/Keepsake photos", where the copies would go. If the browser can't answer, the
+ * answer is yes: a folder we can't check is never written to.
+ */
+export async function inRecoveryFolder(root: RecoveryRootDir, chosen: ResolvingDir): Promise<boolean> {
+  try {
+    if (await root.isSameEntry(chosen)) return true;
+    if ((await root.resolve(chosen)) !== null) return true;
+    const down = await chosen.resolve(root);
+    return down !== null && down.length > 0 && key(down[0]) === key(copy.save.rootFolder);
+  } catch {
+    return true;
+  }
+}
+
+type ScannedFile = { directoryHandle?: unknown; webkitRelativePath?: string };
+/**
+ * The folders the scan's files are in, with their depth below the recovery folder, for the
+ * fallback check when there's no handle for the recovery folder itself. Every folder, no limit.
+ */
+export function scanFolders(files: readonly ScannedFile[]): { dir: ResolvingDir; depth: number }[] {
+  const m = new Map<unknown, number>();
+  for (const f of files) {
+    const d = f.directoryHandle;
+    if (d && !m.has(d)) m.set(d, Math.max(0, (f.webkitRelativePath || '').split('/').length - 2));
+  }
+  return [...m].map(([dir, depth]) => ({ dir: dir as ResolvingDir, depth }));
+}
+
+/**
+ * Best-effort fallback when the recovery folder's own handle isn't known: is `chosen` the recovery folder or inside it? The scan's files only know the folder they're
  * in (`directoryHandle`, e.g. recup_dir.1) and their path from the recovery folder
  * ('recovery/recup_dir.1/f1.jpg'), so for each such folder D at depth k below the recovery
  * folder: chosen is inside D, or chosen is D or one of its k ancestors up to the recovery folder.
+ * It can miss a subfolder with no scanned files in it; that's why the handle check comes first.
  */
 export async function insideRecovery(chosen: ResolvingDir, dirs: readonly { dir: ResolvingDir; depth: number }[]): Promise<boolean> {
   for (const { dir, depth } of dirs) {

@@ -15,6 +15,8 @@ import { Timeline } from './ui/Timeline';
 import { Save } from './ui/Save';
 import { Selection } from './ui/timeline';
 import { copy } from './ui/copy';
+import { withPickedFolder } from './ui/recoveryFolder';
+import type { RecoveryRoot } from './ui/recoveryFolder';
 
 type Screen =
   | { name: 'start'; note?: string }
@@ -34,6 +36,8 @@ const pathOf = (f: File) => (f as File & { webkitRelativePath?: string }).webkit
 export default function App() {
   const [screen, setScreen] = useState<Screen>({ name: 'start' });
   const [files, setFiles] = useState<File[]>([]);
+  // The recovery folder's own handle (Chromium's folder picker only), so Save can refuse it (T55).
+  const [recoveryRoot, setRecoveryRoot] = useState<RecoveryRoot | undefined>(undefined);
   const [records, setRecords] = useState<FileRecord[]>([]);
   const [movedBack, setMovedBack] = useState<ReadonlySet<SetAsideGroup>>(new Set());
   // What's selected on the review timeline. Kept here so going back to Clean up keeps the choices.
@@ -59,8 +63,9 @@ export default function App() {
 
   async function chooseFolder() {
     let picked: File[];
+    let root: RecoveryRoot | undefined;
     try {
-      picked = (await directoryOpen({ recursive: true })) as File[];
+      ({ result: picked, root } = await withPickedFolder(async () => (await directoryOpen({ recursive: true })) as File[]));
     } catch (e) {
       if ((e as Error).name === 'AbortError') return; // the person closed the picker
       setScreen({ name: 'error' });
@@ -71,12 +76,14 @@ export default function App() {
       setScreen({ name: 'start', note: `${copy.empty.noFiles} ${copy.empty.noFilesBody}` });
       return;
     }
+    setRecoveryRoot(root);
     await scan(list, list.map(pathOf));
   }
 
   async function trySamples() {
     try {
       const { files: list, paths } = await loadSamples();
+      setRecoveryRoot(undefined);
       await scan(list, paths);
     } catch {
       setScreen({ name: 'error' });
@@ -162,7 +169,7 @@ export default function App() {
           />
         )}
         {screen.name === 'save' && (
-          <Save records={records} files={files} ids={screen.ids} onBack={() => setScreen({ name: 'review' })} onDone={setSaveDone} />
+          <Save records={records} files={files} ids={screen.ids} recoveryRoot={recoveryRoot} onBack={() => setScreen({ name: 'review' })} onDone={setSaveDone} />
         )}
         {screen.name === 'error' && (
           <main className="page narrow">
