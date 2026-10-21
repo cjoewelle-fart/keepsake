@@ -6,9 +6,15 @@
 // - It only ever writes inside "<chosen>/Keepsake photos". The recovery folder is never opened
 //   for writing (the scan's File objects are read-only), and the screen refuses a chosen folder
 //   that is the recovery folder or inside it.
-// - It never overwrites: every name is checked against what's on disk before it's created.
-// - The only removal is of a file this run just created and that is still empty, after its copy
-//   failed or was stopped (getFileHandle({create}) makes an empty file before any bytes arrive).
+// - It never overwrites: each copy is written under a temporary name of its own
+//   (".keepsake-partial-<random>.tmp") and only then moved to its final name, which is checked
+//   against what's on disk just before the move (T56). A name that appeared meanwhile is skipped
+//   for the next " (n)" one.
+// - The only removal is of the temporary file this save made, through its own handle, when its
+//   copy failed or was stopped, and only while it's still empty (D17). Browsers write to a swap
+//   file until close(), so a copy that didn't finish leaves its temporary file empty.
+// - Where move() isn't available (older browsers), each copy is created under its final name as
+//   before; that path still only removes the empty file it created, if its copy didn't finish.
 import { NameBook, classifyWriteError, dirKey, placeFor, zipPath } from './savePlan';
 import type { Planned, WriteProblem } from './savePlan';
 import { ZipWriter, dosFrom } from './zip';
@@ -22,7 +28,13 @@ export type DirHandle = FileSystemDirectoryHandle & {
   requestPermission?(d: { mode: 'readwrite' }): Promise<PermissionState>;
 };
 type Writable = { write(data: BufferSource | Blob): Promise<void>; close(): Promise<void>; abort(reason?: unknown): Promise<void> };
-type FileHandle = FileSystemFileHandle & { createWritable(o?: { keepExistingData?: boolean }): Promise<Writable> };
+type FileHandle = FileSystemFileHandle & {
+  createWritable(o?: { keepExistingData?: boolean }): Promise<Writable>;
+  /** Rename in the same folder (Chromium; not in every browser). */
+  move?(newName: string): Promise<void>;
+  /** Remove the entry this handle points to (Chromium). */
+  remove?(): Promise<void>;
+};
 
 export const canPickFolder = () => typeof window !== 'undefined' && 'showDirectoryPicker' in window;
 
@@ -78,27 +90,22 @@ async function exists(dir: DirHandle, name: string): Promise<boolean> {
   }
 }
 
-async function removeIfEmpty(dir: DirHandle, fh: FileHandle, name: string) {
+/** Remove a file this save created, through its own handle, if it's still empty (D17). */
+async function removeOwnIfEmpty(dir: DirHandle, fh: FileHandle, name: string) {
   try {
-    if ((await fh.getFile()).size === 0) await dir.removeEntry(name);
+    if ((await fh.getFile()).size !== 0) return;
+    if (typeof fh.remove === 'function') await fh.remove();
+    else await dir.removeEntry(name);
   } catch { /* leave it; it's an empty file in our own folder */ }
 }
 
-/** Copy one file in slices. 'stopped' leaves nothing behind. */
-async function copyOne(dir: DirHandle, name: string, file: File, shouldStop: () => boolean): Promise<'ok' | 'stopped'> {
-  const fh = (await dir.getFileHandle(name, { create: true })) as FileHandle;
-  let w: Writable;
-  try {
-    w = await fh.createWritable({ keepExistingData: false });
-  } catch (e) {
-    await removeIfEmpty(dir, fh, name);
-    throw e;
-  }
+/** Write a file's bytes in slices. The handle's file only changes on close(). */
+async function writeInto(fh: FileHandle, file: File, shouldStop: () => boolean): Promise<'ok' | 'stopped'> {
+  const w = await fh.createWritable({ keepExistingData: false });
   try {
     for (let at = 0; at < file.size; at += SLICE) {
       if (shouldStop()) {
         await w.abort().catch(() => {});
-        await removeIfEmpty(dir, fh, name);
         return 'stopped';
       }
       let chunk: ArrayBuffer;
@@ -113,9 +120,77 @@ async function copyOne(dir: DirHandle, name: string, file: File, shouldStop: () 
     return 'ok';
   } catch (e) {
     await w.abort().catch(() => {});
-    await removeIfEmpty(dir, fh, name);
     throw e;
   }
+}
+
+export const TEMP_PREFIX = '.keepsake-partial-';
+function tempName(): string {
+  const b = new Uint8Array(8);
+  crypto.getRandomValues(b);
+  return `${TEMP_PREFIX}${Array.from(b, (x) => x.toString(16).padStart(2, '0')).join('')}.tmp`;
+}
+const unsupported = (e: unknown) => e instanceof TypeError || (e as Error | null)?.name === 'NotSupportedError';
+
+/**
+ * Copy one file into `d` under a free name for `base`/`ext`. Returns the name it got, or null
+ * if stopped. Nothing that was in the folder before is ever opened, replaced or removed.
+ */
+async function copyOne(s: FolderSession, d: DirHandle, k: string, base: string, ext: string, file: File, shouldStop: () => boolean): Promise<string | null> {
+  const free = async () => {
+    let name = s.book.claim(k, base, ext);
+    while (await exists(d, name)) name = s.book.claim(k, base, ext); // appeared since the listing
+    return name;
+  };
+  let name = await free();
+
+  if (s.canMove !== false) {
+    let tmp = tempName();
+    while (await exists(d, tmp)) tmp = tempName();
+    const fh = (await d.getFileHandle(tmp, { create: true })) as FileHandle;
+    if (s.canMove === undefined) {
+      // First copy: try a rename while the file is still empty, to learn whether move() works here.
+      let works = typeof fh.move === 'function';
+      if (works) {
+        const next = tempName();
+        try {
+          await fh.move!(next);
+          tmp = next;
+        } catch (e) {
+          if (!unsupported(e)) { await removeOwnIfEmpty(d, fh, tmp); throw e; }
+          works = false;
+        }
+      }
+      s.canMove = works;
+      if (!works) await removeOwnIfEmpty(d, fh, tmp);
+    }
+    if (s.canMove) {
+      let end: 'ok' | 'stopped';
+      try {
+        end = await writeInto(fh, file, shouldStop);
+      } catch (e) {
+        await removeOwnIfEmpty(d, fh, tmp);
+        throw e;
+      }
+      if (end === 'stopped') { await removeOwnIfEmpty(d, fh, tmp); return null; }
+      // Just before the move: is the name still free? If something took it, use the next one.
+      while (await exists(d, name)) { s.book.take(k, name); name = await free(); }
+      await fh.move!(name);
+      return name;
+    }
+  }
+
+  // No move(): create the copy under its final name (checked free just above).
+  const fh = (await d.getFileHandle(name, { create: true })) as FileHandle;
+  let end: 'ok' | 'stopped';
+  try {
+    end = await writeInto(fh, file, shouldStop);
+  } catch (e) {
+    await removeOwnIfEmpty(d, fh, name);
+    throw e;
+  }
+  if (end === 'stopped') { await removeOwnIfEmpty(d, fh, name); return null; }
+  return name;
 }
 
 export type FolderSession = {
@@ -125,6 +200,8 @@ export type FolderSession = {
   dirs: Map<string, DirHandle>;
   /** Where each saved file went (folders below "Keepsake photos"), for the receipt. */
   placed: Map<number, string[]>;
+  /** Whether copies can be moved into place from a temporary name (learned on the first copy). */
+  canMove?: boolean;
 };
 
 export const newFolderSession = (chosen: DirHandle): FolderSession => ({ chosen, book: new NameBook(), dirs: new Map(), placed: new Map() });
@@ -153,9 +230,7 @@ export async function saveToFolder(s: FolderSession, items: readonly { r: FileRe
         for await (const n of d.keys()) names.push(n);
         s.book.seed(k, names);
       }
-      let name = s.book.claim(k, base, ext);
-      while (await exists(d, name)) name = s.book.claim(k, base, ext); // appeared since the listing
-      if ((await copyOne(d, name, file, ev.shouldStop)) === 'stopped') return 'stopped';
+      if ((await copyOne(s, d, k, base, ext, file, ev.shouldStop)) === null) return 'stopped';
       s.placed.set(r.index, dir);
       ev.onSaved(r.index);
     } catch (e) {
