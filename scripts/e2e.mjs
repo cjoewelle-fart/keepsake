@@ -1,17 +1,22 @@
 // End-to-end check of the built app in a real browser.
-// Usage: npm run build && node scripts/e2e.mjs [chromiumPath]
+// Usage: npm run build && node scripts/e2e.mjs [chromiumPath] [--port 4173]
 import { execFileSync, spawn } from 'node:child_process';
 import { mkdirSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { chromium } from 'playwright';
 
-const exe = process.argv[2] || process.env.CHROMIUM_PATH;
+const args = process.argv.slice(2);
+const opt = (k, d) => { const i = args.indexOf(k); return i >= 0 ? args.splice(i, 2)[1] : d; };
+// Its own port, so several people (or worktrees) can run it at once.
+const port = String(Number(opt('--port', '4173')));
+const base = `http://localhost:${port}`;
+const exe = args[0] || process.env.CHROMIUM_PATH;
 const out = 'e2e-shots';
 mkdirSync(out, { recursive: true });
 
-const server = spawn('npx', ['vite', 'preview', '--port', '4173', '--strictPort'], { stdio: 'pipe', detached: true });
-await new Promise((r) => server.stdout.on('data', (d) => String(d).includes('4173') && r()));
+const server = spawn('npx', ['vite', 'preview', '--port', port, '--strictPort'], { stdio: 'pipe', detached: true });
+await new Promise((r, j) => { server.stdout.on('data', (d) => String(d).includes(port) && r()); server.on('exit', () => j(new Error(`preview server exited (port ${port} in use?)`))); });
 
 const num = (t) => Number(t.replace(/[^0-9]/g, ''));
 /** The ledger must always add up: kept + set aside = files checked. */
@@ -279,7 +284,7 @@ try {
     const page = await browser.newPage({ viewport, deviceScaleFactor });
     page.on('console', (m) => m.type() === 'error' && problems.push(`[${label}] console: ${m.text()}`));
     page.on('pageerror', (e) => problems.push(`[${label}] page error: ${e.message}`));
-    page.on('request', (r) => { if (!r.url().startsWith('http://localhost:4173') && !r.url().startsWith('blob:') && !r.url().startsWith('data:')) requests.push(r.url()); });
+    page.on('request', (r) => { if (!r.url().startsWith(base) && !r.url().startsWith('blob:') && !r.url().startsWith('data:')) requests.push(r.url()); });
     // Force the file-input fallback (the folder picker dialog can't be automated).
     await page.addInitScript(() => {
       for (const k of ['showDirectoryPicker', 'showOpenFilePicker', 'showSaveFilePicker']) {
@@ -287,7 +292,7 @@ try {
         delete Window.prototype[k];
       }
     });
-    await page.goto('http://localhost:4173/');
+    await page.goto(`${base}/`);
     await page.screenshot({ path: `${out}/${label}-1-start.png`, fullPage: true });
     await checkNoSideScroll(page, label, 'start');
 
