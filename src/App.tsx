@@ -13,6 +13,7 @@ import { Header } from './ui/Header';
 import { Results } from './ui/Results';
 import { Timeline } from './ui/Timeline';
 import { Save } from './ui/Save';
+import { InfoPage } from './ui/InfoPage';
 import { Selection } from './ui/timeline';
 import { copy } from './ui/copy';
 import { withPickedFolder } from './ui/recoveryFolder';
@@ -26,7 +27,11 @@ type Screen =
   | { name: 'review' }
   /** Step 5: save new copies of the selected files (T25). */
   | { name: 'save'; ids: number[] }
-  | { name: 'error' };
+  | { name: 'error' }
+  /** The privacy page or the PhotoRec guide, from the start screen (T67). */
+  | { name: 'info'; page: InfoName };
+
+type InfoName = 'privacy' | 'guide';
 
 /** Files the operating system adds to folders; they're not part of the recovery. */
 const isOsClutter = (name: string) => name.startsWith('.') || /^(thumbs\.db|desktop\.ini)$/i.test(name);
@@ -52,7 +57,10 @@ export default function App() {
 
   useEffect(() => () => workerRef.current?.raw.terminate(), []);
   // Move keyboard and screen-reader focus to the new screen's heading.
-  useEffect(() => { document.querySelector<HTMLElement>('main h1')?.focus(); }, [screen.name]);
+  useEffect(() => {
+    if (screen.name === 'info') window.scrollTo(0, 0);
+    document.querySelector<HTMLElement>('main h1')?.focus();
+  }, [screen.name]);
 
   const getWorker = () => {
     if (!workerRef.current) {
@@ -148,17 +156,19 @@ export default function App() {
 
   const step = screen.name === 'results' ? 2 : screen.name === 'review' ? 3 : screen.name === 'save' ? 4 : 1;
   const done = screen.name === 'save' && saveDone;
+  const info = screen.name === 'info' ? screen.page : undefined;
   // Which step you're on, in the browser tab too (2.4.2).
   useEffect(() => {
-    document.title = copy.pageTitle(done ? copy.save.doneStep : copy.steps[step], APP_TITLE);
-  }, [step, done]);
+    document.title = copy.pageTitle(info ? copy.info[info].title : done ? copy.save.doneStep : copy.steps[step], APP_TITLE);
+  }, [step, done, info]);
 
   return (
     <div className="app">
       <a className="skip" href="#main">{copy.skip}</a>
       <Header current={step} done={done} />
       <div id="main" ref={headingRef}>
-        {screen.name === 'start' && <Start note={screen.note} onChoose={chooseFolder} onSamples={SAMPLES_ENABLED ? trySamples : undefined} />}
+        {screen.name === 'start' && <Start note={screen.note} onChoose={chooseFolder} onSamples={SAMPLES_ENABLED ? trySamples : undefined} onInfo={(page) => setScreen({ name: 'info', page })} />}
+        {screen.name === 'info' && <InfoPage md={copy.info[screen.page].md} onBack={() => setScreen({ name: 'start' })} />}
         {screen.name === 'scanning' && <Scanning progress={screen.progress} onStop={() => { runRef.current.stopped = true; workerRef.current?.api.cancel(); }} />}
         {screen.name === 'results' && (
           <Results
@@ -196,7 +206,7 @@ export default function App() {
   );
 }
 
-function Start({ note, onChoose, onSamples }: { note?: string; onChoose: () => void; onSamples?: () => void }) {
+function Start({ note, onChoose, onSamples, onInfo }: { note?: string; onChoose: () => void; onSamples?: () => void; onInfo: (page: InfoName) => void }) {
   const fullSupport = typeof window !== 'undefined' && 'showDirectoryPicker' in window;
   // The claude.ai preview: choosing the folder opens the browser's "upload" dialog.
   const framed = inFrame();
@@ -225,6 +235,10 @@ function Start({ note, onChoose, onSamples }: { note?: string; onChoose: () => v
       {!fullSupport && !framed && <p className="sub-sm">{copy.start.browserNote}</p>}
       {framed && <p className="sub-sm">{copy.start.uploadNote}</p>}
       <p className="sub-sm privacy">{copy.privacy}</p>
+      <ul className="start-links">
+        <li><button type="button" className="btn btn-link" onClick={() => onInfo('privacy')}>{copy.info.privacy.link}</button></li>
+        <li><button type="button" className="btn btn-link" onClick={() => onInfo('guide')}>{copy.info.guide.link}</button></li>
+      </ul>
     </main>
   );
 }

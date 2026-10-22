@@ -94,6 +94,15 @@ try {
   const fontsOk = await page.evaluate(async () => { await document.fonts.ready; return [...document.fonts].filter((f) => f.status === 'loaded').length; });
   check(fontsOk > 0, `${fontsOk} bundled font files loaded offline`);
 
+  // The privacy page and the PhotoRec guide open offline too (T67); they're part of the app.
+  for (const [link, heading] of [['How Keepsake keeps your photos private', 'Your privacy'], ['New to PhotoRec? Here’s how to recover your files', 'Get your photos back']]) {
+    await page.getByRole('button', { name: link }).click();
+    const opened = await page.getByRole('heading', { level: 1, name: heading }).waitFor({ timeout: 5000 }).then(() => true, () => false);
+    check(opened, `"${heading}" page opens offline`);
+    await page.getByRole('button', { name: 'Back to start' }).last().click();
+    await page.getByRole('button', { name: 'Choose recovery folder' }).waitFor({ timeout: 5000 });
+  }
+
   // Every precached file can be fetched with the network off.
   const precache = await page.evaluate(async () => {
     const urls = [];

@@ -19,8 +19,7 @@ PhotoRec recovers files well but loses their names and folders, leaving thousand
 
 ## Status: phase 1 (prototype the engine)
 
-Done: folder picking, scanning in a background worker, cleanup rules, the cleanup results screen, the review timeline ("Choose what to save": photos and videos by year, month and day, everything selected to start), saving (new copies in a folder, or zip downloads) with a receipt, offline install.
-Next (phase 2): PhotoRec guide, privacy page.
+Done: folder picking, scanning in a background worker, cleanup rules, the cleanup results screen, the review timeline ("Choose what to save": photos and videos by year, month and day, everything selected to start), saving (new copies in a folder, or zip downloads) with a receipt, offline install, and the privacy page and PhotoRec guide (quiet links on the start screen; text in `copy.info`, written in the small Markdown of `src/ui/markdown.ts`; screenshots in the guide are labelled placeholders until QA supplies them).
 
 ## Run it
 
