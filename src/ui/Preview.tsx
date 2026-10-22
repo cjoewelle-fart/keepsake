@@ -49,7 +49,7 @@ function watch(el: Element, cb: (near: boolean, tilePx: number) => void) {
  */
 export function Preview({ file, record, size = 'md', note }: {
   file: File; record: FileRecord; size?: 'md' | 'sm' | 'xs' | 'fill';
-  /** A short line under the file type when there's no picture (e.g. "Can't play here"). Hidden from screen readers: say it in the tile's name too. */
+  /** A short line under the file type when there's no picture (e.g. "Can’t play in this browser"). Hidden from screen readers: say it in the tile's name too. */
   note?: string;
 }) {
   const [stage, setStage] = useState<Stage>(() => firstStage(record));

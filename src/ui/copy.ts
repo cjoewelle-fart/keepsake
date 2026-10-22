@@ -243,7 +243,7 @@ export const copy = {
      * On a video tile when this browser can't play the video (old phone 3GP, HEVC in a browser
      * without it, AVI). T61, needs UX writer review. It's still selected and saved as it is.
      */
-    cantPlay: 'Can’t play here; it’ll still be saved',
+    cantPlay: 'Can’t play in this browser. It can still be saved.',
     emptyFilter: {
       photos: 'There are no photos to show.',
       videos: 'There are no videos to show.',
@@ -311,11 +311,16 @@ export const copy = {
     recoveryH: 'That’s your recovery folder.',
     recoveryBody: 'To keep it exactly as it was, Keepsake won’t save there. Please choose a different folder.',
     // New (T25 QA follow-up), needs UX writer review: the safety check itself failed.
-    uncheckedH: 'We couldn’t check that folder is safe to use.',
-    uncheckedBody: 'Nothing was saved there. Please choose a different folder.',
+    uncheckedH: 'We couldn’t check that folder.',
+    uncheckedBody: 'Before saving, we make sure a folder isn’t inside your recovery folder. This time we couldn’t tell, so nothing was saved there. Your files are fine. Please choose a different folder, for example in Pictures or Documents.',
     // New (T25 QA follow-up), needs UX writer review: this browser can't save into a folder safely after all.
-    unsupportedH: 'This browser can’t save straight into a folder.',
-    unsupportedBody: 'Nothing was saved there. You can download your photos and videos as zip files instead.',
+    unsupportedH: 'Saving into a folder didn’t work in this browser.',
+    // T64: "empty folders" is true when move() exists but fails on the first copy: dirFor() in
+    // saveRun.ts has already made Keepsake photos/<year>/<month> by then (not when move() is missing).
+    unsupportedBody: (mediaOnly: boolean) =>
+      mediaOnly
+        ? 'No photos or videos were saved there, and your files are fine. You may see some new empty folders there. You can download your photos and videos as zip files instead, using the button below.'
+        : 'No files were saved there, and your files are fine. You may see some new empty folders there. You can download your files as zip files instead, using the button below.',
     // T22 proposed a new "Keepsake photos (2)" folder; T25 adds to the existing one instead. New, needs UX writer review.
     existsNote: 'There’s already a Keepsake photos folder here, so we’re adding to it. Nothing in it is changed or replaced. If a name is already taken, the new copy gets (2) at the end.',
 

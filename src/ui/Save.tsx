@@ -33,12 +33,11 @@ type Phase =
   | { k: 'done'; when: Date };
 
 const s = copy.save;
-const problemText = {
-  denied: [s.deniedH, s.deniedBody],
-  recovery: [s.recoveryH, s.recoveryBody],
-  unchecked: [s.uncheckedH, s.uncheckedBody],
-  unsupported: [s.unsupportedH, s.unsupportedBody],
-} as const;
+const problemText = (problem: 'denied' | 'recovery' | 'unchecked' | 'unsupported', mediaOnly: boolean): readonly [string, string] =>
+  problem === 'denied' ? [s.deniedH, s.deniedBody]
+    : problem === 'recovery' ? [s.recoveryH, s.recoveryBody]
+      : problem === 'unchecked' ? [s.uncheckedH, s.uncheckedBody]
+        : [s.unsupportedH, s.unsupportedBody(mediaOnly)];
 const split = (list: readonly Planned[]) => splitParts(list, (p) => entryCost(zipPath(p), p.size), END_COST);
 
 export function Save({ records, files, ids, recoveryRoot, onBack, onDone }: Props) {
@@ -297,8 +296,8 @@ export function Save({ records, files, ids, recoveryRoot, onBack, onDone }: Prop
       <div className="sheet-col save-col">
         {phase.problem && (
           <section className="card card-problem" role="alert" aria-labelledby="problem-h">
-            <h2 id="problem-h">{problemText[phase.problem][0]}</h2>
-            <p className="sub">{problemText[phase.problem][1]}</p>
+            <h2 id="problem-h">{problemText(phase.problem, mediaOnly)[0]}</h2>
+            <p className="sub">{problemText(phase.problem, mediaOnly)[1]}</p>
           </section>
         )}
         {folderMode ? (
@@ -318,7 +317,8 @@ export function Save({ records, files, ids, recoveryRoot, onBack, onDone }: Prop
             {bigFile && <p className="card-body">{s.zipBigFile}</p>}
             {partCount > 1 && <p className="sub-sm">{s.zipAllowTip}</p>}
             <div><button type="button" className="btn btn-primary" onClick={runZip}>{s.downloadZips(partCount)}</button></div>
-            <p className="sub-sm">{s.zipChromeTip}</p>
+            {/* T64: after 'unsupported' they're most likely in Chrome or Edge already. */}
+            {phase.problem !== 'unsupported' && <p className="sub-sm">{s.zipChromeTip}</p>}
           </section>
         )}
         <section className="card card-quiet" aria-labelledby="tree-h">

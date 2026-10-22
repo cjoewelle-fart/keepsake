@@ -1,4 +1,4 @@
-// T61: which videos get "Can't play here; it'll still be saved", from the codec the scan read
+// T61: which videos get "Can't play in this browser. It can still be saved.", from the codec the scan read
 // and the browser's canPlayType answers. The answer tables below stand in for real browsers.
 import { describe, expect, it } from 'vitest';
 import type { FileRecord } from '../src/engine/types';
@@ -76,11 +76,11 @@ describe('playable', () => {
 
 describe('copy', () => {
   it('adds the note to the tile\'s name', () => {
-    expect(copy.timeline.cantPlay).toBe('Can’t play here; it’ll still be saved');
+    expect(copy.timeline.cantPlay).toBe('Can’t play in this browser. It can still be saved.');
     expect(copy.timeline.tileLabel('video', '2009-08-15T10:20:30', 1, 3, 2, true))
-      .toBe('Save video from 15 August 2009, 10:20, 2 seconds long. Can’t play here; it’ll still be saved');
+      .toBe('Save video from 15 August 2009, 10:20, 2 seconds long. Can’t play in this browser. It can still be saved.');
     expect(copy.timeline.tileLabel('video', undefined, 2, 3, undefined, true))
-      .toBe('Save video with no date (2 of 3). Can’t play here; it’ll still be saved');
+      .toBe('Save video with no date (2 of 3). Can’t play in this browser. It can still be saved.');
     expect(copy.timeline.tileLabel('video', undefined, 2, 3)).toBe('Save video with no date (2 of 3)');
   });
 });
