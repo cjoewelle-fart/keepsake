@@ -157,10 +157,29 @@ progress::-moz-progress-bar { background: var(--accent); border-radius: 999px; }
 .tile img, .tile canvas { width: 100%; height: 100%; object-fit: cover; display: block; }
 .tile-label { font-size: 11px; font-weight: 700; color: var(--ink-soft); letter-spacing: 0.04em; }
 .tile-xs .tile-label { font-size: 9px; letter-spacing: 0; }
-/* A short note in the middle of a tile with no picture, e.g. a video this browser can't play (T61). The file type moves to the free top-left corner; the note stays clear of the tick (top right) and the time and length (bottom), down to ~100 px tiles. */
+/* A short note in the middle of a tile with no picture, e.g. a video this browser can't play (T61). The file type moves to the free top-left corner; the note stays clear of the tick (top right) and the length (bottom) on tiles 120 px and wider. */
 .tile:has(.tile-note) { padding: 28px 8px 32px; }
 .tile:has(.tile-note) .tile-label { position: absolute; top: 10px; left: 10px; }
 .tile-note { font-size: 11px; line-height: 1.25; text-align: center; color: var(--ink-soft); max-width: 100%; overflow-wrap: anywhere; }
+/* T64: narrower timeline tiles have no room for the file type, the note, the tick and the length.
+   The file type goes (the note says more), and the note starts top left and wraps around the tick.
+   Below 110 px it also steps down to 9 px (the smallest size in use, see .tile-xs) and the length
+   row takes its phone size. Checked at every width from 90 to 180 px by checkVideoTags (e2e). */
+.tl-tile { container-type: inline-size; }
+@container (max-width: 119.98px) {
+  .tile:has(.tile-note) { display: block; padding: 6px 8px 0; }
+  .tile:has(.tile-note) .tile-label { display: none; }
+  .tile-note { display: block; text-align: left; overflow-wrap: normal; }
+  .tile-note::before { content: ''; float: right; width: 28px; height: 28px; }
+}
+@container (max-width: 109.98px) {
+  .tile:has(.tile-note) { padding-top: 4px; }
+  .tile-note { font-size: 9px; line-height: 11px; }
+  .tile-note::before { height: 24px; }
+  .tile:has(.tile-note) ~ .vid-row { left: 6px; right: 6px; bottom: 6px; height: 22px; }
+  .tile:has(.tile-note) ~ .vid-row .vid, .tile:has(.tile-note) ~ .vid-row .tag { height: 22px; }
+  .tile:has(.tile-note) ~ .vid-row .vid-len { line-height: 22px; }
+}
 
 /* Set aside, kept safe */
 .aside { background: var(--surface-2); border: 1px solid var(--rule-soft); border-radius: 20px; padding: 26px 26px 14px; display: flex; flex-direction: column; gap: 14px; }
