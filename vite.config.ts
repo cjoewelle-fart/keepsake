@@ -7,6 +7,11 @@ import { VitePWA } from 'vite-plugin-pwa'
 // sessions, in dist-test/. Same privacy lock-down and offline install, but the example-files
 // button is forced off and the page title says "(test)" so sessions can be told apart.
 const TEST_BUILD = 'testbuild'
+// `npm run build:artifact-test` (vite build --mode artifact-test): the shareable preview page for
+// usability sessions, in dist-artifact-test/. Like the artifact build, but with no example files
+// and "(test)" in the title, checked the same way as the test build.
+const ARTIFACT_TEST = 'artifact-test'
+const isArtifact = (mode: string) => mode === 'artifact' || mode === ARTIFACT_TEST
 
 // The app's name in one place (a rename is pending): install name and home-screen label.
 const APP_NAME = 'Keepsake'
@@ -109,14 +114,16 @@ const offline = () =>
 export default defineConfig(({ mode }) => ({
   base: './',
   plugins: mode === 'artifact' ? [react()]
+    : mode === ARTIFACT_TEST ? [react(), testBuild()]
     : mode === TEST_BUILD ? [react(), csp(), offline(), installTags(), testBuild()]
     : [react(), csp(), offline(), installTags()],
-  // The test build never shows the example-files button, whatever the environment says.
-  define: mode === TEST_BUILD ? { 'import.meta.env.VITE_SAMPLES': JSON.stringify('0') } : {},
+  // Test builds never show the example-files button, whatever the environment says.
+  define: mode === TEST_BUILD || mode === ARTIFACT_TEST ? { 'import.meta.env.VITE_SAMPLES': JSON.stringify('0') } : {},
   worker: { format: 'es' },
-  build: mode === 'artifact'
+  build: isArtifact(mode)
     ? {
-        outDir: 'dist-artifact', assetsInlineLimit: 100_000_000, cssCodeSplit: false, modulePreload: false,
+        outDir: mode === ARTIFACT_TEST ? 'dist-artifact-test' : 'dist-artifact',
+        assetsInlineLimit: 100_000_000, cssCodeSplit: false, modulePreload: false,
         rolldownOptions: { output: { codeSplitting: false } }, // one script (the HEIC decoder is loaded lazily otherwise)
       }
     : mode === TEST_BUILD ? { outDir: 'dist-test' } : {},

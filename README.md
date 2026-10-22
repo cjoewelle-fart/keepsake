@@ -34,6 +34,16 @@ npm run build:test # test build for usability sessions in dist-test/
 
 The test build (`npm run build:test`) is the production build (same privacy lock-down and offline install) with two differences: the "Try with example files" button is always off, even if `VITE_SAMPLES=1` is set (the build fails if the example-files code gets in), and the page title reads "Keepsake (test)" so session recordings can be told apart. Serve it with `npx vite preview --outDir dist-test`.
 
+### Builds for usability sessions
+
+Two ways to give testers the app, both without the "Try with example files" button and titled "Keepsake (test)":
+
+- **Remote sessions: a shareable page.** `npm run build:artifact-test` makes one self-contained page, `dist-artifact-test/page/keepsake-test.html` (no sample pack), to publish as a claude.ai artifact. The steps by hand: `npx vite build --mode artifact-test`, then `node scripts/make-artifact.mjs --test <out-dir>`; both refuse to finish if the example-files code gets in. The artifact viewer runs the page in a sandboxed frame, so there:
+  - the folder is chosen with the browser's folder-upload dialog (`<input webkitdirectory>`), never the folder picker, which Chromium refuses in sandboxed frames. Chrome then asks "Upload N files to this site?"; the start screen says that's the browser's wording and nothing is sent. Scanning works as usual.
+  - saving isn't possible (no folder picker, and downloads from a sandboxed frame are blocked unless the frame allows them, which a page can't check). The save step says "Saving isn't available in this preview. In the real app, your photos are saved to a folder you choose." instead of offering a button that would fail. So the save task (G2) can't be run on this page.
+  - `node scripts/sandbox-check.mjs <path-to-chromium> <out-dir>/keepsake-test.html` checks this in headless Chromium: the page in an iframe with `sandbox="allow-scripts allow-same-origin"` (no `allow-downloads`), with the folder picker removed and with Chromium's own, plus a control run outside a frame.
+- **In-person sessions: on your laptop, where saving fully works.** `npm run build:test && npx vite preview --outDir dist-test --port 4173`, then open http://localhost:4173 in Chrome. This is the real app (folder picker, saving into a folder, offline install). Stop the server with Ctrl+C when the session ends. (`--outDir dist-test` matters: plain `npx vite preview` serves the normal build in `dist/`.)
+
 Offline use: open the production build once (it must be served over https or from localhost), then it can be installed ("Install app" in Chrome or Edge's address bar, or "Add to Home Screen") and works with the network off. A new version is picked up in the background and takes over on the visit after it was downloaded. The development server (`npm run dev`) doesn't work offline. The install name lives in `APP_NAME` in `vite.config.ts`; install icons are made from `public/favicon.svg` by `node scripts/make-icons.mjs <path-to-chromium>`.
 
 Use Chrome or Edge for the best experience. Other browsers fall back to a folder upload dialog (still local).

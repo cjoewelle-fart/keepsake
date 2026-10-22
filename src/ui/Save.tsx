@@ -12,6 +12,7 @@ import type { RecoveryRoot } from './recoveryFolder';
 import { canSaveToFolder, download, ensureWritable, hasRoot, newFolderSession, pickFolder, saveAsZip, saveToFolder } from './saveRun';
 import type { DirHandle, FolderSession, RunEnd } from './saveRun';
 import { END_COST, entryCost } from './zip';
+import { canDownload } from './embedded';
 import { mediaType } from './timeline';
 
 type Props = {
@@ -44,6 +45,8 @@ export function Save({ records, files, ids, recoveryRoot, onBack, onDone }: Prop
   // Zip downloads where the browser can't save into a folder safely (no folder picker, or no
   // move()); also if move() turns out not to work for the chosen folder.
   const [folderMode, setFolderMode] = useState(() => canSaveToFolder());
+  // Neither works in a sandboxed frame (the claude.ai preview): say so calmly, offer nothing.
+  const [noSaving] = useState(() => !canSaveToFolder() && !canDownload());
   const byIndex = useMemo(() => {
     const a: FileRecord[] = [];
     for (const r of records) a[r.index] = r;
@@ -300,7 +303,12 @@ export function Save({ records, files, ids, recoveryRoot, onBack, onDone }: Prop
             <p className="sub">{problemText(phase.problem, mediaOnly)[1]}</p>
           </section>
         )}
-        {folderMode ? (
+        {noSaving ? (
+          <section className="card" aria-labelledby="preview-h" data-k="no-saving">
+            <h2 id="preview-h">{s.previewH}</h2>
+            <p className="card-body">{s.previewBody}</p>
+          </section>
+        ) : folderMode ? (
           <section className="card" aria-labelledby="folder-h">
             <h2 id="folder-h">{s.folderH}</h2>
             <p className="card-body">{s.folderBody}</p>

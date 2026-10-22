@@ -19,6 +19,7 @@
 // - Browsers without move() don't write into folders at all: the old create-under-final-name way
 //   could open a file another program had just made. They get zip downloads instead
 //   (canSaveToFolder() is false up front; a move() that turns out unsupported ends 'unsupported').
+import { canUseFolderPicker } from './embedded';
 import { NameBook, classifyWriteError, dirKey, placeFor, zipPath } from './savePlan';
 import type { Planned, WriteProblem } from './savePlan';
 import { ZipWriter, dosFrom } from './zip';
@@ -43,10 +44,11 @@ type FileHandle = FileSystemFileHandle & {
 /**
  * Can this browser save straight into a folder? It needs the folder picker and
  * FileSystemFileHandle.move(); without move() the person gets zip downloads instead.
+ * Never inside a frame (the claude.ai preview): the picker is refused there.
  * `w` is the window (a parameter so it can be tested in Node).
  */
 export function canSaveToFolder(w: object | undefined = typeof window !== 'undefined' ? window : undefined): boolean {
-  if (!w || !('showDirectoryPicker' in w)) return false;
+  if (!w || !canUseFolderPicker(w)) return false;
   const proto = (w as { FileSystemFileHandle?: { prototype?: object } }).FileSystemFileHandle?.prototype;
   return !!proto && typeof (proto as { move?: unknown }).move === 'function';
 }

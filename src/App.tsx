@@ -1,6 +1,6 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
 import * as Comlink from 'comlink';
-import { directoryOpen } from 'browser-fs-access';
+import { directoryOpen, directoryOpenLegacy } from 'browser-fs-access';
 import type { FileRecord, Progress } from './engine/types';
 import type { SetAsideGroup } from './engine/summary';
 import { summarize } from './engine/summary';
@@ -17,6 +17,7 @@ import { Selection } from './ui/timeline';
 import { copy } from './ui/copy';
 import { withPickedFolder } from './ui/recoveryFolder';
 import type { RecoveryRoot } from './ui/recoveryFolder';
+import { canUseFolderPicker, inFrame } from './ui/embedded';
 
 type Screen =
   | { name: 'start'; note?: string }
@@ -65,7 +66,10 @@ export default function App() {
     let picked: File[];
     let root: RecoveryRoot | undefined;
     try {
-      ({ result: picked, root } = await withPickedFolder(async () => (await directoryOpen({ recursive: true })) as File[]));
+      // In a frame (the claude.ai preview) the folder picker is refused, so the folder-upload
+      // input is used straight away (still read-only, still only on this computer).
+      const open = canUseFolderPicker() ? directoryOpen : directoryOpenLegacy;
+      ({ result: picked, root } = await withPickedFolder(async () => (await open({ recursive: true })) as File[]));
     } catch (e) {
       if ((e as Error).name === 'AbortError') return; // the person closed the picker
       setScreen({ name: 'error' });
@@ -194,6 +198,8 @@ export default function App() {
 
 function Start({ note, onChoose, onSamples }: { note?: string; onChoose: () => void; onSamples?: () => void }) {
   const fullSupport = typeof window !== 'undefined' && 'showDirectoryPicker' in window;
+  // The claude.ai preview: choosing the folder opens the browser's "upload" dialog.
+  const framed = inFrame();
   // The live region must exist before its text arrives, or screen readers stay silent. Start
   // can mount with a note already ("Scan stopped"), so the text goes in a moment after mount.
   const [ready, setReady] = useState<string>();
@@ -216,7 +222,8 @@ function Start({ note, onChoose, onSamples }: { note?: string; onChoose: () => v
         {onSamples && <button type="button" className="btn btn-secondary btn-lg" onClick={onSamples}>{copy.start.samples}</button>}
       </div>
       {onSamples && <p className="sub-sm">{copy.start.samplesNote}</p>}
-      {!fullSupport && <p className="sub-sm">{copy.start.browserNote}</p>}
+      {!fullSupport && !framed && <p className="sub-sm">{copy.start.browserNote}</p>}
+      {framed && <p className="sub-sm">{copy.start.uploadNote}</p>}
       <p className="sub-sm privacy">{copy.privacy}</p>
     </main>
   );

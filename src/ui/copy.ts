@@ -64,6 +64,8 @@ export const copy = {
     choose: 'Choose recovery folder',
     browserNote: 'Keepsake works best in Chrome or Edge on a computer. You can still scan your folder in this browser.',
     stopped: 'Scan stopped. Nothing was changed, and you can start again any time.',
+    /** Inside the claude.ai preview the folder is chosen with the browser's upload dialog. */
+    uploadNote: 'Your browser may ask “Upload files to this site?” That’s the browser’s own wording. Your files are only read on this computer, not sent anywhere.',
     samples: 'Try with example files',
     samplesNote: 'No recovery folder handy? The example files come from a test memory card that was wiped and then recovered.',
   },
@@ -278,6 +280,9 @@ export const copy = {
     ledgerSize: 'Total size',
     needSpace: (size: string) => `You’ll need at least ${size} of free space.`,
     newCopies: 'We save new copies. Your recovery folder stays exactly as it was.',
+    // The claude.ai preview (a sandboxed frame), where neither folder saving nor downloads work.
+    previewH: 'Saving isn’t available in this preview.',
+    previewBody: 'In the real app, your photos are saved to a folder you choose.',
     folderH: 'Save to a folder',
     folderBody: 'Choose a folder or make a new one, for example in Pictures. We’ll put a folder called Keepsake photos inside it. Anything already there stays as it is.',
     notTheCard: 'Choose a place on this computer or on another drive. Don’t save onto the memory card your photos came from.',
