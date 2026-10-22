@@ -220,6 +220,17 @@ progress::-moz-progress-bar { background: var(--accent); border-radius: 999px; }
 .vid { position: absolute; right: 8px; bottom: 8px; display: flex; align-items: center; gap: 4px; padding: 5px 8px; border-radius: 999px; background: #FFFFFF; color: var(--ink); }
 /* Video length beside the play mark (TL mockups: "▶ 0:42"). */
 .vid-len { font-size: 13px; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; }
+/* T63: on a video tile the length and the time share one row along the bottom, length on the right.
+   The row is one pill tall and clips, and neither pill shrinks: when both don't fit (desktop tiles are
+   ~90-110 px) the time wraps onto a second, hidden line and drops out whole, never cut to "10:".
+   The checkbox's name keeps the time and length. */
+.vid-row { position: absolute; left: 8px; right: 8px; bottom: 8px; height: 24px; display: flex; flex-direction: row-reverse; flex-wrap: wrap; column-gap: 4px; overflow: hidden; pointer-events: none; }
+.vid-row .vid, .vid-row .tag { position: static; flex: none; height: 24px; max-width: none; }
+/* An hour-long length on the narrowest tiles: the pill shrinks to the row and the play mark drops out
+   the same way (wraps onto a hidden line), so "1:02:03" stays whole. */
+.vid-row .vid { flex: 0 1 auto; min-width: 0; padding-top: 0; padding-bottom: 0; flex-direction: row-reverse; flex-wrap: wrap; justify-content: center; align-content: flex-start; overflow: hidden; }
+.vid-row .vid-len { order: -1; line-height: 24px; }
+.vid-row .tag { display: flex; align-items: center; padding-top: 0; padding-bottom: 0; margin-right: auto; overflow: visible; }
 .tl-aside { flex-direction: row; flex-wrap: wrap; justify-content: space-between; align-items: center; padding: 18px 22px; }
 .tl-aside .btn-sm { align-self: center; }
 .tl-empty { display: flex; flex-direction: column; gap: 12px; align-items: flex-start; }
@@ -253,6 +264,9 @@ progress::-moz-progress-bar { background: var(--accent); border-radius: 999px; }
   .actions, .actions .btn, .cta .btn-primary { width: 100%; }
   .tl-footer { margin: 0 -16px -48px; padding: 12px 16px 16px; }
   .vid { right: 6px; bottom: 6px; padding: 4px 6px; }
+  .vid-row { left: 6px; right: 6px; bottom: 6px; height: 22px; }
+  .vid-row .vid, .vid-row .tag { height: 22px; }
+  .vid-row .vid-len { line-height: 22px; }
   .dot { width: 24px; height: 24px; }
   .fan { transform: scale(0.9); transform-origin: left top; height: 136px; }
 }
