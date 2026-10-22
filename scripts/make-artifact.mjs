@@ -1,13 +1,18 @@
 // Turns `vite build --mode artifact` output into one self-contained page plus a sample pack.
 // Usage: node scripts/make-artifact.mjs <photorec-output-dir> <out-dir>
+//
+// Pilot test page (no example files, title "Keepsake (test)"), from `vite build --mode artifact-test`:
+//        node scripts/make-artifact.mjs --test <out-dir>    (writes <out-dir>/keepsake-test.html only)
 import { mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
 import { join, relative } from 'node:path';
 
-const [samplesDir, outDir] = process.argv.slice(2);
+const test = process.argv[2] === '--test';
+const [samplesDir, outDir] = test ? [undefined, process.argv[3]] : process.argv.slice(2);
+if (!outDir) throw new Error('usage: make-artifact.mjs <photorec-output-dir> <out-dir> | --test <out-dir>');
 mkdirSync(outDir, { recursive: true });
 
 // 1. Inline the built JS and CSS into the page body.
-const dist = 'dist-artifact';
+const dist = test ? 'dist-artifact-test' : 'dist-artifact';
 let html = readFileSync(join(dist, 'index.html'), 'utf8');
 const assets = readdirSync(join(dist, 'assets'));
 const js = assets.filter((f) => f.endsWith('.js')).map((f) => readFileSync(join(dist, 'assets', f), 'utf8'));
@@ -22,6 +27,14 @@ const page = `${title}
 ${body.trim()}
 <script type="module">${js[0].replaceAll('</script', '<\\/script')}</script>
 `;
+if (test) {
+  // The test page must not offer the example files (testers use a real recovery folder).
+  if (!title.includes('(test)')) throw new Error(`test page: title is ${title}, run vite build --mode artifact-test`);
+  if (page.includes('sample-pack')) throw new Error('test page: example files code found');
+  writeFileSync(join(outDir, 'keepsake-test.html'), page);
+  console.log(`test page ${(page.length / 1024).toFixed(0)} KB, ${title}, no sample pack`);
+  process.exit(0);
+}
 writeFileSync(join(outDir, 'keepsake.html'), page);
 
 // 2. Pack the example files (kept under 14 MB by dropping some large photos evenly).

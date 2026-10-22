@@ -47,8 +47,337 @@ export const bytes = (x: number) => {
   return u === 0 ? `${n(x)} ${plural(x, 'byte', 'bytes')}` : `${x >= 100 ? Math.round(x) : x.toFixed(1).replace(/\.0$/, '')} ${units[u]}`;
 };
 
+const APP = 'Keepsake';
+
+// The privacy page and PhotoRec guide texts (copy.info), in the small Markdown described there.
+const PRIVACY = `# Your privacy
+
+**Your photos never leave this computer, and ${APP} never changes or deletes your files.**
+
+## Nothing is uploaded
+
+${APP} runs inside your web browser, on your computer. When you choose your recovery folder, your browser reads the files right here. They are not sent to us or to anyone else.
+
+There is no ${APP} server that stores photos. The app is a set of files your browser loads once, like a page in a book. After that, all the sorting happens on your computer.
+
+The app is also built so the page can’t send data to other websites. It doesn’t use ads or tracking, and it doesn’t load anything from other companies.
+
+iPhone photos (HEIC files) are turned into previews on your computer too. The part that does this comes with ${APP}. Nothing is fetched from anywhere else.
+
+Some browsers show a message like “Upload files to this site?” when you choose a folder. That is the browser’s own wording. The files are only read on this computer. They are not sent anywhere.
+
+## None of your files are deleted
+
+${APP} only reads your recovery folder. It can’t change it, move files in it, or delete anything from it.
+
+When we set files aside, they stay exactly where they were. “Set aside” only means we don’t show them with your photos. You can keep any of them.
+
+When you save your photos, ${APP} makes new copies in a folder you choose. It never replaces a file that’s already there. Your recovery folder stays as it was.
+
+If saving stops partway, ${APP} removes the one empty file it had just started for that copy. It never removes anything that was there before, any copy it finished, or anything in your recovery folder.
+
+## How to check for yourself
+
+You don’t have to take our word for it. Here’s how to check.
+
+**Watch what your browser sends.**
+Browsers have a tool that lists everything a page sends and receives. On a computer using Chrome or Edge:
+1. Press **F12** (on a Mac, press **Option + Command + I**).
+2. Click the **Network** tab.
+3. Use ${APP} as normal.
+
+You’ll see ${APP} loading its own files when the page opens. You won’t see your photos being sent anywhere.
+
+## What we can’t control
+
+We’re honest about the limits.
+
+- **Your browser.** ${APP} runs inside your browser, so it can only be as private as the browser is. Use a browser you trust, kept up to date.
+- **Browser extensions.** Add-ons you’ve installed in your browser (like ad blockers, shopping or translation tools) may be able to see pages you open. If you’re worried, turn them off while you use ${APP}.
+- **Your computer’s own backups.** Photos you save may be copied by backup or sync tools you already use, like OneDrive, iCloud, Google Drive or Dropbox. That’s set up on your computer, not by ${APP}.
+- **The website that sends you the app.** Like any website, the place ${APP} is hosted may keep basic visit records, such as when the page was opened. Those records never include your photos.
+
+## What ${APP} stores
+
+- **On our side: nothing.** We have no server that keeps photos, scan results or accounts.
+- **In your browser: the app itself.** Your browser may keep ${APP}’s own files so it opens faster or works without the internet. These are the app’s files, not your photos.
+- **Your scan results: only in this browser tab.** The list of what ${APP} found is kept while the tab is open. When you close the tab, it’s gone. Your photos stay safe in your recovery folder and wherever you saved them.
+
+## Questions
+
+**Do you see my photos?**
+No. Your photos are read on your computer and never sent to us. We have no way to see them.
+
+**Do I need an account?**
+No. There’s nothing to sign up for and no email to give.
+`;
+
+const GUIDE = `# Get your photos back from a memory card with PhotoRec
+
+This guide helps you look for lost photos on a phone’s memory card (SD card), a USB stick or a camera card. It uses PhotoRec, a free program. It works on Windows and Mac.
+
+PhotoRec finds the photos. Then ${APP} sorts them for you.
+
+## Before you start
+
+Read these four things first. They matter more than anything else in this guide.
+
+**1. Stop using the card now.**
+Don’t take new photos. Don’t copy anything onto the card. If it’s in a phone or camera, turn it off and take the card out. Every new file can cover up an old photo.
+
+**2. If your computer asks to “format” or “fix” the card, say no.**
+- On Windows, if you see “You need to format the disk”, click **Cancel**.
+- On Mac, if you see “The disk you inserted was not readable”, click **Ignore**.
+
+**3. Save the photos you find to a different place than the card.**
+Save them on your computer, or on a different USB drive. Never save them back onto the card you are searching. That could cover up the photos you’re trying to find.
+
+**4. Check you have room, and time.**
+- You need about as much free space as the size of the card, plus a little extra. For a 32 GB card, have at least 40 GB free.
+- It can take hours. A big or damaged card can take all night. That’s normal. Leave the computer plugged in.
+
+**What you need**
+- A computer (Windows or Mac).
+- A way to plug in the card. Most phone cards need a card reader (a small adapter that plugs into your computer’s USB port).
+- About 15 minutes to set up, then time to wait.
+
+**Is your phone’s memory built in, with no card?** Read [If your photos were in the phone itself](#if-your-photos-were-in-the-phone-itself) first. PhotoRec usually can’t help in that case.
+
+---
+
+## Part 1: Get PhotoRec
+
+PhotoRec comes inside a free download called “TestDisk & PhotoRec”. Get it only from its makers’ website, cgsecurity.org.
+
+### On Windows
+
+1. Open your web browser and go to **cgsecurity.org/wiki/TestDisk_Download**.
+2. Find the newest version that isn’t marked “Beta”. Today that is **7.2**.
+3. Click **Windows 64-bit**. The file is called \`testdisk-7.2.win64.zip\`.
+   [Screenshot: the download page with the Windows 64-bit link circled]
+4. Open your **Downloads** folder.
+5. Right-click \`testdisk-7.2.win64.zip\` and choose **Extract All**, then **Extract**.
+   You must do this step. PhotoRec won’t start from inside the zip file.
+6. Open the new folder called \`testdisk-7.2\`.
+
+### On Mac
+
+1. Open Safari or another browser and go to **cgsecurity.org/wiki/TestDisk_Download**.
+2. Find the newest version that isn’t marked “Beta”. Today that is **7.2**.
+3. Click the **Mac OS X** download. The file is called \`testdisk-7.2.mac_intel_x86_64.tar.bz2\`.
+   You need macOS 10.15 (Catalina) or newer.
+4. Open your **Downloads** folder.
+5. Double-click the file. A folder called \`testdisk-7.2\` appears.
+   [Screenshot: Finder showing the testdisk-7.2 folder in Downloads]
+
+---
+
+## Part 2: Plug in the card and make a folder for your photos
+
+1. Plug the card into your computer. Use a card reader if you need one.
+2. If your computer asks to format or fix the card, say no (**Cancel** on Windows, **Ignore** on Mac).
+3. Make a new, empty folder on your computer for the photos PhotoRec finds. Put it on your **Desktop** and call it \`Recovered photos\`.
+   Don’t make this folder on the card.
+
+---
+
+## Part 3: Start PhotoRec
+
+There are two kinds of PhotoRec:
+- **QPhotoRec** has windows and buttons you can click. It comes with the Windows download.
+- **PhotoRec** (the text version) uses the keyboard only. You move with the arrow keys and press Enter. This is the one you use on a Mac.
+
+### On Windows: start QPhotoRec (easiest)
+
+1. In the \`testdisk-7.2\` folder, double-click **qphotorec_win** (it may show as \`qphotorec_win.exe\`).
+2. Windows asks, “Do you want to allow this app to make changes to your device?” Click **Yes**.
+   PhotoRec needs this to read the card. You need to be signed in as an administrator.
+3. If you see “Windows protected your PC”, click **More info**, then **Run anyway**.
+4. The QPhotoRec window opens.
+   [Screenshot: QPhotoRec main window]
+
+Now go to [Part 4A: Search with QPhotoRec](#part-4a-search-with-qphotorec-windows).
+
+If QPhotoRec doesn’t open, you can use the text version instead. Right-click **photorec_win** and choose **Run as administrator**. Then follow [Part 4B](#part-4b-search-with-the-text-version-mac-or-windows).
+
+### On Mac: start PhotoRec in Terminal
+
+Terminal is a Mac app where you type commands. You only need it to start PhotoRec.
+
+1. Press **Command + Space**, type \`Terminal\`, and press **Return**.
+   A window with text opens.
+   [Screenshot: an empty Terminal window]
+2. Open the \`testdisk-7.2\` folder in Finder, so you can see it next to Terminal.
+3. Drag the file called **photorec** from the folder into the Terminal window. Its location appears as text.
+4. Click in the Terminal window and press **Return**.
+5. If your Mac says it needs **Rosetta**, click **Install** and wait. Then do step 4 again.
+
+**If your Mac blocks PhotoRec**
+
+Your Mac may say it “could not verify” PhotoRec, or that it “can’t be opened”. This happens because PhotoRec isn’t sold in the App Store. It doesn’t mean something is wrong with it.
+
+1. Click **Done** (or **OK**). Don’t click Move to Trash.
+2. Open the **Apple menu** and choose **System Settings**.
+3. Click **Privacy & Security**. Scroll down to the Security part.
+4. Next to the message about photorec, click **Open Anyway**.
+   [Screenshot: Privacy & Security with “Open Anyway” circled]
+5. Type your Mac password and click **OK**.
+6. Go back to Terminal and press the up arrow key, then **Return**. PhotoRec starts.
+7. If your Mac asks again, click **Open**.
+
+You only have to do this once, within about an hour of the first try.
+
+**When PhotoRec asks for your password**
+
+1. PhotoRec may say some disks won’t show unless it has more access. Use the arrow keys to choose **Sudo** and press **Return**.
+2. Type your Mac password and press **Return**.
+   You won’t see anything as you type. That’s normal. Type it anyway.
+3. If your Mac account has no password, PhotoRec can’t continue. Set a password first in **System Settings > Users & Groups**, then start again.
+
+Now go to [Part 4B](#part-4b-search-with-the-text-version-mac-or-windows).
+
+---
+
+## Part 4A: Search with QPhotoRec (Windows)
+
+1. At the top, open the list of disks and choose your card.
+   Pick it by its size. A 32 GB card may show as about 31 or 32 GB. Don’t choose your computer’s own drive (usually the biggest one).
+   [Screenshot: the disk list open, with the card selected]
+2. In the list below it, click the line for the card’s main part. If you’re not sure, choose the line that says **No partition** or **Whole disk**, or the biggest line.
+3. Under the file system choice, pick **FAT/NTFS/HFS+/ReiserFS/…** (the one that is not ext2/ext3/ext4). Phone and camera cards use this kind.
+4. Choose **Whole** or **Free**:
+   - **Whole** searches the entire card. Choose this if the card stopped working, was formatted, or you’re not sure. It takes longer and also finds photos that are still on the card. That’s fine: ${APP} puts the extra copies aside for you.
+   - **Free** only searches the empty space. Choose this if the card still works and you only deleted some photos. It’s faster.
+5. Leave **File Formats** as it is. PhotoRec looks for all kinds of files, and that’s fine. ${APP} sorts out what isn’t a photo or video.
+6. Click **Browse** and choose the \`Recovered photos\` folder on your Desktop.
+   [Screenshot: QPhotoRec with Whole selected and the destination filled in]
+7. Click **Search**.
+
+Now go to [Part 5: Wait](#part-5-wait).
+
+---
+
+## Part 4B: Search with the text version (Mac or Windows)
+
+In the text version, you use the **arrow keys** to move and **Enter** (Return on a Mac) to choose. The keys you can use are listed at the bottom of each screen.
+
+**Pick the card**
+
+1. You see a list of disks. Use the arrow keys to choose your card. Pick it by its size, for example 32 GB.
+   Don’t choose your computer’s own drive (usually the biggest one, or the one at the top).
+   On a Mac, if you see the card twice, choose the one that starts with \`/dev/rdisk\`. It’s faster.
+   [Screenshot: the disk list with the card highlighted]
+2. At the bottom, make sure **Proceed** is highlighted, then press **Enter**.
+
+**Pick the part of the card to search**
+
+3. You see a list of the card’s parts. Choose the biggest one, or the one that says **No partition** or **Whole disk**.
+4. At the bottom, make sure **Search** is highlighted, then press **Enter**.
+   You don’t need **Options** or **File Opt**. PhotoRec looks for all kinds of files, and that’s fine. ${APP} sorts out what isn’t a photo or video.
+   [Screenshot: the partition list with Search highlighted at the bottom]
+
+**Answer two questions**
+
+5. PhotoRec asks what kind of file system the card uses. Choose **Other** and press **Enter**. Phone and camera cards use this kind.
+6. PhotoRec asks where to search. Choose one and press **Enter**:
+   - **Whole** searches the entire card. Choose this if the card stopped working, was formatted, or you’re not sure. It takes longer and also finds photos that are still on the card. That’s fine: ${APP} puts the extra copies aside for you.
+   - **Free** only searches the empty space. Choose this if the card still works and you only deleted some photos. It’s faster.
+   [Screenshot: the Free / Whole question]
+
+**Choose where to save**
+
+PhotoRec now shows folders on your computer. You move into a folder by choosing it and pressing **Enter**. You go back up by choosing \`..\` (two dots) and pressing **Enter**.
+
+7. Find the \`Recovered photos\` folder you made:
+   - **On a Mac:** you usually start in your home folder. Choose **Desktop** and press **Return**. Then choose **Recovered photos** and press **Return**.
+   - **On Windows:** you start in the \`testdisk-7.2\` folder. Choose \`..\` and press **Enter** until you reach \`C:\`. Then go into **Users**, then your name, then **Desktop**, then **Recovered photos**.
+8. Check the line at the top. It should end in \`Recovered photos\`.
+   [Screenshot: the destination screen with the folder path at the top]
+9. Press the **C** key to start.
+   (Some older versions ask you to press **Y** instead. Use whichever key the screen asks for.)
+
+Now go to Part 5.
+
+---
+
+## Part 5: Wait
+
+PhotoRec is now searching. You’ll see a count of files found, by type, going up. “Pass 0” and “Pass 1” are normal.
+[Screenshot: the search screen with files being counted]
+
+- This can take hours. Leave it running. You can do other things on the computer.
+- Keep the computer plugged in and the card plugged in.
+- Don’t let the computer go to sleep. On Windows, check **Settings > System > Power**. On a Mac, check **System Settings > Lock Screen** or **Battery**.
+- You can look in the \`Recovered photos\` folder while it runs. Files appear there as they’re found.
+- If it stops by mistake, start PhotoRec again the same way. It asks if you want to carry on where it left off.
+
+When it’s done, PhotoRec says so and shows how many files it found. You can close it. (In the text version, choose **Quit** and press **Enter** until it closes.)
+
+---
+
+## Part 6: What you’ll see
+
+Open the \`Recovered photos\` folder. Inside, you’ll see folders named:
+
+\`recup_dir.1\`, \`recup_dir.2\`, \`recup_dir.3\` …
+
+[Screenshot: the Recovered photos folder with several recup_dir folders]
+
+Inside them are lots of files with names like \`f12345678.jpg\`. PhotoRec can’t bring back the old names or folders, so everything is mixed together. There will also be small preview copies, copies of the same photo, broken files and files from apps.
+
+You don’t need to sort through them yourself.
+
+**Now open ${APP} and choose that folder.** Choose \`Recovered photos\` (the folder that holds the recup_dir folders). ${APP} finds the photos and videos worth keeping and sorts them by date. It doesn’t change or delete anything in the folder.
+
+---
+
+## If your photos were in the phone itself
+
+Many phones have no memory card. The photos are stored inside the phone.
+
+PhotoRec usually can’t reach this memory. When you plug a phone into a computer, it doesn’t show up as a normal disk, so PhotoRec can’t search it. Phones also lock and scramble their memory to keep it private, which makes deleted photos very hard to find.
+
+Here are some things to check. We can’t promise any of them will work.
+
+1. **Turn on airplane mode and stop using the phone** as much as you can.
+2. **Look in “Recently deleted”.** Most phones keep deleted photos for about 30 days.
+   - iPhone: **Photos** app > **Albums** > **Recently Deleted**.
+   - Android: the **Gallery** or **Google Photos** app > **Trash** or **Bin**.
+3. **Check your online backups.** Your photos may have been copied there without you knowing. Sign in on another device or a computer:
+   - Google Photos (photos.google.com), iCloud (icloud.com/photos), Samsung Cloud or OneDrive.
+4. **Check other places the photos may be.** Chat apps (like Messenger, WhatsApp or Viber), email, an old phone, or a computer you once plugged the phone into.
+5. **Ask a data recovery shop.** Some shops can try special methods. Ask for a price before they start, and ask what happens if they find nothing.
+
+Be careful with apps or websites that promise to “recover everything” from a phone. Many can’t, and some charge before showing you anything.
+
+---
+
+## If something goes wrong
+
+**The card doesn’t show up in the list**
+- Unplug the card and plug it in again. Then close PhotoRec and start it again.
+- Try a different USB port or a different card reader.
+- Check that PhotoRec has administrator access. On Windows, click **Yes** when asked. On a Mac, choose **Sudo** and type your password.
+- On a Mac: open **System Settings > Privacy & Security > Full Disk Access**. Turn on **Terminal** (click **+** to add it if it isn’t there). Then close Terminal and start again.
+- If the computer doesn’t see the card at all, the card or reader may be broken. A data recovery shop may still be able to help.
+
+**It says “Permission denied” or “Operation not permitted”**
+- PhotoRec doesn’t have enough access. On Windows, close it and start it again with **Yes** to the question, or right-click and choose **Run as administrator**. On a Mac, choose **Sudo** and type your password, and turn on Full Disk Access for Terminal (see above).
+- If it happens when saving, you may have picked a folder PhotoRec can’t write to. Choose your \`Recovered photos\` folder on the Desktop.
+
+**It’s very slow, or seems stuck**
+- Hours is normal, especially with **Whole** or a big card. If the file count is still going up now and then, it’s working.
+- Damaged cards can be very slow. It’s OK to leave it overnight.
+- If the count hasn’t changed for a few hours, you can stop it. The photos already found stay in your \`Recovered photos\` folder, and you can open them in ${APP} now.
+
+**It says the disk is full**
+- The place you’re saving to has run out of room. Stop PhotoRec. Free up space or use a bigger drive (never the card itself), then start again. PhotoRec asks if you want to carry on.
+
+Your card and the files already found are fine. Nothing here deletes anything.
+`;
+
 export const copy = {
-  appName: 'Keepsake',
+  appName: APP,
   steps: ['Recover', 'Scan', 'Clean up', 'Review', 'Save'],
   stepOf: (i: number, total: number, name: string) => `Step ${i + 1} of ${total} · ${name}`,
   /** The browser tab's title on each step: "Clean up · Keepsake". `app` keeps the test build's "(test)". */
@@ -64,6 +393,8 @@ export const copy = {
     choose: 'Choose recovery folder',
     browserNote: 'Keepsake works best in Chrome or Edge on a computer. You can still scan your folder in this browser.',
     stopped: 'Scan stopped. Nothing was changed, and you can start again any time.',
+    /** Inside the claude.ai preview the folder is chosen with the browser's upload dialog. */
+    uploadNote: 'Your browser may ask “Upload files to this site?” That’s the browser’s own wording. Your files are only read on this computer, not sent anywhere.',
     samples: 'Try with example files',
     samplesNote: 'No recovery folder handy? The example files come from a test memory card that was wiped and then recovered.',
   },
@@ -278,6 +609,9 @@ export const copy = {
     ledgerSize: 'Total size',
     needSpace: (size: string) => `You’ll need at least ${size} of free space.`,
     newCopies: 'We save new copies. Your recovery folder stays exactly as it was.',
+    // The claude.ai preview (a sandboxed frame), where neither folder saving nor downloads work.
+    previewH: 'Saving isn’t available in this preview.',
+    previewBody: 'In the real app, your photos are saved to a folder you choose.',
     folderH: 'Save to a folder',
     folderBody: 'Choose a folder or make a new one, for example in Pictures. We’ll put a folder called Keepsake photos inside it. Anything already there stays as it is.',
     notTheCard: 'Choose a place on this computer or on another drive. Don’t save onto the memory card your photos came from.',
@@ -399,5 +733,32 @@ export const copy = {
     zipAgain: (i: number, parts: number) => (parts === 1 ? 'Download zip file again' : `Download zip file ${n(i)} of ${n(parts)} again`),
     /** "16 October 2026, 16:05" (this computer's clock) */
     when: (d: Date) => `${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear()}, ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`,
+  },
+  /**
+   * The privacy page (T29) and the PhotoRec guide (T26), opened from the start screen (T67).
+   * Source: team/content/privacy-page.md and photorec-guide.md, without the team notes and
+   * without what isn't true yet (open source and the code link, the Wi-Fi check before QA signs
+   * it off, private windows, "Is it free?" and "Why is it free?").
+   * Written in a small Markdown (src/ui/markdown.ts): # ## ### headings; paragraphs, where a line
+   * break stays a line break; "- " and "1. " lists (indent 3 spaces to put something inside an
+   * item); **bold**; `code`; [words](#heading-id) links, to a heading on the same page only;
+   * [Screenshot: what it shows] placeholders; --- for a divider. A heading's id is its words in
+   * lower case, with spaces as dashes and punctuation dropped.
+   */
+  info: {
+    back: 'Back to start',
+    /** A placeholder where a screenshot will go (QA will supply them). */
+    shot: (what: string) => `Screenshot to come: ${what}`,
+    privacy: {
+      link: `How ${APP} keeps your photos private`,
+      /** In the browser tab: "Your privacy · Keepsake". */
+      title: 'Your privacy',
+      md: PRIVACY,
+    },
+    guide: {
+      link: 'New to PhotoRec? Here’s how to recover your files',
+      title: 'PhotoRec guide',
+      md: GUIDE,
+    },
   },
 };

@@ -11,7 +11,7 @@ export const THUMB_MAX_BYTES = 80 * 1024 * 1024;
 
 async function startDecoder() {
   // The shareable single-page preview needs everything inline.
-  const mod = import.meta.env.MODE === 'artifact'
+  const mod = import.meta.env.MODE === 'artifact' || import.meta.env.MODE === 'artifact-test'
     ? await import('../worker/thumb.worker.ts?worker&inline')
     : await import('../worker/thumb.worker.ts?worker');
   const raw: Worker = new mod.default();

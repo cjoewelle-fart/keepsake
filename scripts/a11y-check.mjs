@@ -171,6 +171,8 @@ async function targets(page, run, screen, min, severity, criterion) {
     const res = [];
     for (const el of els) {
       if (el.matches('h1,h2') || el.closest('[hidden]') || el.classList.contains('skip')) continue;
+      // Links inside running text (the reading pages) are exempt from target size (2.5.8 "inline").
+      if (el.matches('.doc p a, .doc li a')) continue;
       // An invisible input inside a bigger label: the label is the target.
       const box = el.matches('.chk input') ? el.parentElement : el.closest('label.tl-day-h') || el;
       const r = box.getBoundingClientRect();
@@ -222,6 +224,56 @@ async function scanFolder(page, dir, viaKeyboard = false) {
   await chooser.setFiles(dir);
 }
 
+/**
+ * The privacy page and the PhotoRec guide (T67), opened from the start screen and back: focus on
+ * the page's heading, axe, targets, no side scroll; by keyboard, a Tab sweep too. The guide's
+ * same-page links must lead to a heading on it.
+ */
+const INFO = [
+  { link: 'How Keepsake keeps your photos private', h1: /^Your privacy$/, screen: 'privacy page' },
+  { link: 'New to PhotoRec? Here’s how to recover your files', h1: /^Get your photos back/, screen: 'PhotoRec guide' },
+];
+async function infoPages(page, run, { min = 24, severity = 'minor', criterion = '2.5.8, WCAG 2.2', keyboard = false } = {}) {
+  for (const { link, h1: name, screen } of INFO) {
+    const open = page.getByRole('button', { name: link });
+    check(await open.isVisible().catch(() => false), 'serious', run, 'start', `"${link}" link on the start screen`);
+    if (keyboard) { await open.focus(); await page.keyboard.press('Enter'); } else await open.click();
+    const shown = await h1(page, name).waitFor({ timeout: 5000 }).then(() => true, () => false);
+    check(shown, 'serious', run, screen, 'opens from the start screen');
+    if (!shown) continue;
+    await focusOnHeading(page, run, screen);
+    await axe(page, run, screen);
+    await targets(page, run, screen, min, severity, criterion);
+    const top = await page.evaluate(() => scrollY);
+    check(top === 0, 'minor', run, screen, `opens at the top of the page (scrollY ${top})`);
+    if (keyboard) {
+      // Focus starts on the h1: Tab goes on through the page to the bottom "Back to start",
+      // Shift+Tab goes back to the one above the heading.
+      const stops = await sweep(page, run, screen, { max: 60 });
+      check(stops.at(-1)?.name === 'Back to start', 'serious', run, screen, `Tab from the heading reaches "Back to start" at the bottom (${stops.map((st) => st.name).join(' → ')})`);
+      await page.locator('main h1').focus();
+      await page.keyboard.press('Shift+Tab');
+      const up = await page.evaluate(focusInfo);
+      check(up.name === 'Back to start' && up.ring && up.inView, 'serious', run, screen, `Shift+Tab from the heading reaches "Back to start" at the top ("${up.name}")`);
+    }
+    // Same-page links (the guide's "Now go to Part 5" and so on) lead to a heading, which gets focus.
+    const links = await page.locator('.doc a[href^="#"]').evaluateAll((as) => as.map((a) => ({ href: a.getAttribute('href'), ok: !!document.getElementById(a.getAttribute('href').slice(1)) })));
+    if (links.length) {
+      check(links.every((l) => l.ok), 'serious', run, screen, `same-page links lead somewhere (${links.filter((l) => !l.ok).map((l) => l.href).join(', ') || `${links.length} links`})`);
+      const a = page.locator('.doc a[href^="#"]').last();
+      if (keyboard) { await a.focus(); await page.keyboard.press('Enter'); } else await a.click();
+      await page.waitForTimeout(200);
+      const at = await page.evaluate(() => { const t = document.getElementById(location.hash.slice(1)); const r = t?.getBoundingClientRect(); return { tag: t?.tagName, inView: !!r && r.top >= -1 && r.top < innerHeight, focused: document.activeElement === t }; });
+      check(at.inView && /^H[23]$/.test(at.tag ?? ''), 'serious', run, screen, `a same-page link scrolls to its heading (${at.tag}, in view ${at.inView})`);
+      check(at.focused, 'minor', run, screen, 'a same-page link moves focus to its heading');
+    }
+    const back = page.getByRole('button', { name: 'Back to start' }).last();
+    if (keyboard) { await back.focus(); await page.keyboard.press('Enter'); } else await back.click();
+    await h1(page, /find the photos/).waitFor({ timeout: 5000 });
+    await focusOnHeading(page, run, `start (back from the ${screen})`);
+  }
+}
+
 async function newPage(browser, run, ctx) {
   const context = await browser.newContext({ bypassCSP: true, ...ctx });
   const page = await context.newPage();
@@ -244,6 +296,7 @@ async function desktop(browser) {
   const page = await newPage(browser, run, { viewport: { width: 1280, height: 900 } });
   await axe(page, run, 'start');
   await targets(page, run, 'start', 24, 'minor', '2.5.8, WCAG 2.2');
+  await infoPages(page, run);
   const liveBefore = await page.locator('main [role=status]').count();
 
   await scanFolder(page, emptyDir);
@@ -387,6 +440,8 @@ async function keyboard(browser) {
   await page.locator('main h1').focus();
   const startStops = await sweep(page, run, 'start');
   check(startStops.some((s) => /Choose recovery folder/.test(s.name)), 'serious', run, 'start', 'Choose recovery folder reachable by Tab');
+  check(INFO.every((i) => startStops.some((s) => s.name === i.link)), 'serious', run, 'start', 'privacy page and PhotoRec guide links reachable by Tab');
+  await infoPages(page, run, { keyboard: true });
 
   await scanFolder(page, fixture, true);
   await page.getByText('Files checked').waitFor({ timeout: 120_000 });
@@ -480,6 +535,7 @@ async function narrow(browser, run, viewport, ctx = {}) {
   if (run === 'phone') ok(run, 'any', `pointer: coarse = ${coarse}`);
   await axe(page, run, 'start');
   await targets(page, run, 'start', min, sev, crit);
+  await infoPages(page, run, { min, severity: sev, criterion: crit });
   await scanFolder(page, fixture);
   await page.getByText('Files checked').waitFor({ timeout: 120_000 });
   await page.waitForTimeout(600);

@@ -11,7 +11,7 @@ export const HEIC_PREVIEW_MAX_BYTES = 60 * 1024 * 1024;
 async function startDecoder() {
   // The shareable single-page preview needs everything inline; the real app loads the
   // decoder as its own file, only when a HEIC preview is first needed.
-  const mod = import.meta.env.MODE === 'artifact'
+  const mod = import.meta.env.MODE === 'artifact' || import.meta.env.MODE === 'artifact-test'
     ? await import('../worker/heic.worker.ts?worker&inline')
     : await import('../worker/heic.worker.ts?worker');
   const raw: Worker = new mod.default();
