@@ -121,6 +121,54 @@ async function checkTimeline(page, label, keptOnResults) {
 }
 
 /**
+ * T63: a video tile's time and length are never cut off mid-text. Each pill in the bottom row is
+ * either wholly shown (inside the row, text not overflowing) or wholly hidden (wrapped below it),
+ * and the length is always shown. Checks the real video tiles on the page, plus test tiles built
+ * like Tile in Timeline.tsx at every width from 90 to 180 px with short and long lengths.
+ */
+async function checkVideoTags(page, label) {
+  const bad = await page.evaluate(() => {
+    const grid = document.querySelector('.tl-grid');
+    if (!grid) return ['no .tl-grid on the review page'];
+    const host = document.createElement('div');
+    host.className = 'tl-grid';
+    host.style.cssText = 'display:block;position:absolute;left:0;top:0;visibility:hidden';
+    grid.parentElement.appendChild(host);
+    const play = '<svg width="10" height="10" viewBox="0 0 10 10"><path d="M2 1l7 4-7 4z" fill="currentColor"></path></svg>';
+    for (let w = 90; w <= 180; w++) {
+      for (const [time, len] of [['10:42', '0:42'], ['23:59', '12:05'], ['00:00', '59:59'], ['10:42', '1:02:03'], [null, '0:42']]) {
+        const f = document.createElement('figure');
+        f.className = 'print tl-tile';
+        f.style.width = `${w}px`;
+        f.dataset.test = `${w}px, ${time ?? 'no time'}, ${len}`;
+        f.innerHTML = `<div class="tile tile-fill"></div><div class="vid-row" aria-hidden="true"><span class="vid">${play}<span class="vid-len">${len}</span></span>${time ? `<span class="tag">${time}</span>` : ''}</div>`;
+        host.appendChild(f);
+      }
+    }
+    const out = [];
+    for (const row of document.querySelectorAll('.vid-row')) {
+      const where = row.closest('[data-test]')?.dataset.test ?? `tile "${row.textContent}"`;
+      const r = row.getBoundingClientRect();
+      if (row.scrollWidth > row.clientWidth + 0.5) out.push(`${where}: row overflows sideways`);
+      for (const pill of row.children) {
+        const p = pill.getBoundingClientRect();
+        const hidden = p.top >= r.bottom - 0.5;
+        const inside = p.left >= r.left - 0.5 && p.right <= r.right + 0.5 && p.top >= r.top - 0.5 && p.bottom <= r.bottom + 0.5;
+        if (pill.classList.contains('vid') && !inside) out.push(`${where}: length pill not wholly shown`);
+        else if (!hidden && !inside) out.push(`${where}: ${pill.className} pill cut off`);
+        else if (inside && pill.scrollWidth > pill.clientWidth + 0.5) out.push(`${where}: ${pill.className} text cut off`);
+        const len = pill.querySelector('.vid-len')?.getBoundingClientRect();
+        if (len && !(len.left >= p.left - 0.5 && len.right <= p.right + 0.5 && len.top >= p.top - 0.5 && len.bottom <= p.bottom + 0.5)) out.push(`${where}: length text cut off`);
+      }
+    }
+    host.remove();
+    return out;
+  });
+  console.log(`[${label}] video tags: ${bad.length ? `${bad.length} cut off` : 'none cut off'}`);
+  for (const b of bad.slice(0, 10)) problems.push(`[${label}] video tag: ${b}`);
+}
+
+/**
  * T51: the highlighted month (pill, and the month picker's value) is the month showing at the
  * top of the screen, just under the jump bar when it stays in view, whichever way you scroll.
  */
@@ -329,6 +377,7 @@ try {
     await page.screenshot({ path: `${out}/${label}-4-review.png`, fullPage: true });
     await checkNoSideScroll(page, label, 'review');
     await checkScrollSpy(page, label);
+    await checkVideoTags(page, label);
     const selected = await checkTimeline(page, label, keptOnResults);
     if (label === 'desktop') await saveToFolder(page, label, selected);
     else await saveAsZip(page, label, selected);

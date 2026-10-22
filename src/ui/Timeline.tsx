@@ -363,12 +363,19 @@ function Tile({ r, file, pos, of, on, onChange }: TileProps) {
           {on && <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7.2l2.6 2.6L11 4.4" stroke="#FFFFFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>}
         </span>
       </label>
-      {r.takenAt && <figcaption className="tag" aria-hidden="true">{clock(r.takenAt)}</figcaption>}
-      {type === 'video' && (
-        <span className="vid" aria-hidden="true" title={t.video}>
-          <svg width="10" height="10" viewBox="0 0 10 10"><path d="M2 1l7 4-7 4z" fill="currentColor" /></svg>
-          {r.durationSec !== undefined && <span className="vid-len">{runTime(r.durationSec)}</span>}
-        </span>
+      {type === 'video' ? (
+        // T63: the length pill and the time share one row. When a tile is too narrow for both
+        // (desktop tiles are ~90-110 px), the time drops out whole rather than being cut to "10:";
+        // the checkbox name always has both.
+        <div className="vid-row" aria-hidden="true">
+          <span className="vid" title={t.video}>
+            <svg width="10" height="10" viewBox="0 0 10 10"><path d="M2 1l7 4-7 4z" fill="currentColor" /></svg>
+            {r.durationSec !== undefined && <span className="vid-len">{runTime(r.durationSec)}</span>}
+          </span>
+          {r.takenAt && <span className="tag">{clock(r.takenAt)}</span>}
+        </div>
+      ) : (
+        r.takenAt && <figcaption className="tag" aria-hidden="true">{clock(r.takenAt)}</figcaption>
       )}
     </figure>
   );
