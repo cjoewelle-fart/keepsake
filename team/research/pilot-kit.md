@@ -30,7 +30,7 @@ Read the scenario once, then give one card at a time. Run order: G1, T2, T3, T4,
 ## 2. Pre-session checklist
 
 **Day before**
-- [ ] Ask the Team Lead to set up the test build on your laptop (`npm run build:test`, then `npx vite preview --outDir dist-test`). It opens at http://localhost:4173, the tab reads "Keepsake (test)", and there's no "Try with example files" button.
+- [ ] Ask the Team Lead to set up the test build on your laptop (`npm run build:test`, then `npx vite preview --outDir dist-test`). It opens at http://localhost:4173, the tab title ends in "Keepsake (test)" (for example "Scan · Keepsake (test)"), and there's no "Try with example files" button.
 - [ ] Do the whole flow once yourself in Chrome: choose the folder, scan, review, Save into a folder, open it in File Explorer or Finder. Then delete what you saved.
 - [ ] Get **Recovered from old phone** from QA (T65) and put it on the Desktop. Keep the master zip safe. Write down its file count: ____
 - [ ] Make an empty folder called **Pictures** on the Desktop, as the place to save in G2. Don't use your real Pictures folder.
@@ -92,7 +92,7 @@ Ranked by the harm to the user if it goes wrong.
 3. **The set-aside groups.** In T2, listen for "deleted", "trash", "junk" or "gone". The right idea is: still there, and can be kept.
 4. **"Keep these files" (T3).** Do they find the button in the "Small preview copies" group, and believe it worked? Do the ledger numbers change in a way they notice?
 5. **The tri-state day checkbox.** A day with some photos unselected shows a dash. Do they read it as unselected, or click it and get confused when everything gets selected or unselected?
-6. **The ledger.** Do they read "Not selected" as lost? Do they notice "Your files deleted · uploaded 0 · 0", and does it reassure them?
+6. **The ledger.** Do they read "Not selected" as lost? Do they notice "Your files: deleted · uploaded 0 · 0" on the receipt (and "Your files: 0 deleted" while scanning and saving), and does it reassure them?
 7. **Zip fallback.** This shouldn't show in Chrome. If it does (wrong browser, or the remote preview), note it and treat it as setup, not an assist. If a zip downloads, can they open it and find 2022?
 8. **"No date" (T4).** Do they find it through the year tabs or by scrolling? Does "No date" match how they think about it?
 
