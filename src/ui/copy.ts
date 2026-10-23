@@ -406,7 +406,8 @@ export const copy = {
     copiesProgress: (done: number, total: number) => `Compared ${n(done)} of ${n(total)} possible copies`,
     reassure: 'This happens on your computer. Nothing is uploaded, and you can stop any time.',
     // “Your files”: Save may remove an empty file it made itself (D17), never one of yours (T58).
-    deleted: 'Your files deleted: 0',
+    // D18: the zero sits next to “deleted”.
+    deleted: 'Your files: 0 deleted',
     stagesLabel: 'Scan stages',
     stages: ['Check every file', 'Spot exact copies', 'Sort them by date'],
     stageDone: '(done)',
@@ -424,7 +425,7 @@ export const copy = {
     ledgerAside: 'Set aside, kept safe below',
     ledgerSafe: 'Deleted · Uploaded',
     ledgerSafeValue: '0 · 0',
-    ledgerSafeSr: 'Your files deleted and uploaded',
+    ledgerSafeSr: 'How many of your files were deleted or uploaded', // D18
     ledgerSafeValueSr: 'None deleted, none uploaded',
     ledgerChanged: (keep: number, aside: number) => `Now keeping ${n(keep)} ${plural(keep, 'file', 'files')}. ${n(aside)} set aside.`,
     untouched: 'Your recovery folder is exactly as it was.',
@@ -528,7 +529,7 @@ export const copy = {
     ledgerAside: 'Still set aside, kept safe',
     ledgerSafe: 'Deleted · Uploaded',
     ledgerSafeValue: '0 · 0',
-    ledgerSafeSr: 'Your files deleted and uploaded',
+    ledgerSafeSr: 'How many of your files were deleted or uploaded', // D18
     ledgerSafeValueSr: 'None deleted, none uploaded',
     notSelectedMeans: 'Photos you don’t select stay where they are now. Nothing is deleted.',
     nothingSelected: 'Nothing is selected, so there’s nothing to save yet. Your photos are all still here.',
@@ -723,7 +724,7 @@ export const copy = {
     rRecovery: 'Recovery folder',
     rRecoveryValue: 'Untouched',
     /** Receipt row (T58, D17): about the person's files, not the empty file Save may remove. */
-    rSafe: 'Your files deleted · uploaded',
+    rSafe: 'Your files: deleted · uploaded', // D18
     receiptNote: 'Save or print this so you can find your photos later.',
     saveReceipt: 'Save receipt',
     print: 'Print',

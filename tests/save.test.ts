@@ -161,7 +161,8 @@ describe('receipt', () => {
     expect(txt).toMatch(/Saved to\s+Pictures › Keepsake photos/);
     expect(txt).toMatch(/Sorted into\s+6 years, 41 months, plus No date \(312\)/);
     expect(txt).toMatch(/Recovery folder\s+Untouched/);
-    expect(txt).toMatch(/Your files deleted · uploaded\s+0 · 0/);
+    expect(txt).toMatch(/Your files: deleted · uploaded\s+0 · 0/); // D18
+    expect(txt).not.toContain('Your files deleted');
     expect(txt).toContain('  recup_dir.4/f0099.jpg');
   });
 });
