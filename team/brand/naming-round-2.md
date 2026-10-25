@@ -21,3 +21,15 @@ Sift (PhotoSift), Glean (software company), Tidy (iOS photo cleaner), Hush (phot
 | 5 | Foldaway | Put away neatly | Low (3 syllables) | None found; too ordinary to protect | Low–medium |
 
 **For the 1-hour test (T44): Tuckbox, Keepfold, Hanay.** Backups: Tipon, Foldaway. If two pass, the cleaner trademark search wins. An attorney search (USPTO, IPOPHL) comes before the beta.
+
+## Owner suggestion, Oct 25: Keepit
+
+**Team view: not usable.**
+- **Keepit A/S** (Copenhagen) is a profitable backup and data-recovery company with about 7,500 customers in 74 countries. That's the same "protect and recover your data" space we're in.
+- **KEEPIT** is a live US registration (Reg. 3918915, since 2011) for data-storage hardware and software (class 9) and online software for securing and managing customer data (class 42). These are close to what Keepsake does.
+- **"Keep It"** by Reinvented Software is an existing notes and files app for Mac and iPhone.
+- keepit.com is taken. Search for "Keepit" returns the backup company.
+
+People would likely confuse us with a data-backup brand, and it's a clear trademark risk before launch. What Keepit gets right is short, plain, and starts with "Keep". The names in the test (T44) already cover that: Keepsake and Keepies.
+
+Sources: [Blocks & Files on Keepit](https://blocksandfiles.com/2024/02/23/keepit-saas-app-data-protection/), [KEEPIT US trademark](https://trademark.justia.com/790/56/keepit-79056596.html), [Keep It app](https://reinventedsoftware.com/keepit//ios/).
