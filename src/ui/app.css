@@ -161,20 +161,25 @@ progress::-moz-progress-bar { background: var(--accent); border-radius: 999px; }
 .tile:has(.tile-note) { padding: 28px 8px 32px; }
 .tile:has(.tile-note) .tile-label { position: absolute; top: 10px; left: 10px; }
 .tile-note { font-size: 11px; line-height: 1.25; text-align: center; color: var(--ink-soft); max-width: 100%; overflow-wrap: anywhere; }
+/* T69: a note can come in two lengths (.tile-note-long, .tile-note-short); the short one is for small timeline tiles. */
+.tile-note-short { display: none; }
 /* T64: narrower timeline tiles have no room for the file type, the note, the tick and the length.
    The file type goes (the note says more), and the note starts top left and wraps around the tick.
-   Below 110 px it also steps down to 9 px (the smallest size in use, see .tile-xs) and the length
-   row takes its phone size. Checked at every width from 90 to 180 px by checkVideoTags (e2e). */
+   T69: a note with a short version (.tile-note-short) switches to it here and stays at 11 px.
+   Below 110 px a note without one steps down to 9 px (the smallest size in use, see .tile-xs), and
+   the length row takes its phone size. Checked at every width from 90 to 180 px by checkVideoTags (e2e). */
 .tl-tile { container-type: inline-size; }
 @container (max-width: 119.98px) {
   .tile:has(.tile-note) { display: block; padding: 6px 8px 0; }
   .tile:has(.tile-note) .tile-label { display: none; }
   .tile-note { display: block; text-align: left; overflow-wrap: normal; }
   .tile-note::before { content: ''; float: right; width: 28px; height: 28px; }
+  .tile-note:has(.tile-note-short) .tile-note-long { display: none; }
+  .tile-note-short { display: inline; }
 }
 @container (max-width: 109.98px) {
   .tile:has(.tile-note) { padding-top: 4px; }
-  .tile-note { font-size: 9px; line-height: 11px; }
+  .tile-note:not(:has(.tile-note-short)) { font-size: 9px; line-height: 11px; }
   .tile-note::before { height: 24px; }
   .tile:has(.tile-note) ~ .vid-row { left: 6px; right: 6px; bottom: 6px; height: 22px; }
   .tile:has(.tile-note) ~ .vid-row .vid, .tile:has(.tile-note) ~ .vid-row .tag { height: 22px; }

@@ -576,6 +576,8 @@ export const copy = {
      * without it, AVI). T61, needs UX writer review. It's still selected and saved as it is.
      */
     cantPlay: 'Can’t play in this browser. It can still be saved.',
+    /** The same note on timeline tiles under 120 px wide, where the full one only fits very small (T69). The tile's name keeps the full note. */
+    cantPlayShort: 'Can’t play. Can save it.',
     emptyFilter: {
       photos: 'There are no photos to show.',
       videos: 'There are no videos to show.',

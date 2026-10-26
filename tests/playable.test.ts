@@ -83,4 +83,9 @@ describe('copy', () => {
       .toBe('Save video with no date (2 of 3). Can’t play in this browser. It can still be saved.');
     expect(copy.timeline.tileLabel('video', undefined, 2, 3)).toBe('Save video with no date (2 of 3)');
   });
+
+  it('has a short note for small tiles, and keeps the full one in the tile\'s name (T69)', () => {
+    expect(copy.timeline.cantPlayShort).toBe('Can’t play. Can save it.');
+    expect(copy.timeline.tileLabel('video', undefined, 2, 3, undefined, true)).not.toContain(copy.timeline.cantPlayShort);
+  });
 });
