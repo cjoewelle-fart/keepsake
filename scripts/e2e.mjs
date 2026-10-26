@@ -137,8 +137,9 @@ async function checkVideoTags(page, label) {
     host.style.cssText = 'display:block;position:absolute;left:0;top:0;visibility:hidden';
     grid.parentElement.appendChild(host);
     const play = '<svg width="10" height="10" viewBox="0 0 10 10"><path d="M2 1l7 4-7 4z" fill="currentColor"></path></svg>';
-    // copy.timeline.cantPlay (keep in step with src/ui/copy.ts).
+    // copy.timeline.cantPlay and cantPlayShort (keep in step with src/ui/copy.ts).
     const cantPlay = 'Can’t play in this browser. It can still be saved.';
+    const cantPlayShort = 'Can’t play. Can save it.';
     for (let w = 90; w <= 180; w++) {
       for (const [time, len] of [['10:42', '0:42'], ['23:59', '12:05'], ['00:00', '59:59'], ['10:42', '1:02:03'], [null, '0:42']]) {
         for (const note of [false, true]) {
@@ -146,7 +147,8 @@ async function checkVideoTags(page, label) {
           f.className = 'print tl-tile';
           f.style.width = `${w}px`;
           f.dataset.test = `${w}px, ${time ?? 'no time'}, ${len}${note ? ', can’t play' : ''}`;
-          const tile = note ? `<div class="tile tile-fill"><span class="tile-label">MP4</span><span class="tile-note" aria-hidden="true">${cantPlay}</span></div>` : '<div class="tile tile-fill"></div>';
+          f.dataset.w = String(w);
+          const tile = note ? `<div class="tile tile-fill"><span class="tile-label">MP4</span><span class="tile-note" aria-hidden="true"><span class="tile-note-long">${cantPlay}</span><span class="tile-note-short">${cantPlayShort}</span></span></div>` : '<div class="tile tile-fill"></div>';
           f.innerHTML = `${tile}<label class="chk"><input type="checkbox" checked tabindex="-1"><span class="dot" aria-hidden="true"></span></label><div class="vid-row" aria-hidden="true"><span class="vid">${play}<span class="vid-len">${len}</span></span>${time ? `<span class="tag">${time}</span>` : ''}</div>`;
           host.appendChild(f);
         }
@@ -168,6 +170,7 @@ async function checkVideoTags(page, label) {
         if (len && !(len.left >= p.left - 0.5 && len.right <= p.right + 0.5 && len.top >= p.top - 0.5 && len.bottom <= p.bottom + 0.5)) out.push(`${where}: length text cut off`);
       }
     }
+    const sizes = [];
     const hit = (a, b) => a.left < b.right - 0.5 && b.left < a.right - 0.5 && a.top < b.bottom - 0.5 && b.top < a.bottom - 0.5;
     for (const note of document.querySelectorAll('.tl-tile .tile-note')) {
       const fig = note.closest('.tl-tile');
@@ -186,10 +189,24 @@ async function checkVideoTags(page, label) {
         for (const [name, el] of others) if (el && hit(ln, el.getBoundingClientRect())) found.add(name);
       }
       if (found.size) out.push(`${where}: note overlaps ${[...found].join(', ')}`);
+      // T69: under 120 px the short note shows, at 11 px like the rest; 120 px and up, the full one.
+      const w = Number(fig.dataset.w);
+      if (w) {
+        const shown = [...note.children].filter((c) => c.getClientRects().length).map((c) => c.textContent);
+        const want = w < 120 ? cantPlayShort : cantPlay;
+        if (shown.length !== 1 || shown[0] !== want) out.push(`${where}: note shows "${shown.join(' + ')}", expected "${want}"`);
+        const px = parseFloat(getComputedStyle(note).fontSize);
+        if (px !== 11) out.push(`${where}: note is ${px} px, expected 11 px`);
+        if (w % 10 === 0 && !fig.querySelector('.tag')) {
+          const lines = [...range.getClientRects()];
+          const bottom = Math.max(...lines.map((l) => l.bottom)) - t.top;
+          sizes.push(`${w}px ${px}px "${shown[0]}" ${new Set(lines.map((l) => Math.round(l.top))).size} lines, ends ${bottom.toFixed(1)} of ${Math.round(t.height)}, row at ${(row.top - t.top).toFixed(1)}`);
+        }
+      }
     }
     host.remove();
-    return out;
-  });
+    return { out, sizes };
+  }).then((r) => { if (Array.isArray(r)) return r; for (const l of r.sizes) console.log(`[${label}] can’t-play note at ${l}`); return r.out; });
   console.log(`[${label}] video tags: ${bad.length ? `${bad.length} cut off or overlapping` : 'none cut off or overlapping'}`);
   for (const b of bad.slice(0, 10)) problems.push(`[${label}] video tag: ${b}`);
 }

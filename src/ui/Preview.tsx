@@ -47,10 +47,12 @@ function watch(el: Element, cb: (near: boolean, tilePx: number) => void) {
  * is given back (to a capped cache) when the tile goes away. The full-size photo is never kept
  * in the page. HEIC photos the browser can't read are decoded by our own worker instead.
  */
-export function Preview({ file, record, size = 'md', note }: {
+export function Preview({ file, record, size = 'md', note, noteShort }: {
   file: File; record: FileRecord; size?: 'md' | 'sm' | 'xs' | 'fill';
   /** A short line under the file type when there's no picture (e.g. "Can’t play in this browser"). Hidden from screen readers: say it in the tile's name too. */
   note?: string;
+  /** A shorter `note` for small timeline tiles (under 120 px wide), switched in by CSS (T69). */
+  noteShort?: string;
 }) {
   const [stage, setStage] = useState<Stage>(() => firstStage(record));
   const [url, setUrl] = useState<string>();
@@ -137,7 +139,9 @@ export function Preview({ file, record, size = 'md', note }: {
       {small && <canvas ref={canvas} aria-hidden="true" style={drawn ? undefined : { display: 'none' }} />}
       {stage === 'native' && url && <img src={url} alt="" loading="lazy" decoding="async" onError={onError} />}
       {!showing && <span className="tile-label" title={stage === 'none' ? copy.results.previewUnavailable : undefined}>{ext || '—'}</span>}
-      {!showing && note && <span className="tile-note" aria-hidden="true">{note}</span>}
+      {!showing && note && (noteShort
+        ? <span className="tile-note" aria-hidden="true"><span className="tile-note-long">{note}</span><span className="tile-note-short">{noteShort}</span></span>
+        : <span className="tile-note" aria-hidden="true">{note}</span>)}
     </div>
   );
 }

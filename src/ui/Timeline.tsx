@@ -356,7 +356,7 @@ function Tile({ r, file, pos, of, on, onChange }: TileProps) {
   const cantPlay = type === 'video' && playableHere(r) === false;
   return (
     <figure className={`print tl-tile${on ? '' : ' off'}`}>
-      <Preview file={file} record={r} size="fill" note={cantPlay ? t.cantPlay : undefined} />
+      <Preview file={file} record={r} size="fill" note={cantPlay ? t.cantPlay : undefined} noteShort={cantPlay ? t.cantPlayShort : undefined} />
       <label className="chk">
         <input type="checkbox" checked={on} onChange={(e) => onChange(e.target.checked)} aria-label={t.tileLabel(type, r.takenAt, pos, of, r.durationSec, cantPlay)} />
         <span className="dot" aria-hidden="true">
