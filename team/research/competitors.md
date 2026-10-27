@@ -12,12 +12,14 @@
 | PhotoRec Refinery | Desktop app (Mac, Windows, Linux) | Deletes unwanted file types from `recup_dir` and moves the rest into folders by type | Deletes files. Sorts by type only, not date. No previews, copies or broken-file checks. Made for forensics users (0 stars) | [GitHub](https://github.com/WarpedWing/photorec-refinery) |
 | Czkawka / dupeGuru | Desktop duplicate finders | Find exact and similar copies, broken files, empty files | Not built for recovered files. No dated library. Deleting is the default action | [Czkawka](https://linuxuprising.com/2021/03/find-and-remove-duplicate-files-similar.html) |
 | Disk Drill (and other paid recovery suites) | Paid desktop recovery app | Recovers files and filters results by type, with previews | Doesn't work on an existing PhotoRec folder. No dated library or cleanup of previews and copies | [CleverFiles](https://www.cleverfiles.com/help/find-specific-lost-item-in-disk-drill.html) |
+| PHOTO home (v1.0.0, Oct 14, 2026) | Free Windows desktop app, GPL-3.0, offline | Sorts a photo archive into Year/Month folders, with a plan you review first. Copies by default and never deletes. Undo journal. Undated photos go to `_UNDATED`. No account, cloud or telemetry | Windows only. Made for home photo archives and phone imports, not PhotoRec output. No cleanup of tiny previews, system files or broken files described. **Closest product found so far:** same promises (offline, never deletes, undoable, dated library). Found Oct 27 in naming round 6. | [wingetly](https://wingetly.io/apps/robertas-ta/photo-home) |
 
 ## Conclusion
 
 1. No strong competitor: no tool combines a friendly interface, cleanup of previews, copies and broken files, and a dated library.
 2. The nearest one, PhotoRec Refinery, deletes files and sorts by type only. That conflicts with "never destructive" and doesn't help non-technical users.
 3. Gate 1's "no strong competitor" condition is met. Re-check before the public launch (phase 5).
+4. **Oct 27 update:** PHOTO home (above) shares our core promises for ordinary photo archives. It doesn't target recovered files or clean up previews and junk, but it's the closest product yet. Whether it changes gate 1 is the owner's call (D22).
 
 ## Sources
 
@@ -30,4 +32,5 @@
 - [reclaim](https://github.com/hjanesh/reclaim)
 - [PhotoRec Refinery](https://github.com/WarpedWing/photorec-refinery)
 - [Linux Uprising: Czkawka](https://linuxuprising.com/2021/03/find-and-remove-duplicate-files-similar.html)
+- [PHOTO home (wingetly)](https://wingetly.io/apps/robertas-ta/photo-home)
 - [Disk Drill help](https://www.cleverfiles.com/help/find-specific-lost-item-in-disk-drill.html)
