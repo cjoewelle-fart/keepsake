@@ -33,3 +33,17 @@ Sift (PhotoSift), Glean (software company), Tidy (iOS photo cleaner), Hush (phot
 People would likely confuse us with a data-backup brand, and it's a clear trademark risk before launch. What Keepit gets right is short, plain, and starts with "Keep". The names in the test (T44) already cover that: Keepsake and Keepies.
 
 Sources: [Blocks & Files on Keepit](https://blocksandfiles.com/2024/02/23/keepit-saas-app-data-protection/), [KEEPIT US trademark](https://trademark.justia.com/790/56/keepit-79056596.html), [Keep It app](https://reinventedsoftware.com/keepit//ios/).
+
+## Copybara (owner suggestion, Oct 27): team advises against it
+
+Copy + capybara. Assessed by the Product owner (conflicts, research) and the UX writer (voice).
+
+- **Same-name software from Google.** Copybara is Google's open-source tool for moving code between repositories, with an official page, a Bazel module and copies kept by MongoDB and Replit. No registered COPYBARA mark turned up, but Google's use in software is our class, and search results would drown us out. Clipbara, a clipboard app for Mac and iPhone, uses the same pun.
+- **Fails say-it-and-type-it by design.** Four syllables. People who hear it type "Capybara" ("kapibara" in Tagalog) and land on the animal or Google's tool. Spelling slips: "Copybarra", "Capybarra".
+- **Voice.** "Warm, not cute": a pun name sits badly with someone who just lost family photos, especially in error messages ("Copybara can't save to that folder").
+- **"Copy" cuts both ways.** It hints "we only copy, never delete", but sounds like a file-copy tool, and the app already uses "copies" for duplicates it sets aside.
+- **Capybara traits.** Tolerant of other animals and lives in groups of about 10: loose fits. Their "calm" is mostly internet image (wild capybaras are shy). Nothing maps to never deleting or dating a library. The meme peaked around 2023–25 and may feel dated by launch.
+
+What it gets right: a calm, friendly feeling. A capybara could work later as a mascot on waiting or empty screens, without a pun in the name. T44 stays on Keepsake, Keepies and Tuckaway.
+
+Sources: [Google Copybara](https://cs.opensource.google/copybara), [InfoWorld](https://www.infoworld.com/article/2267082/4-enterprise-github-projects-from-google.html), [Bazel module](https://registry.bazel.build/modules/copybara/0.0.0-20250728-6672ce2/), [Clipbara](https://github.com/mobrava/Clipbara/wiki), [Britannica](https://www.britannica.com/animal/capybara), [PBS](https://www.pbs.org/wnet/nature/blog/capybara-fact-sheet/), [Biota Neotropica](https://www.biotaneotropica.org.br/BN/article/view/624), [Euronews](https://euronews.com/culture/2023/04/12/why-are-capybaras-systematically-taking-over-social-media).
