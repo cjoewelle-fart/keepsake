@@ -614,10 +614,14 @@ async function forced(browser) {
 
 // ---------------------------------------------------------------------------------------------
 
+// Start the server and the browser inside try/finally, so a failed launch never leaves the port held.
 const server = spawn('npx', ['vite', 'preview', '--port', String(port), '--strictPort'], { stdio: 'pipe', detached: true });
-await new Promise((r, j) => { server.stdout.on('data', (d) => String(d).includes(String(port)) && r()); server.on('exit', () => j(new Error('preview server exited'))); });
-const browser = await chromium.launch({ executablePath: exe });
+const stopServer = () => { try { process.kill(-server.pid); } catch { /* already gone */ } }; // the server and its children
+process.once('SIGINT', () => { stopServer(); rmSync(tmp, { recursive: true, force: true }); process.exit(130); });
+let browser;
 try {
+  await new Promise((r, j) => { server.stdout.on('data', (d) => String(d).includes(String(port)) && r()); server.on('exit', () => j(new Error(`preview server exited (port ${port} in use?)`))); });
+  browser = await chromium.launch({ executablePath: exe });
   await desktop(browser);
   await keyboard(browser);
   await narrow(browser, 'phone', { width: 390, height: 844 });
@@ -626,8 +630,8 @@ try {
   await narrow(browser, 'reflow320', { width: 320, height: 640 }, { hasTouch: false, isMobile: false });
   await forced(browser);
 } finally {
-  await browser.close();
-  process.kill(-server.pid);
+  await browser?.close();
+  stopServer();
   rmSync(tmp, { recursive: true, force: true });
 }
 

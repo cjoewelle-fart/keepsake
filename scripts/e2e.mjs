@@ -15,9 +15,6 @@ const exe = args[0] || process.env.CHROMIUM_PATH;
 const out = 'e2e-shots';
 mkdirSync(out, { recursive: true });
 
-const server = spawn('npx', ['vite', 'preview', '--port', port, '--strictPort'], { stdio: 'pipe', detached: true });
-await new Promise((r, j) => { server.stdout.on('data', (d) => String(d).includes(port) && r()); server.on('exit', () => j(new Error(`preview server exited (port ${port} in use?)`))); });
-
 const num = (t) => Number(t.replace(/[^0-9]/g, ''));
 /** The ledger must always add up: kept + set aside = files checked. */
 async function checkLedger(page, label, when) {
@@ -365,10 +362,16 @@ async function saveAsZip(page, label, selected) {
   }
 }
 
-const browser = await chromium.launch({ executablePath: exe });
 const problems = [];
 const requests = [];
+// Start the server and the browser inside try/finally, so a failed launch never leaves the port held.
+const server = spawn('npx', ['vite', 'preview', '--port', port, '--strictPort'], { stdio: 'pipe', detached: true });
+const stopServer = () => { try { process.kill(-server.pid); } catch { /* already gone */ } }; // the server and its children
+process.once('SIGINT', () => { stopServer(); process.exit(130); });
+let browser;
 try {
+  await new Promise((r, j) => { server.stdout.on('data', (d) => String(d).includes(port) && r()); server.on('exit', () => j(new Error(`preview server exited (port ${port} in use?)`))); });
+  browser = await chromium.launch({ executablePath: exe });
   // 'zoom200' is the desktop window at 200% browser zoom: half the CSS pixels, twice the density.
   const runs = [['desktop', { width: 1280, height: 900 }, 1], ['phone', { width: 390, height: 844 }, 1], ['zoom200', { width: 640, height: 450 }, 2]];
   for (const [label, viewport, deviceScaleFactor] of runs) {
@@ -407,7 +410,10 @@ try {
     await page.getByRole('button', { name: 'Keep these files' }).click();
     console.log(`[${label}] after moving previews back: ${await page.locator('h1').innerText()}`);
     await checkLedger(page, label, 'moved back');
-    const said = await page.locator('main [role=status]').innerText();
+    // The app fills the live region in an effect after the render: wait for it (up to 2 s).
+    const status = page.locator('main [role=status]');
+    await status.filter({ hasText: /^Now keeping/ }).waitFor({ timeout: 2000 }).catch(() => {});
+    const said = await status.innerText();
     if (!/^Now keeping/.test(said)) problems.push(`[${label}] ledger change not announced (got "${said}")`);
     await page.screenshot({ path: `${out}/${label}-3-moved-back.png`, fullPage: true });
     await page.getByRole('button', { name: 'Set these aside again' }).click();
@@ -427,8 +433,8 @@ try {
     await page.close();
   }
 } finally {
-  await browser.close();
-  process.kill(-server.pid); // stop the preview server and its children
+  await browser?.close();
+  stopServer();
 }
 console.log(problems.length ? `PROBLEMS:\n${problems.join('\n')}` : 'No console errors.');
 console.log(requests.length ? `OUTSIDE REQUESTS:\n${requests.join('\n')}` : 'No requests left this computer.');

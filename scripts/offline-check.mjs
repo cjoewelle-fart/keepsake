@@ -20,17 +20,20 @@ cpSync('fixtures/recovery', join(folder, 'recovery'), { recursive: true });
 cpSync('tests/heic/iphone.heic', join(folder, 'recovery', 'recup_dir.1', 'f99999999.heic'));
 const fileCount = readdirSync(join(folder, 'recovery'), { recursive: true, withFileTypes: true }).filter((d) => d.isFile()).length;
 
-const server = spawn('npx', ['vite', 'preview', '--port', String(PORT), '--strictPort'], { stdio: 'pipe', detached: true });
-await new Promise((r) => server.stdout.on('data', (d) => String(d).includes(String(PORT)) && r()));
-
-const browser = await chromium.launch({ executablePath: exe });
 const failures = [];
 const outside = [];
 const offlineFromNetwork = [];
 const heicLoads = [];
 const check = (ok, msg) => { console.log(`${ok ? 'PASS' : 'FAIL'}  ${msg}`); if (!ok) failures.push(msg); };
 let offline = false;
+// Start the server and the browser inside try/finally, so a failed launch never leaves the port held.
+const server = spawn('npx', ['vite', 'preview', '--port', String(PORT), '--strictPort'], { stdio: 'pipe', detached: true });
+const stopServer = () => { try { process.kill(-server.pid); } catch { /* already gone */ } }; // the server and its children
+process.once('SIGINT', () => { stopServer(); rmSync(folder, { recursive: true, force: true }); process.exit(130); });
+let browser;
 try {
+  await new Promise((r, j) => { server.stdout.on('data', (d) => String(d).includes(String(PORT)) && r()); server.on('exit', () => j(new Error(`preview server exited (port ${PORT} in use?)`))); });
+  browser = await chromium.launch({ executablePath: exe });
   const context = await browser.newContext({ viewport: { width: 1280, height: 900 } });
   // Watch every request from pages and workers, including the service worker's own fetches.
   context.on('request', (r) => {
@@ -139,8 +142,8 @@ try {
   check(offlineFromNetwork.length === 0, offlineFromNetwork.length ? `served from network while offline: ${offlineFromNetwork.join(', ')}` : 'every offline request was answered by the service worker');
   await context.close();
 } finally {
-  await browser.close();
-  process.kill(-server.pid);
+  await browser?.close();
+  stopServer();
   rmSync(folder, { recursive: true, force: true });
 }
 check(outside.length === 0, outside.length ? `requests to other origins:\n  ${outside.join('\n  ')}` : `zero requests to any origin other than ${ORIGIN}`);

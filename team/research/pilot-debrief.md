@@ -1,6 +1,6 @@
 # Pilot debrief (T68)
 
-For the owner, Oct 28. Fill in from your notes from the Oct 26–27 pilot. You ran it yourself on your laptop, in the test build, on **Recovered from old phone**. It doesn't count toward the gate; it's practice.
+For the owner, Oct 28. Fill in from your notes from the Oct 26–27 pilot. You ran it yourself on your laptop, in the test build, on **Recovered from old phone**. Under D19 your own walkthroughs are the evidence for the phase 3 gate. Whether this run counts as the pilot-folder walkthrough is your call (see "D19 gate check" at the end).
 
 Date run: ____ · Build (commit or tab title): ____ · G1 + G2 total time: ____ (target under 25 min)
 
@@ -112,3 +112,28 @@ Some problems can't be fixed by changing words or layout. Don't make these into 
 - Anything that would change the **no-delete promise**: the recovery folder stays read-only, and every cleanup choice can be undone.
 - **Scope:** anything outside the phase 3 MVP, for example similar-photo grouping, repair or more file types. Those come after launch.
 - **The gate:** the pass rule, what counts as done (for example, saving everything in G2), or whether other testers come back in.
+
+---
+
+## D19 gate check (phase 3)
+
+The gate (D19, Oct 26): you finish the full flow without help, doing all six tasks on the pilot folder and on one real recovery, and QA's scripted end-to-end and accessibility run passes. Watching the first few private-beta users comes later, before public launch.
+
+**You pass or fail this gate, not the team.** The team gathers the evidence and fixes what it shows, but it doesn't tick the gate. Tick a row only once its evidence is written down.
+
+| | Gate condition | Evidence that shows it | Where it's written | Build | Status |
+|---|---|---|---|---|---|
+| [ ] | 1. Pilot folder: all six tasks, without help | G1, T2, T3, T4, G2 and T6 above are all "Without help: yes"; your numbers match the answer key; every Safety and privacy box is ticked | This debrief | | met / not met / not yet |
+| [ ] | 2. One real recovery: all six tasks, without help | All six are "yes" on the `OWNER-REAL` notes sheet, and every check in `pilot-kit.md` section 6 is OK: file count unchanged, known photos found, counts add up, Wi-Fi off the whole way | `pilot-kit.md` section 6 sheet (paste it here) | | met / not met / not yet · planned: ____ |
+| [ ] | 3. QA's scripted end-to-end and accessibility run passes | Every scripted step and accessibility check is marked pass, with date and build; no open P1 | `team/research/gate-check.md` (QA; run with `npm run gate`) | | met / not met / not yet |
+| — | 4. First few private-beta users watched for feedback | Not checked at this gate. It's a phase 4 item, done before public launch | Phase 4 plan | — | phase 4 |
+
+- **No open safety or trust finding.** If any walkthrough left a P1 open (a file changed, or anything that looked like a delete or upload), the gate stays open until it's fixed.
+- **Same app.** Note the build (commit or tab title) on each row. If the flow changes after a row is met, whether to redo that row is your call. QA reruns its script on the build you sign off.
+
+**Calls only you make** (the Team Lead raises them on the dashboard as "Decision for owner"):
+- Does the Oct 26–27 run count for row 1, given you already knew the app and had the kit?
+- A task done "with a hint": redo it after the fix, or accept it?
+- G2: does saving everything (which includes the year) count as done?
+
+**Result:** Phase 3 gate: passed / not passed / not yet · Decided by: owner · Date: ____. The Team Lead copies your decision onto the dashboard in your words.
