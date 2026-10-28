@@ -1,6 +1,6 @@
 # Pilot debrief (T68)
 
-For the owner, Oct 28. Fill in from your notes from the Oct 26–27 pilot. You ran it yourself on your laptop, in the test build, on **Recovered from old phone**. Under D19 your own walkthroughs are the evidence for the phase 3 gate. Whether this run counts as the pilot-folder walkthrough is your call (see "D19 gate check" at the end).
+For the owner, Oct 28. Fill in from your notes from the Oct 26–27 pilot. You ran it yourself on your laptop, in the test build, on **Recovered from old phone**. Under D19 your own walkthroughs are the evidence for the phase 3 gate. You decided (D20, Oct 27) that this run counts as the pilot-folder walkthrough if all six tasks went without help; only tasks whose screens change after the debrief fixes get redone (see "D19 gate check" at the end).
 
 Date run: ____ · Build (commit or tab title): ____ · G1 + G2 total time: ____ (target under 25 min)
 
@@ -123,7 +123,7 @@ The gate (D19, Oct 26): you finish the full flow without help, doing all six tas
 
 | | Gate condition | Evidence that shows it | Where it's written | Build | Status |
 |---|---|---|---|---|---|
-| [ ] | 1. Pilot folder: all six tasks, without help | G1, T2, T3, T4, G2 and T6 above are all "Without help: yes"; your numbers match the answer key; every Safety and privacy box is ticked | This debrief | | met / not met / not yet |
+| [ ] | 1. Pilot folder: all six tasks, without help | G1, T2, T3, T4, G2 and T6 above are all "Without help: yes"; your numbers match the answer key; every Safety and privacy box is ticked. Per D20 the Oct 26–27 run counts; redo only the tasks whose screens change after the debrief fixes | This debrief (plus any redone tasks) | | met / not met / not yet |
 | [ ] | 2. One real recovery: all six tasks, without help | All six are "yes" on the `OWNER-REAL` notes sheet, and every check in `pilot-kit.md` section 6 is OK: file count unchanged, known photos found, counts add up, Wi-Fi off the whole way | `pilot-kit.md` section 6 sheet (paste it here) | | met / not met / not yet · planned: ____ |
 | [ ] | 3. QA's scripted end-to-end and accessibility run passes | Every scripted step and accessibility check is marked pass, with date and build; no open P1 | `team/research/gate-check.md` (QA; run with `npm run gate`) | | met / not met / not yet |
 | — | 4. First few private-beta users watched for feedback | Not checked at this gate. It's a phase 4 item, done before public launch | Phase 4 plan | — | phase 4 |
@@ -132,7 +132,7 @@ The gate (D19, Oct 26): you finish the full flow without help, doing all six tas
 - **Same app.** Note the build (commit or tab title) on each row. If the flow changes after a row is met, whether to redo that row is your call. QA reruns its script on the build you sign off.
 
 **Calls only you make** (the Team Lead raises them on the dashboard as "Decision for owner"):
-- Does the Oct 26–27 run count for row 1, given you already knew the app and had the kit?
+- ~~Does the Oct 26–27 run count for row 1?~~ Decided Oct 27 (D20): yes, if all six tasks went without help; redo only tasks whose screens change.
 - A task done "with a hint": redo it after the fix, or accept it?
 - G2: does saving everything (which includes the year) count as done?
 

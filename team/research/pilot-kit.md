@@ -1,6 +1,6 @@
 # Pilot kit: usability pilot, Oct 26–27 (T66)
 
-By the Product owner, Oct 22, 2026; updated Oct 27 for D19 and T45. For the owner. Under D19 the phase 3 gate is your own walkthrough of all six tasks, without help, on two folders: **Recovered from old phone** (sections 1–4, with an answer key) and one real recovery of your own photos (section 6, no answer key). Whether the Oct 26–27 run counts as the first of these is your call. Rules, assists and script: `usability-test-plan.md` sections 1 and 5.
+By the Product owner, Oct 22, 2026; updated Oct 27 for D19 and T45. For the owner. Under D19 the phase 3 gate is your own walkthrough of all six tasks, without help, on two folders: **Recovered from old phone** (sections 1–4, with an answer key) and one real recovery of your own photos (section 6, no answer key). The Oct 26–27 run counts as the first of these if all six tasks went without help (your D20 choice, Oct 27); tasks whose screens change after the debrief fixes get redone. Rules, assists and script: `usability-test-plan.md` sections 1 and 5.
 
 **Setup choice**
 - **In person (recommended):** your laptop, Chrome, the test build running on your laptop. This setup can run all six tasks.
@@ -77,7 +77,7 @@ Tester: `PILOT-1` · Date: ____ · In person / remote · EN / Taglish · Age ran
 - File count unchanged after the session? Y / N
 - Believes files were deleted or uploaded? Y / N (if yes, it's a Critical finding)
 
-**Session passed:** Y / N. Whether it counts toward the D19 gate is your call (`pilot-debrief.md`, "D19 gate check").
+**Session passed:** Y / N. It counts toward the D19 gate if all six went without help (D20) (`pilot-debrief.md`, "D19 gate check").
 
 **Kit fixes** (cards, timings, setup): ____
 

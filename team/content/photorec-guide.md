@@ -42,7 +42,7 @@ PhotoRec comes inside a free download called "TestDisk & PhotoRec". Get it only 
 1. Open your web browser and go to **cgsecurity.org/wiki/TestDisk_Download**.
 2. Find the newest version that isn't marked "Beta". Today that is **7.2**.
 3. Click **Windows 64-bit**. The file is called `testdisk-7.2.win64.zip`.
-   [Screenshot: the download page with the Windows 64-bit link circled]
+   You should see: the download page, with a link called **Windows 64-bit**.
 4. Open your **Downloads** folder.
 5. Right-click `testdisk-7.2.win64.zip` and choose **Extract All**, then **Extract**.
    You must do this step. PhotoRec won't start from inside the zip file.
@@ -56,7 +56,7 @@ PhotoRec comes inside a free download called "TestDisk & PhotoRec". Get it only 
    You need macOS 10.15 (Catalina) or newer.
 4. Open your **Downloads** folder.
 5. Double-click the file. A folder called `testdisk-7.2` appears.
-   [Screenshot: Finder showing the testdisk-7.2 folder in Downloads]
+   You should see: a folder called `testdisk-7.2` in your **Downloads** folder.
 
 ---
 
@@ -82,7 +82,7 @@ There are two kinds of PhotoRec:
    PhotoRec needs this to read the card. You need to be signed in as an administrator.
 3. If you see "Windows protected your PC", click **More info**, then **Run anyway**.
 4. The QPhotoRec window opens.
-   [Screenshot: QPhotoRec main window]
+   You should see: a window called QPhotoRec, with a list of disks at the top.
 
 Now go to [Part 4A: Search with QPhotoRec](#part-4a-search-with-qphotorec-windows).
 
@@ -94,7 +94,7 @@ Terminal is a Mac app where you type commands. You only need it to start PhotoRe
 
 1. Press **Command + Space**, type `Terminal`, and press **Return**.
    A window with text opens.
-   [Screenshot: an empty Terminal window]
+   You should see: a plain window with a short line of text at the top. That's Terminal.
 2. Open the `testdisk-7.2` folder in Finder, so you can see it next to Terminal.
 3. Drag the file called **photorec** from the folder into the Terminal window. Its location appears as text.
 4. Click in the Terminal window and press **Return**.
@@ -108,7 +108,7 @@ Your Mac may say it "could not verify" PhotoRec, or that it "can't be opened". T
 2. Open the **Apple menu** and choose **System Settings**.
 3. Click **Privacy & Security**. Scroll down to the Security part.
 4. Next to the message about photorec, click **Open Anyway**.
-   [Screenshot: Privacy & Security with "Open Anyway" circled]
+   You should see: a message about photorec, with an **Open Anyway** button next to it.
 5. Type your Mac password and click **OK**.
 6. Go back to Terminal and press the up arrow key, then **Return**. PhotoRec starts.
 7. If your Mac asks again, click **Open**.
@@ -130,7 +130,7 @@ Now go to [Part 4B](#part-4b-search-with-the-text-version-mac-or-windows).
 
 1. At the top, open the list of disks and choose your card.
    Pick it by its size. A 32 GB card may show as about 31 or 32 GB. Don't choose your computer's own drive (usually the biggest one).
-   [Screenshot: the disk list open, with the card selected]
+   You should see: your card chosen at the top. The size should match your card, for example about 31 or 32 GB.
 2. In the list below it, click the line for the card's main part. If you're not sure, choose the line that says **No partition** or **Whole disk**, or the biggest line.
 3. Under the file system choice, pick **FAT/NTFS/HFS+/ReiserFS/…** (the one that is not ext2/ext3/ext4). Phone and camera cards use this kind.
 4. Choose **Whole** or **Free**:
@@ -138,7 +138,7 @@ Now go to [Part 4B](#part-4b-search-with-the-text-version-mac-or-windows).
    - **Free** only searches the empty space. Choose this if the card still works and you only deleted some photos. It's faster.
 5. Leave **File Formats** as it is. PhotoRec looks for all kinds of files, and that's fine. [Name] sorts out what isn't a photo or video.
 6. Click **Browse** and choose the `Recovered photos` folder on your Desktop.
-   [Screenshot: QPhotoRec with Whole selected and the destination filled in]
+   You should see: **Whole** or **Free** chosen, and your `Recovered photos` folder filled in as the place to save.
 7. Click **Search**.
 
 Now go to [Part 5: Wait](#part-5-wait).
@@ -154,7 +154,7 @@ In the text version, you use the **arrow keys** to move and **Enter** (Return on
 1. You see a list of disks. Use the arrow keys to choose your card. Pick it by its size, for example 32 GB.
    Don't choose your computer's own drive (usually the biggest one, or the one at the top).
    On a Mac, if you see the card twice, choose the one that starts with `/dev/rdisk`. It's faster.
-   [Screenshot: the disk list with the card highlighted]
+   You should see: a list of disks, with your card highlighted. The size should match your card.
 2. At the bottom, make sure **Proceed** is highlighted, then press **Enter**.
 
 **Pick the part of the card to search**
@@ -162,7 +162,7 @@ In the text version, you use the **arrow keys** to move and **Enter** (Return on
 3. You see a list of the card's parts. Choose the biggest one, or the one that says **No partition** or **Whole disk**.
 4. At the bottom, make sure **Search** is highlighted, then press **Enter**.
    You don't need **Options** or **File Opt**. PhotoRec looks for all kinds of files, and that's fine. [Name] sorts out what isn't a photo or video.
-   [Screenshot: the partition list with Search highlighted at the bottom]
+   You should see: a list of the card's parts, with **Search** highlighted at the bottom.
 
 **Answer two questions**
 
@@ -170,7 +170,7 @@ In the text version, you use the **arrow keys** to move and **Enter** (Return on
 6. PhotoRec asks where to search. Choose one and press **Enter**:
    - **Whole** searches the entire card. Choose this if the card stopped working, was formatted, or you're not sure. It takes longer and also finds photos that are still on the card. That's fine: [Name] puts the extra copies aside for you.
    - **Free** only searches the empty space. Choose this if the card still works and you only deleted some photos. It's faster.
-   [Screenshot: the Free / Whole question]
+   You should see: a question with two choices, **Free** and **Whole**.
 
 **Choose where to save**
 
@@ -180,7 +180,7 @@ PhotoRec now shows folders on your computer. You move into a folder by choosing 
    - **On a Mac:** you usually start in your home folder. Choose **Desktop** and press **Return**. Then choose **Recovered photos** and press **Return**.
    - **On Windows:** you start in the `testdisk-7.2` folder. Choose `..` and press **Enter** until you reach `C:`. Then go into **Users**, then your name, then **Desktop**, then **Recovered photos**.
 8. Check the line at the top. It should end in `Recovered photos`.
-   [Screenshot: the destination screen with the folder path at the top]
+   You should see: a line at the top that ends in `Recovered photos`.
 9. Press the **C** key to start.
    (Some older versions ask you to press **Y** instead. Use whichever key the screen asks for.)
 
@@ -191,7 +191,8 @@ Now go to Part 5.
 ## Part 5: Wait
 
 PhotoRec is now searching. You'll see a count of files found, by type, going up. "Pass 0" and "Pass 1" are normal.
-[Screenshot: the search screen with files being counted]
+
+You should see: a number for each kind of file, going up as PhotoRec finds more.
 
 - This can take hours. Leave it running. You can do other things on the computer.
 - Keep the computer plugged in and the card plugged in.
@@ -209,7 +210,7 @@ Open the `Recovered photos` folder. Inside, you'll see folders named:
 
 `recup_dir.1`, `recup_dir.2`, `recup_dir.3` …
 
-[Screenshot: the Recovered photos folder with several recup_dir folders]
+You should see: one or more folders that start with `recup_dir`.
 
 Inside them are lots of files with names like `f12345678.jpg`. PhotoRec can't bring back the old names or folders, so everything is mixed together. There will also be small preview copies, copies of the same photo, broken files and files from apps.
 

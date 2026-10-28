@@ -1,6 +1,6 @@
 import { describe, expect, it } from 'vitest';
-import { anchors, inline, parse, slug } from '../src/ui/markdown';
-import type { Block } from '../src/ui/markdown';
+import { anchors, inline, parse, plain, slug } from '../src/ui/markdown';
+import type { Block, Inline } from '../src/ui/markdown';
 import { copy } from '../src/ui/copy';
 
 describe('the small Markdown of the in-app pages', () => {
@@ -73,11 +73,30 @@ describe('privacy page and PhotoRec guide (T67)', () => {
     expect(md).toContain('Watch what your browser sends.');
   });
 
-  it('guide marks every screenshot as one to come', () => {
-    const shots: string[] = [];
-    const walk = (bs: Block[]) => bs.forEach((b) => { if (b.t === 'shot') shots.push(b.what); if (b.t === 'list') b.items.forEach(walk); });
-    walk(parse(pages.guide));
-    expect(shots.length).toBe(13); // every [Screenshot: …] in the draft
-    expect(copy.info.shot(shots[0])).toMatch(/^Screenshot to come: /);
+  it('guide says what you should see, as plain text inside its step, with no screenshot placeholders left', () => {
+    expect(pages.guide).not.toContain('[Screenshot:');
+    const seen: { line: Inline[]; inStep: boolean }[] = [];
+    let shots = 0;
+    const walk = (bs: Block[], inStep: boolean) => bs.forEach((b) => {
+      if (b.t === 'shot') shots++;
+      if (b.t === 'p') for (const l of b.lines) if (l[0]?.t === 'text' && l[0].v.startsWith('You should see: ')) seen.push({ line: l, inStep });
+      if (b.t === 'list') b.items.forEach((item) => walk(item, inStep || b.ordered));
+    });
+    walk(parse(pages.guide), false);
+    expect(shots).toBe(0);
+    expect(seen).toHaveLength(13); // one for each screenshot the draft had
+    expect(seen.filter((s) => s.inStep)).toHaveLength(11); // the last two (Parts 5 and 6) are their own paragraphs
+    // Bold and code read as they do in the rest of the guide.
+    const kinds = seen.flatMap((s) => s.line.map((x) => x.t));
+    expect(kinds).toContain('b');
+    expect(kinds).toContain('code');
+    expect(seen.map((s) => plain(s.line)).join('\n')).not.toMatch(/\*\*|`/);
+    // Part 5's line is its own paragraph, not run on from the one before it.
+    const doc = parse(pages.guide);
+    const part5 = doc.findIndex((b) => b.t === 'h' && b.id === 'part-5-wait');
+    const p = doc[part5 + 2] as Extract<Block, { t: 'p' }>;
+    expect(p.t).toBe('p');
+    expect(p.lines).toHaveLength(1);
+    expect(plain(p.lines[0])).toMatch(/^You should see: /);
   });
 });
