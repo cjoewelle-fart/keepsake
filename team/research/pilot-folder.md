@@ -50,7 +50,9 @@ Numbers below are for the build at commit time; if the app's rules change, rerun
 **G1 (scan).** Scanning shows "Checked … of 523 files", then "Looking for exact copies…". The results screen says:
 - Title: **"We found 214 photos and videos worth keeping."** with "They're sorted by the date each one was taken."
 - Ledger: Files checked **523** · Kept, sorted by date **214** · Set aside, kept safe below **309** · Deleted · Uploaded **0 · 0**.
-- Year chips: **2024, 2023, 2022, 2021, 2020, 2019** and **No date · 20**. The chips count photos only: 2024 27, 2023 37, 2022 42, 2021 32, 2020 28, 2019 22.
+- Year chips: **2024, 2023, 2022, 2021, 2020, 2019** and **No date · 20**. The year chips show only the year, with no count. Choosing one shows up to 3 months of that year, newest first, each headed with its photo count ("N photos").
+- No screen shows a total for a whole year. To check one, open the review timeline and add up that year's months in the **Jump to a month** list (each reads like "June 2024 · 3 of 3"; the second number is the month's total). Photos and videos together: 2024 **28**, 2023 **38**, 2022 **44**, 2021 **33**, 2020 **29**, 2019 **22**.
+- Photos only, as the engine counts them (checked in gate step 4, not shown on screen): 2024 27, 2023 37, 2022 42, 2021 32, 2020 28, 2019 22.
 - Set aside: "We set aside 309 files that look like leftovers from the recovery." Groups: **Small preview copies 204**, **Exact copies 22**, **Damaged or incomplete files 2**, **App and system files 81**.
 
 **T2 (what was set aside).** Correct answer, in their words: the 309 are leftovers (small previews, copies, damaged files, app files), nothing was deleted, they're still in the recovery folder, and any group can be kept.
@@ -59,7 +61,7 @@ Numbers below are for the build at commit time; if the app's rules change, rerun
 
 **T4 (find the Messenger photo with no date).** They reach the **No date** group (chip "No date · 20", heading "No date: 20 photos, kept together so none get lost"). After Sprint 2, in the review timeline: "No date" has **20**. **If they kept the small previews in T3, "No date" in the timeline has 224** (the 204 previews have no dates either), and the 20 real photos are mixed in among them.
 
-**G2 (2022 into a folder).** In the review timeline, 2022 holds **44** (42 photos + 2 videos), whether or not they kept the previews in T3. Saved, they land in `Keepsake photos/2022/<month>/` (12 month folders, Jan–Dec). Then the tester should be able to reopen that folder in File Explorer or Finder.
+**G2 (2022 into a folder).** In the review timeline, 2022's months add up to **44** (42 photos + 2 videos; check them in the Jump to a month list), whether or not they kept the previews in T3. Saved, they land in `Keepsake photos/2022/<month>/` (12 month folders, Jan–Dec). Then the tester should be able to reopen that folder in File Explorer or Finder.
 
 **T6 (uploads).** Nothing folder-specific. The results ledger shows "Deleted · Uploaded 0 · 0".
 
