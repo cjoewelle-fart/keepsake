@@ -90,7 +90,7 @@ A small thank-you (merienda, load) is your call; anything that costs money is yo
 | Item | Notes |
 |---|---|
 | Laptop with Chrome (latest) | Your laptop for in-person sessions. Remote testers use their own laptop with Chrome. The app is for computers, not phones. |
-| The test build link | The team's preview: https://claude.ai/artifact/8edzAfvrtTVUWACpPpYE6Y. **Before the pilot, ask the Team Lead for a test build without the "Try with example files" button**, so testers use the recovery folder like a real user. Check that "Choose recovery folder" opens the folder picker in it. |
+| The test build | The test build running on your laptop at http://localhost:4173 (pilot kit section 2), without the "Try with example files" button, so testers use the recovery folder like a real user. Saving doesn't work in the claude.ai preview, so don't use it for sessions. Check that "Choose recovery folder" opens the folder picker. |
 | A prepared recovery folder | See below. Same folder for every session in a round. |
 | Task cards | One card per task (section 4), printed or ready to paste into chat. |
 | Notes sheet | Section 6, one per tester. |
@@ -102,10 +102,10 @@ A small thank-you (merienda, load) is your call; anything that costs money is yo
 **Best: a real recovery of photos you own (about 1 hour, once).** It looks and behaves like what testers would really get.
 1. Pick 150–300 of your own photos you're happy for testers to see (no IDs, no private moments). Include:
    - photos from 3–4 different years, with a good number from **2022**;
-   - 10–20 photos saved from Messenger or Facebook (these lose their date, so some will land in **Undated**);
+   - 10–20 photos saved from Messenger or Facebook (these lose their date, so some will land in **No date**);
    - a few screenshots.
-2. Copy them to a spare memory card or USB stick you can wipe.
-3. Quick-format the card or stick.
+2. Copy (don't move) them from your laptop to a spare memory card or USB stick you can wipe. Your originals stay on the laptop.
+3. Quick-format the card or stick. Only do this to a spare card or stick whose photos are all also on your laptop.
 4. Run PhotoRec on it and save the output into a new folder on your laptop (the writer's PhotoRec guide, T26, walks through it; or ask the Team Lead for help). You'll get folders named `recup_dir.1`, `recup_dir.2`…
 5. Put them in a folder on the Desktop called **Recovered from old phone**. Zip a master copy and keep it safe.
 

@@ -31,7 +31,7 @@ Read the scenario once, then give one card at a time. Run order: G1, T2, T3, T4,
 
 **Day before**
 - [ ] Ask the Team Lead to set up the test build on your laptop (`npm run build:test`, then `npx vite preview --outDir dist-test`). It opens at http://localhost:4173, the tab title ends in "Keepsake (test)" (for example "Scan · Keepsake (test)"), and there's no "Try with example files" button.
-- [ ] Do the whole flow once yourself in Chrome: choose the folder, scan, review, Save into a folder, open it in File Explorer or Finder. Then delete what you saved.
+- [ ] Do the whole flow once yourself in Chrome: choose the folder, scan, review, Save to a folder (Choose a folder), open it in File Explorer or Finder. Then delete the **Keepsake photos** folder inside Desktop › Pictures (only what you saved).
 - [ ] Get **Recovered from old phone** from QA (T65) and put it on the Desktop. Keep the master zip safe. Write down its file count: ____
 - [ ] Make an empty folder called **Pictures** on the Desktop, as the place to save in G2. Don't use your real Pictures folder.
 - [ ] Remote: share the master zip by Drive, and send the preview link.
@@ -116,14 +116,14 @@ Ranked by the harm to the user if it goes wrong.
 
 Same six tasks, same order, this time on a real PhotoRec recovery of your own photos. You're both the tester and the note-taker. There's no answer key, because only you know what was on the card, so the checks below take its place.
 
-**Which folder.** One real recovery: PhotoRec's `recup_dir.1`, `recup_dir.2`… from a card, stick or phone that had your photos on it. If you don't have one yet, make it as in `usability-test-plan.md` section 3, "Make the recovery folder" (about 1 hour). Use the test build on your laptop in Chrome, as in section 2.
+**Which folder.** One real recovery: PhotoRec's `recup_dir.1`, `recup_dir.2`… from a **spare** card or USB stick. **Copy (don't move) photos from your laptop onto it, so your originals stay on the laptop. Never wipe a card or stick whose photos aren't also on your laptop.** Don't use a phone: PhotoRec usually can't reach a phone's built-in memory. If you don't have a recovery yet, make it as in `usability-test-plan.md` section 3, "Make the recovery folder" (about 1 hour). Use the test build on your laptop in Chrome, as in section 2.
 
 **Your photos stay yours.** You don't need to record this run. In your notes and on the dashboard, write numbers and words only: no screenshots, no photos, and no file names that give away anything private. The folder never goes into the repo or onto Drive.
 
 ### Before you start (write these down)
 
 - [ ] Zip a copy of the recovery folder and keep it somewhere else. The app shouldn't change anything; the copy just means nothing is lost if it does.
-- [ ] The whole recovery folder's file count: ____ and total size: ____. Windows: right-click › Properties ("Contains: N Files"). Mac: Get Info counts items, and that includes the `recup_dir` folders themselves, so subtract those.
+- [ ] The whole recovery folder's file count: ____ and total size: ____. Windows: right-click › Properties ("Contains: N Files"). Mac: Get Info counts items, and that includes the `recup_dir` folders themselves, so subtract those. Finder can add a hidden `.DS_Store` file when you open a folder, which the app also counts. For the before/after check, run `find <folder> -type f ! -name .DS_Store | wc -l` in Terminal, before and after.
 - [ ] **Known photos:** list 10 photos you're sure were on it. For each, note what it shows and roughly when it was taken (month and year). Include 2 or 3 with no date: photos saved from Messenger or Facebook, or screenshots.
 - [ ] A year you have plenty of photos from, for G2: ____ (it replaces 2022).
 - [ ] **Pictures** on the Desktop is empty, as in section 2.
@@ -143,11 +143,11 @@ Time each task as before. A big folder takes longer to scan, so write the scan t
 
 | Check | How | You saw | OK? |
 |---|---|---|---|
-| Every file was checked | "Files checked" on the results screen matches your file count | | |
-| The results add up | Kept + Set aside = Files checked. The set-aside groups add up to Set aside | | |
+| Every file was checked | "Files checked" on the results screen matches your file count. On a Mac, compare it with `find <folder> -type f \| wc -l` run just before you scan, because the app also counts hidden `.DS_Store` files | | |
+| The results add up | Kept, sorted by date + Set aside = Files checked. The groups not marked "Keeping these" add up to Set aside | | |
 | Known photos found | Each of your 10 is in the review timeline, in the right year and month, or in "No date" if it had no date | __ of 10 | |
-| None of your photos set aside | Look through every set-aside group (for a big group, the first 100 files). Count any of your real photos in there and note which group | __ photos · groups: | |
-| The save adds up | On the receipt, the saved count equals the number selected for your year, minus any "Couldn't save". The receipt shows "Deleted · Uploaded 0 · 0" | | |
+| None of your photos set aside | The app shows only 3 sample pictures per set-aside group (on the group's row), not every file, so use your known photos. Look at each group's samples. For any of your 10 known photos that isn't in the timeline, check one group at a time: click **Show**, then **Keep these files**, then **Review my … photos and videos**, and look for the photo. Files kept from Small preview copies, Damaged or incomplete files and App and system files have no date, so look under **No date**. Then click **Back to Clean up** and **Set these aside again**. Note any of your photos you find this way and which group | __ photos · groups: | |
+| The save adds up | On the receipt, the saved count equals the number selected for your year, minus any "Couldn't save". The receipt row "Your files: deleted · uploaded" shows "0 · 0" | | |
 | The saved copies are right | In *Pictures › Keepsake photos › <your year>*: the file count matches the receipt, the month folders are the months you expect, and 3 photos and 1 video open normally and are yours | | |
 | Recovery folder unchanged | After closing the app: the same file count and size as before, and no "Keepsake photos" folder or anything else new inside it | before __ / after __ | |
 | Nothing left the computer | Wi-Fi was off from choosing the folder until you reopened the saved folder, and the flow still finished | Y / N | |
