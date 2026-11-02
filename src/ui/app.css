@@ -189,9 +189,9 @@ progress::-moz-progress-bar { background: var(--accent); border-radius: 999px; }
   .tile:has(.tile-note) { padding-top: 4px; }
   .tile-note:not(:has(.tile-note-short)) { font-size: 9px; line-height: 11px; }
   .tile-note::before { height: 24px; }
-  .tile:has(.tile-note) ~ .vid-row { left: 6px; right: 6px; bottom: 6px; height: 22px; }
-  .tile:has(.tile-note) ~ .vid-row .vid, .tile:has(.tile-note) ~ .vid-row .tag { height: 22px; }
-  .tile:has(.tile-note) ~ .vid-row .vid-len { line-height: 22px; }
+  .tl-tile:has(.tile-note) .vid-row { left: 6px; right: 6px; bottom: 6px; height: 22px; }
+  .tl-tile:has(.tile-note) .vid-row .vid, .tl-tile:has(.tile-note) .vid-row .tag { height: 22px; }
+  .tl-tile:has(.tile-note) .vid-row .vid-len { line-height: 22px; }
 }
 
 /* Set aside, kept safe */
@@ -211,6 +211,16 @@ progress::-moz-progress-bar { background: var(--accent); border-radius: 999px; }
 .group-toggle { color: var(--accent); font-weight: 400; font-size: var(--control-text); min-width: 40px; text-align: right; }
 .group-body { padding: 0 0 16px 26px; display: flex; flex-direction: column; gap: 10px; color: var(--ink-soft); font-size: 16px; }
 .group-body[hidden] { display: none; }
+
+/* D23: every file in a set-aside group, one row each (drawn only near the screen). */
+.gf-toggle { align-self: flex-start; }
+.gf { display: flex; flex-direction: column; gap: 10px; }
+.gf[hidden] { display: none; }
+.gf-list, .gf-block { display: flex; flex-direction: column; gap: 8px; }
+.gf-item { display: flex; align-items: center; gap: 12px; min-height: 56px; min-width: 0; }
+.gf-open { flex: none; padding: 0; border: 0; background: transparent; border-radius: 8px; cursor: zoom-in; }
+.gf-text { display: flex; flex-direction: column; min-width: 0; line-height: 1.35; }
+.gf-name { color: var(--ink); font-size: 15px; overflow-wrap: anywhere; }
 
 /* Two columns once there's room; the ledger stays in view only when the window is tall enough. */
 @media (min-width: 960px) {
@@ -244,6 +254,12 @@ progress::-moz-progress-bar { background: var(--accent); border-radius: 999px; }
 .tl-tile.off { box-shadow: none; outline: 2px dashed var(--control-edge); outline-offset: -2px; }
 /* Fade the picture only: the file-type label on a tile with no preview keeps its contrast (T30). */
 .tl-tile.off .tile img, .tl-tile.off .tile canvas { opacity: 0.55; }
+/* D24: the tile itself opens the viewer; the checkbox (.chk) sits on top in its corner. */
+.tile-open { display: block; width: 100%; height: 100%; padding: 0; border: 0; background: transparent; cursor: zoom-in; border-radius: inherit; }
+.tile-open:focus-visible { outline-offset: -3px; }
+.tile-open-pic { display: block; width: 100%; height: 100%; }
+.gf-open > span[aria-hidden] { display: block; }
+.tl-tile .tag { pointer-events: none; }
 .chk { position: absolute; top: 0; right: 0; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
 .chk input { position: absolute; inset: 0; opacity: 0; width: 44px; height: 44px; margin: 0; cursor: pointer; }
 .dot { pointer-events: none; width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--accent); box-shadow: 0 0 0 2px #FFFFFF; }
@@ -274,13 +290,17 @@ progress::-moz-progress-bar { background: var(--accent); border-radius: 999px; }
 .tl-back { display: flex; flex-wrap: wrap; align-items: center; gap: 6px 14px; }
 .tl-back .btn-sm { align-self: center; }
 
-/* Keep the jump bar in view on tall, wide windows, with the selected count and Back to top on it (T80, T79). */
-@media (min-width: 960px) and (min-height: 720px) {
+/* Keep the jump bar in view on tall, wide windows, with the selected count and Back to top on it (T80, T79).
+   QA m1: from 880px tall only (the bar can be ~250px with the month pills wrapped), so it stays under 30%. */
+@media (min-width: 960px) and (min-height: 880px) {
   .tl-tools { position: sticky; top: 0; }
-  .tl-tally { display: flex; justify-content: space-between; align-items: center; gap: 12px; min-height: 44px; padding: 8px 14px; background: var(--surface); border: 1px solid var(--rule-soft); border-radius: 12px; }
+  /* QA m1: one compact line, so the whole bar stays under about 30% of the window. */
+  .tl-tools { gap: 8px; padding: 8px 0; }
+  .tl-tally { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 0 14px; background: var(--surface); border: 1px solid var(--rule-soft); border-radius: 12px; font-size: 15px; white-space: nowrap; }
+  .tl-tally .tl-top { min-height: 40px; }
 }
 /* Wide but short windows: the jump bar doesn't stick, so the count and Save stay at the bottom, in one row. */
-@media (min-width: 960px) and (max-height: 719.98px) {
+@media (min-width: 960px) and (max-height: 879.98px) {
   .tl-wide { display: none; }
   .tl-footer { grid-column: 1 / -1; display: flex; flex-direction: row; align-items: center; gap: 16px; position: sticky; bottom: 0; z-index: 3; margin: 0 -24px -72px; padding: 10px 24px; background: var(--surface); border-top: 1px solid var(--rule-soft); }
   .tl-footer-line { flex: 1; justify-content: flex-start; gap: 0 20px; }
@@ -386,6 +406,35 @@ progress::-moz-progress-bar { background: var(--accent); border-radius: 999px; }
 .shot-todo figcaption { color: var(--muted); font-size: var(--text-small); max-width: 420px; }
 @media (max-width: 640px) {
   .doc { padding: 24px 18px 28px; border-radius: 16px; }
+}
+
+/* D24: the viewer. A plain dialog: no fade or slide, so nothing to turn off for reduced motion. */
+.viewer { padding: 0; border: 0; border-radius: 16px; background: var(--surface); color: var(--ink); width: min(1120px, calc(100vw - 48px)); height: min(920px, calc(100dvh - 48px)); max-width: none; max-height: none; overflow: auto; box-shadow: 0 10px 40px rgba(31, 36, 39, 0.35); }
+.viewer[open] { display: flex; flex-direction: column; }
+.viewer::backdrop { background: rgba(31, 36, 39, 0.78); }
+.viewer-top { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 16px; padding: 10px 12px 10px 20px; border-bottom: 1px solid var(--rule-soft); }
+.viewer-title { flex: 1 1 220px; min-width: 0; }
+.viewer h2 { font-size: 20px; }
+.viewer-pos { color: var(--muted); font-size: 15px; font-variant-numeric: tabular-nums; }
+.viewer-stage { position: relative; flex: 1 1 auto; min-height: 220px; display: flex; align-items: center; justify-content: center; padding: 12px; background: var(--bg); }
+.viewer-media { position: absolute; inset: 12px; width: calc(100% - 24px); height: calc(100% - 24px); object-fit: contain; display: block; }
+video.viewer-media { background: #000000; }
+.viewer-msg { display: flex; flex-direction: column; align-items: center; gap: 10px; max-width: 380px; text-align: center; color: var(--ink-soft); }
+.viewer-msg .tile-label { font-size: 15px; }
+.viewer-bottom { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; padding: 10px 12px; border-top: 1px solid var(--rule-soft); }
+.viewer-step { display: inline-flex; align-items: center; gap: 8px; }
+.viewer-step[aria-disabled='true'] { color: var(--muted); border-color: var(--rule); cursor: default; }
+.viewer-chk { display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 0 8px; font-weight: 700; cursor: pointer; }
+.viewer-chk input { width: 22px; height: 22px; margin: 0; accent-color: var(--accent); cursor: pointer; }
+@media (max-width: 640px) {
+  .viewer { width: 100vw; height: 100dvh; margin: 0; border-radius: 0; }
+  .viewer-top { padding: 8px 8px 8px 16px; }
+  .viewer-stage { padding: 8px; }
+  .viewer-media { inset: 8px; width: calc(100% - 16px); height: calc(100% - 16px); }
+}
+@media (max-height: 480px) {
+  .viewer { height: 100dvh; margin: 0 auto; }
+  .viewer-stage { min-height: 160px; }
 }
 
 @media print {

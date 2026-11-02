@@ -7,6 +7,7 @@ import type { FileRecord } from '../engine/types';
 import { SET_ASIDE_GROUPS } from '../engine/types';
 import { buildSheet, spread } from './contactSheet';
 import { copy, dayMonth, monthYear, n } from './copy';
+import { GroupFiles } from './GroupFiles';
 import { Preview } from './Preview';
 
 type Props = {
@@ -66,6 +67,20 @@ export function Results({ records, files, movedBack, onToggleGroup, onReview, on
     setLastToggled(g);
     onToggleGroup(g);
   };
+  // QA m2: on a phone the "Added … to Kept" note can end below the window; bring it into view.
+  const addedNote = useRef<HTMLParagraphElement>(null);
+  useEffect(() => {
+    if (!lastToggled || !movedBack.has(lastToggled)) return;
+    const still = window.matchMedia?.('(prefers-reduced-motion: reduce)').matches;
+    addedNote.current?.scrollIntoView({ block: 'nearest', behavior: still ? 'auto' : 'smooth' });
+  }, [lastToggled, movedBack]);
+  /** D23: the groups whose list of every file is open (closed to start with). */
+  const [listed, setListed] = useState<ReadonlySet<SetAsideGroup>>(new Set());
+  const toggleList = (g: SetAsideGroup) => setListed((now) => {
+    const next = new Set(now);
+    if (!next.delete(g)) next.add(g);
+    return next;
+  });
 
   const jumpToUndated = () => {
     flushSync(() => setView('none'));
@@ -120,7 +135,7 @@ export function Results({ records, files, movedBack, onToggleGroup, onReview, on
                 <span>{r.ledgerKept}</span>
                 <span className="month-count">{n(s.keep)}</span>
               </h2>
-              <p className="sub">{r.keptPhotosOnly}</p>
+              <p className="sub">{r.keptPhotosOnly(s.videos > 0)}</p>
             </div>
             {sheet.years.length > 0 && (sheet.years.length > 1 || sheet.undated.count > 0) && (
               <div className="chips" role="group" aria-label={r.jumpLabel}>
@@ -224,7 +239,13 @@ export function Results({ records, files, movedBack, onToggleGroup, onReview, on
                         {moved ? r.undo : r.moveBack}
                       </button>
                       {!moved && <p className="sub-sm">{r.moveBackNote}</p>}
-                      {moved && lastToggled === g && <p className="note-box">{r.keptAdded(s.groups[g], s.keep)}</p>}
+                      {moved && lastToggled === g && <p className="note-box" ref={addedNote}>{r.keptAdded(s.groups[g], s.keep)}</p>}
+                      <button type="button" className="btn btn-link gf-toggle" aria-expanded={listed.has(g)} aria-controls={`all-${g}`} onClick={() => toggleList(g)}>
+                        {listed.has(g) ? r.hideAll : r.seeAll(byGroup[g].length)}
+                      </button>
+                      <div className="gf" id={`all-${g}`} hidden={!listed.has(g)}>
+                        {listed.has(g) && <GroupFiles records={byGroup[g]} files={files} />}
+                      </div>
                     </div>
                   </li>
                 );

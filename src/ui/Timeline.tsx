@@ -4,6 +4,7 @@ import type { CSSProperties, ReactNode } from 'react';
 import type { FileRecord } from '../engine/types';
 import { bytes, clock, copy, monthName, monthYear, n, runTime, weekdayDayMonth } from './copy';
 import { Preview } from './Preview';
+import { Viewer } from './Viewer';
 import { playableHere } from './playable';
 import { NO_DATE, blocksOf, buildTimeline, columnsFor, inPlay, mediaType, selectedIds, tally } from './timeline';
 import type { Block, Filter, Month, Selection, TriState } from './timeline';
@@ -178,6 +179,35 @@ export function Timeline({ records, files, movedBack, setAside, selection: sel, 
     setCurrent(monthKey);
   };
 
+  // D24: "View larger" on each tile opens the viewer on the files showing now (the filter applies).
+  const [viewing, setViewing] = useState<number>();
+  /** A file whose day must be drawn now (focus is going back to it after the viewer closes). */
+  const [hold, setHold] = useState<number>();
+  const shownIds = useMemo(() => tl.months.flatMap((m) => m.ids), [tl]);
+  const place = useMemo(() => {
+    const at = new Map<number, { pos: number; of: number; month: string }>();
+    for (const m of tl.months) for (const d of m.days) d.ids.forEach((id, k) => at.set(id, { pos: k + 1, of: d.ids.length, month: m.key }));
+    return at;
+  }, [tl]);
+  const labelOf = (id: number) => {
+    const p = place.get(id);
+    return tileName(byIndex[id], p?.pos ?? 1, p?.of ?? 1);
+  };
+  /** Back to the opening control of the last file shown, drawing its day (and jumping to its month) if it isn't drawn. */
+  const closeViewer = (lastId: number) => {
+    flushSync(() => setViewing(undefined));
+    const find = () => colRef.current?.querySelector<HTMLElement>(`[data-view="${lastId}"]`);
+    let el = find();
+    if (!el) {
+      const m = place.get(lastId)?.month;
+      if (m) jump(m);
+      flushSync(() => setHold(lastId));
+      el = find();
+    }
+    el?.focus();
+    setHold(undefined);
+  };
+
   const noDate = tl.months.find((m) => m.key === NO_DATE);
   const none = sum.selected === 0;
   const saveBtn = (reasonId: string) => (
@@ -289,7 +319,7 @@ export function Timeline({ records, files, movedBack, setAside, selection: sel, 
         {filter === 'unselected' && tl.months.length > 0 && <p className="note-box">{t.unselectedNote}</p>}
 
         {tl.months.map((m) => (
-          <MonthSection key={m.key} m={m} sel={sel} byIndex={byIndex} files={files} width={width} cols={cols} gap={gap} onSet={set} onToggle={toggle} />
+          <MonthSection key={m.key} m={m} sel={sel} byIndex={byIndex} files={files} width={width} cols={cols} gap={gap} onSet={set} onToggle={toggle} onOpen={setViewing} hold={hold} />
         ))}
 
         <div>{topBtn(false)}</div>
@@ -308,6 +338,19 @@ export function Timeline({ records, files, movedBack, setAside, selection: sel, 
         <div className="tl-footer-line"><span className="tl-footer-count" aria-hidden="true">{t.footerCount(sum.selected, sum.total)}</span><span>{t.footerDeleted}</span>{topBtn(true)}</div>
         {saveBtn('save-why')}
       </div>
+
+      {viewing !== undefined && (
+        <Viewer
+          ids={shownIds}
+          startId={viewing}
+          record={(id) => byIndex[id]}
+          files={files}
+          label={labelOf}
+          selected={(id) => sel.has(id)}
+          onSelect={(id, on) => set([id], on)}
+          onClose={closeViewer}
+        />
+      )}
     </main>
   );
 }
@@ -350,9 +393,11 @@ type SectionProps = {
   gap: number;
   onSet: (ids: readonly number[], on: boolean, group?: string) => void;
   onToggle: (ids: readonly number[], group: string) => void;
+  onOpen: (id: number) => void;
+  hold?: number;
 };
 
-function MonthSection({ m, sel, byIndex, files, width, cols, gap, onSet, onToggle }: SectionProps) {
+function MonthSection({ m, sel, byIndex, files, width, cols, gap, onSet, onToggle, onOpen, hold }: SectionProps) {
   const blocks = useMemo(() => blocksOf(m), [m]);
   const isNone = m.key === NO_DATE;
   const title = isNone ? t.noDate : monthYear(m.key);
@@ -378,13 +423,13 @@ function MonthSection({ m, sel, byIndex, files, width, cols, gap, onSet, onToggl
       {c === 0 && <p className="sub-sm">{t.monthNoneNote}</p>}
       <div className="tl-days">
         {blocks.map((b) => (
-          <Lazy key={b.key} estimate={estimate(b)} sizeKey={`${cols}:${Math.round(tile)}`}>
+          <Lazy key={b.key} estimate={estimate(b)} sizeKey={`${cols}:${Math.round(tile)}`} hold={hold !== undefined && b.ids.includes(hold)}>
             {() => (
               <div className="tl-day" data-day={b.day.key}>
                 {b.first && !isNone && <DayHead ymd={b.day.key} state={sel.state(b.day.ids)} count={sel.count(b.day.ids)} total={b.day.ids.length} onToggle={() => onToggle(b.day.ids, weekdayDayMonth(b.day.key))} />}
                 <div className="tl-grid">
                   {b.ids.map((id, k) => (
-                    <Tile key={id} r={byIndex[id]} file={files[id]} pos={b.start + k + 1} of={b.day.ids.length} on={sel.has(id)} onChange={(on) => onSet([id], on)} />
+                    <Tile key={id} r={byIndex[id]} file={files[id]} pos={b.start + k + 1} of={b.day.ids.length} on={sel.has(id)} onChange={(on) => onSet([id], on)} onOpen={() => onOpen(id)} />
                   ))}
                 </div>
               </div>
@@ -411,16 +456,30 @@ function DayHead({ ymd, state, count, total, onToggle }: { ymd: string; state: T
   );
 }
 
-type TileProps = { r: FileRecord; file: File; pos: number; of: number; on: boolean; onChange: (on: boolean) => void };
-function Tile({ r, file, pos, of, on, onChange }: TileProps) {
+/** A tile's name (its checkbox's, and in the viewer the photo's). */
+function tileName(r: FileRecord, pos: number, of: number) {
+  const type = mediaType(r);
+  return t.tileLabel(type, r.takenAt, pos, of, r.durationSec, type === 'video' && playableHere(r) === false);
+}
+
+type TileProps = { r: FileRecord; file: File; pos: number; of: number; on: boolean; onChange: (on: boolean) => void; onOpen: () => void };
+function Tile({ r, file, pos, of, on, onChange, onOpen }: TileProps) {
   const type = mediaType(r);
   // Only a label: a video this browser can't play is selected and saved like any other (T61).
   const cantPlay = type === 'video' && playableHere(r) === false;
+  const name = tileName(r, pos, of);
   return (
     <figure className={`print tl-tile${on ? '' : ' off'}`}>
-      <Preview file={file} record={r} size="fill" note={cantPlay ? t.cantPlay : undefined} noteShort={cantPlay ? t.cantPlayShort : undefined} />
+      {/* D24: the whole tile opens the viewer; the checkbox sits on top of it (and comes after it in Tab order). */}
+      {/* Named by hidden text, not aria-label: the picture's own words (file type, can't-play note) are hidden from screen readers here (2.5.3). */}
+      <button type="button" className="tile-open" data-view={r.index} onClick={onOpen}>
+        <span className="sr-only">{copy.viewer.open(name)}</span>
+        <span className="tile-open-pic" aria-hidden="true">
+          <Preview file={file} record={r} size="fill" note={cantPlay ? t.cantPlay : undefined} noteShort={cantPlay ? t.cantPlayShort : undefined} />
+        </span>
+      </button>
       <label className="chk">
-        <input type="checkbox" checked={on} onChange={(e) => onChange(e.target.checked)} aria-label={t.tileLabel(type, r.takenAt, pos, of, r.durationSec, cantPlay)} />
+        <input type="checkbox" checked={on} onChange={(e) => onChange(e.target.checked)} aria-label={name} />
         <span className="dot" aria-hidden="true">
           {on && <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7.2l2.6 2.6L11 4.4" stroke="#FFFFFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>}
         </span>
@@ -463,8 +522,10 @@ const forcers = new Map<Element, (on: boolean) => void>();
 let forced = new Set<Element>();
 function drawAroundFocus(target: EventTarget | null) {
   const next = new Set<Element>();
-  if (target instanceof Element && target.closest('.tl-col')) {
-    const blocks = [...document.querySelectorAll('.tl-block')].filter((b) => forcers.has(b)); // in page order
+  // The review timeline, or a set-aside group's list of every file (D23).
+  const scope = target instanceof Element ? target.closest('.tl-col, .gf-list') : null;
+  if (target instanceof Element && scope) {
+    const blocks = [...scope.querySelectorAll('.tl-block')].filter((b) => forcers.has(b)); // in page order
     // First block that is (or follows) the focused element.
     let lo = 0;
     let hi = blocks.length;
@@ -486,11 +547,12 @@ function drawAroundFocus(target: EventTarget | null) {
 }
 if (typeof document !== 'undefined') document.addEventListener('focusin', (e) => drawAroundFocus(e.target));
 
-function Lazy({ estimate, sizeKey, children }: { estimate: number; sizeKey: string; children: () => ReactNode }) {
+/** Draws its children only near the screen (or when `hold` is set). Also used by the set-aside lists (GroupFiles). */
+export function Lazy({ estimate, sizeKey, hold = false, children }: { estimate: number; sizeKey: string; hold?: boolean; children: () => ReactNode }) {
   const ref = useRef<HTMLDivElement>(null);
   const [observed, setNear] = useState(false);
   const [pinned, setPinned] = useState(false);
-  const near = observed || pinned;
+  const near = observed || pinned || hold;
   // The real height when a block is dropped, so the page doesn't jump (used until the size changes).
   const [held, setHeld] = useState<{ key: string; h: number }>();
   const key = useRef(sizeKey);

@@ -1,9 +1,9 @@
 // Can this browser play a video? (T61) Asked without loading the video: the scan reads the
 // codec from the file's 'stsd' box (engine/video.ts), and the browser's canPlayType answers for
-// that codec. Nothing is fetched, nothing is decoded, and the file isn't opened again. (A hidden
-// <video> trying the file would need the page's privacy policy to allow blob: media, and would
-// read every video near the screen.) The answer only changes a label: every video is saved
-// the same way, playable here or not.
+// that codec. Nothing is fetched, nothing is decoded, and the file isn't opened again. (The page's
+// privacy policy allows blob: media since D24, so the large-photo viewer can play the one video it
+// shows; a hidden <video> trying every file near the screen would still read them all.) The answer
+// only changes a label: every video is saved the same way, playable here or not.
 import type { FileRecord } from '../engine/types';
 
 /** HTMLMediaElement.canPlayType: '', 'maybe' or 'probably'. */

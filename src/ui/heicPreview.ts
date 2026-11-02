@@ -8,7 +8,8 @@ import { createPreviewQueue, type Lease } from './previewQueue';
 /** Don't try to decode very large files for a preview. */
 export const HEIC_PREVIEW_MAX_BYTES = 60 * 1024 * 1024;
 
-async function startDecoder() {
+/** Starts one HEIC decoding worker (also used by the large-photo viewer's own queue, viewerMedia.ts). */
+export async function startHeicDecoder() {
   // The shareable single-page preview needs everything inline; the real app loads the
   // decoder as its own file, only when a HEIC preview is first needed.
   const mod = import.meta.env.MODE === 'artifact' || import.meta.env.MODE === 'artifact-test'
@@ -31,7 +32,7 @@ function workers(): number {
   return (navigator.hardwareConcurrency || 2) >= 4 && memoryGb >= 4 ? 2 : 1;
 }
 
-const queue = createPreviewQueue({ startDecoder, concurrency: workers(), timeoutMs: 15_000, idleMs: 20_000, maxCached: 200 });
+const queue = createPreviewQueue({ startDecoder: startHeicDecoder, concurrency: workers(), timeoutMs: 15_000, idleMs: 20_000, maxCached: 200 });
 
 /** A small JPEG preview of a HEIC file, as a URL the caller releases when it stops showing it. */
 export const heicPreview = (file: Blob, isWanted: () => boolean, maxSide = 320): Promise<Lease> =>

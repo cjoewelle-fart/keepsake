@@ -39,6 +39,11 @@ export const runTimeWords = (secs: number) => {
     : [m ? `${m} ${plural(m, 'minute', 'minutes')}` : '', s % 60 ? `${s % 60} ${plural(s % 60, 'second', 'seconds')}` : ''];
   return parts.filter(Boolean).join(' ');
 };
+/** '2024-06-28T09:12:…' → '28 June 2024, 09:12' (a date with no time stays a date). */
+export const dateTime = (takenAt: string) => {
+  const d = `${dayMonth(takenAt)} ${takenAt.slice(0, 4)}`;
+  return takenAt.length >= 16 ? `${d}, ${clock(takenAt)}` : d;
+};
 /** Bytes as people read them: '840 KB', '3.4 GB'. */
 export const bytes = (x: number) => {
   const units = ['bytes', 'KB', 'MB', 'GB', 'TB'];
@@ -54,7 +59,7 @@ const PRIVACY = `# Your privacy
 
 **Your photos never leave this computer, and ${APP} never changes or deletes your files.**
 
-## Nothing is uploaded
+## Nothing is sent anywhere
 
 ${APP} runs inside your web browser, on your computer. When you choose your recovery folder, your browser reads the files right here. They are not sent to us or to anyone else.
 
@@ -393,7 +398,7 @@ export const copy = {
     hint: 'Inside it, you’ll usually see folders named recup_dir.1, recup_dir.2 and so on.',
     choose: 'Choose recovery folder',
     /** T76: right under the Choose button, where the folder is chosen. */
-    chooseNote: 'Keepsake works inside your browser, but only on this computer. Choosing a folder lets it read your files here. They aren’t sent to us or to any server, and nothing is deleted.',
+    chooseNote: 'Keepsake runs in your browser, on this computer. Choosing a folder lets it read your files here. They aren’t sent to us or to any server, and nothing is deleted.',
     browserNote: 'Keepsake works best in Chrome or Edge on a computer. You can still scan your folder in this browser.',
     stopped: 'Scan stopped. Nothing was changed, and you can start again any time.',
     /** Inside the claude.ai preview the folder is chosen with the browser's upload dialog. */
@@ -434,8 +439,8 @@ export const copy = {
     ledgerChanged: (keep: number, aside: number) => `Now keeping ${n(keep)} ${plural(keep, 'file', 'files')}. ${n(aside)} set aside.`,
     untouched: 'Nothing was deleted or sent anywhere. Every file is still in your recovery folder, just as it was.',
     takeYourTime: 'No rush. Look through everything first, then review when you’re ready.',
-    /** T77: under the Kept heading. The contact sheet shows photos only (Results.tsx filters on PHOTO_KINDS). */
-    keptPhotosOnly: 'These previews show photos only. You’ll see videos too when you review.',
+    /** T77: under the Kept heading. The contact sheet shows photos only (Results.tsx filters on PHOTO_KINDS). Videos are only mentioned when some are kept (QA m4). */
+    keptPhotosOnly: (videos: boolean) => (videos ? 'These previews show photos only. You’ll see videos too when you review.' : 'These previews show photos only.'),
     /** T77: under "Set these aside again", after keeping a group. */
     keptAdded: (added: number, total: number) => `Added ${n(added)} to Kept. Kept is now ${n(total)}.`,
     photosByDate: 'Your photos by date',
@@ -483,13 +488,34 @@ export const copy = {
     hide: 'Hide',
     moveBack: 'Keep these files',
     /** T78: under "Keep these files", while it reads that. */
-    moveBackNote: 'Adds them to the photos you review and save. Nothing moves on your computer. You can set them aside again.',
+    moveBackNote: 'Adds them to the files you review and save. Nothing moves on your computer. You can set them aside again.',
     undo: 'Set these aside again',
     movedBack: 'Keeping these',
     previewUnavailable: 'No preview',
+    /** D23: under a set-aside group's reason, a list of every file in it. Needs UX writer review. */
+    seeAll: (x: number) => `See all ${n(x)} ${plural(x, 'file', 'files')}`,
+    hideAll: 'Hide the list',
+    allStay: 'These files stay in your recovery folder. Nothing has been deleted.',
+    allListLabel: (group: string) => `Every file in ${group}`,
+    /** A file in that list: its name, size and (if known) when it was taken. */
+    fileMeta: (size: string, takenAt?: string) => (takenAt ? `${size} · ${dateTime(takenAt)}` : size),
     review: (x: number, mediaOnly: boolean) =>
       `Review my ${n(x)} ${mediaOnly ? plural(x, 'photo or video', 'photos and videos') : plural(x, 'file', 'files')}`,
     startOver: 'Scan a different folder',
+  },
+
+  /** D23: what a file in a set-aside group is, from what it holds (and PhotoRec's name for it). */
+  fileType: (kind: string, ext: string) => {
+    if (kind === 'empty') return 'Empty file';
+    if (['jpeg', 'png', 'gif', 'webp', 'heic', 'avif', 'bmp', 'tiff', 'raw'].includes(kind)) return 'Photo';
+    if (['mp4', 'mov', '3gp', 'avi', 'mts'].includes(kind)) return 'Video';
+    const e = ext.toLowerCase();
+    if (e === 'xml' || e === 'plist' || e === 'json' || e === 'ini') return 'App settings';
+    if (e === 'txt' || e === 'log') return 'Log or text';
+    if (e === 'sqlite' || e === 'db') return 'App database';
+    if (e === 'html' || e === 'htm') return 'Web page';
+    if (e === 'gz' || e === 'zip' || e === 'bz2') return 'Compressed file';
+    return e ? `${e.toUpperCase()} file` : 'File';
   },
 
   groups: {
@@ -603,6 +629,28 @@ export const copy = {
     back: 'Back to Clean up',
     /** T79: next to both "Back to Clean up" buttons. */
     backKeeps: 'Your choices here are kept if you go back.',
+  },
+
+  /**
+   * D24: "click to see larger", in Review and in the set-aside groups (Viewer.tsx). Needs UX writer
+   * review. `aside` is a set-aside group, where files are not saved unless that group is kept.
+   */
+  viewer: {
+    /** The tile's own name follows, e.g. "View larger: Save photo from 3 June 2022, 10:15". */
+    open: (label: string) => `View larger: ${label}`,
+    close: 'Close',
+    previous: 'Previous',
+    next: 'Next',
+    position: (i: number, total: number) => `${n(i)} of ${n(total)}`,
+    noDate: 'No date',
+    /** '2022-06-03T10:15:…' → 'Friday 3 June 2022, 10:15' */
+    date: (takenAt: string) => `${weekdayDayMonth(takenAt.slice(0, 10))} ${takenAt.slice(0, 4)}${takenAt.length >= 16 ? `, ${clock(takenAt)}` : ''}`,
+    /** Beside the photo's own checkbox, whose name is the tile's ("Save photo from …"). */
+    save: 'Save',
+    loading: 'Opening…',
+    tooLarge: (aside: boolean) => `This photo is too large to show here. ${aside ? 'It’s still in your recovery folder.' : 'You can still save it.'}`,
+    cantPlay: (aside: boolean) => `This video can’t play in this browser. ${aside ? 'It’s still in your recovery folder.' : 'You can still save it.'}`,
+    cantShow: (aside: boolean) => `This file can’t be shown here. ${aside ? 'It’s still in your recovery folder.' : 'You can still save it.'}`,
   },
 
   // Save step (T25). Source: team/brand/quiet-prints/EX-choose and EX-done (.dc.html), strings from

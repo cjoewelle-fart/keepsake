@@ -62,6 +62,19 @@ const sumYear = (tl, y) => Object.entries(tl).filter(([k]) => k.startsWith(y)).r
 async function run(browser) {
   const ctx = await browser.newContext({ viewport: { width: 1280, height: 900 }, acceptDownloads: true });
   ctx.on('request', (r) => { const u = r.url(); if (!u.startsWith(base) && !u.startsWith('blob:') && !u.startsWith('data:')) outside.push(u); });
+  // D24: watch every blob: URL the page makes and gives back, noting which were made while the viewer is in the page.
+  await ctx.addInitScript(() => {
+    const made = new Map();
+    window.__urls = made;
+    const create = URL.createObjectURL.bind(URL);
+    const revoke = URL.revokeObjectURL.bind(URL);
+    URL.createObjectURL = (b) => {
+      const u = create(b);
+      made.set(u, { name: b instanceof File ? b.name : '', type: b.type, size: b.size, viewer: !!document.querySelector('dialog.viewer'), live: true });
+      return u;
+    };
+    URL.revokeObjectURL = (u) => { const m = made.get(u); if (m) m.live = false; revoke(u); };
+  });
   const page = await ctx.newPage();
   page.on('pageerror', (e) => errors.push(`page error: ${e.message}`));
   page.on('console', (m) => m.type() === 'error' && errors.push(`console: ${m.text()}`));
@@ -140,6 +153,52 @@ async function run(browser) {
     check(h && new RegExp(`\\b${c}\\b`).test(h), `T2 group "${g}" shows ${c}: "${h ?? 'missing'}"`);
   }
 
+  // D23: "See all" in a set-aside group lists every file in it (drawn as it comes near the screen).
+  const listAll = (id) => page.evaluate(async (id) => {
+    const seen = new Set();
+    const list = document.querySelector(`#all-${id} .gf-list`);
+    const opens = new Set();
+    let boxes = 0;
+    for (const b of list.querySelectorAll(':scope > .tl-block')) {
+      b.scrollIntoView({ block: 'center' });
+      await new Promise((r) => setTimeout(r, 60));
+      for (const it of list.querySelectorAll('.gf-item')) seen.add(it.dataset.id);
+      for (const o of list.querySelectorAll('.gf-open')) opens.add(o.dataset.view);
+      boxes += list.querySelectorAll('input[type=checkbox]').length;
+    }
+    const text = list.closest('.gf').innerText;
+    list.closest('.group').scrollIntoView({ block: 'start' });
+    await new Promise((r) => setTimeout(r, 100));
+    return { n: seen.size, boxes, open: opens.size, text };
+  }, id);
+  for (const [g, c, id] of [['Small preview copies', 204, 'small'], ['App and system files', 81, 'system']]) {
+    await page.locator('.group-head', { hasText: g }).click();
+    const toggle = page.locator(`#aside-${id} .gf-toggle`);
+    const label = flat(await toggle.innerText());
+    const closed = (await toggle.getAttribute('aria-expanded')) === 'false' && await page.locator(`#all-${id}`).isHidden();
+    await toggle.click();
+    const l = await listAll(id);
+    check(closed && label === `See all ${c} files` && l.n === c && l.boxes === 0 && /These files stay in your recovery folder\. Nothing has been deleted\./.test(l.text),
+      `D23 "${g}": collapsed at first, "${label}" lists ${l.n} files (key ${c}), ${l.boxes} checkboxes, "stay in your recovery folder" line`);
+    if (id === 'small') {
+      check(l.open === 204, `D23 every file in "${g}" opens the viewer (${l.open} of 204 found while scrolling)`);
+      const firstOpen = page.locator(`#all-${id} .gf-open`).first();
+      const firstView = await firstOpen.getAttribute('data-view');
+      await firstOpen.click();
+      await page.locator('dialog.viewer[open] img.viewer-media').waitFor({ timeout: 5000 }).catch(() => {});
+      const vv = await page.evaluate(() => ({ pos: document.querySelector('dialog.viewer .viewer-pos')?.textContent, img: document.querySelector('dialog.viewer img.viewer-media')?.naturalWidth ?? 0 }));
+      await page.keyboard.press('Escape');
+      await page.waitForTimeout(100);
+      const back = await page.evaluate((v) => document.activeElement?.matches(`#all-small .gf-open[data-view="${v}"]`), firstView);
+      check(vv.pos === '1 of 204' && vv.img > 0 && back, `D23 a group photo opens in the viewer ("${vv.pos}", picture ${vv.img}px wide), Esc returns focus to it: ${back}`);
+    } else {
+      check(l.open === 0 && /App settings/.test(l.text) && /Log or text/.test(l.text), `D23 "${g}": no file opens a viewer (${l.open}); kinds named ("App settings", "Log or text")`);
+    }
+    await toggle.click();
+  }
+  await page.locator('.group-head', { hasText: 'App and system files' }).click(); // close it again
+  await page.evaluate(() => window.scrollTo(0, 0));
+
   // T77: Kept is its own card, named by its heading.
   const keptH = flat(await page.locator('#kept-h').innerText());
   check(keptH === 'Kept, sorted by date 214' && (await page.locator('section.sheet').getAttribute('aria-labelledby')) === 'kept-h', `T77 Kept card heading: "${keptH}" (key 214)`);
@@ -164,13 +223,15 @@ async function run(browser) {
   await page.getByRole('button', { name: /preview copies/i }).click();
   await page.waitForTimeout(300);
   const keepNote = flat(await page.locator('#aside-small').innerText());
-  check(/Adds them to the photos you review and save\. Nothing moves on your computer\./.test(keepNote), 'T78 the line under "Keep these files" says what it does');
+  check(/Adds them to the files you review and save\. Nothing moves on your computer\./.test(keepNote), 'T78 the line under "Keep these files" says what it does');
   await page.getByRole('button', { name: 'Keep these files' }).click();
+  // The tint is set by an effect after the ledger's numbers change (a second render), so wait for it.
+  await page.waitForFunction(() => document.querySelectorAll('dl.ledger > div.changed').length >= 2, null, { timeout: 2000 }).catch(() => {});
   const after = await page.evaluate(() => ({
     focus: document.activeElement?.textContent,
     note: document.querySelector('#aside-small .note-box')?.textContent,
     tinted: [...document.querySelectorAll('dl.ledger > div.changed dt')].map((d) => d.textContent),
-    hint: /Adds them to the photos/.test(document.querySelector('#aside-small').textContent),
+    hint: /Adds them to the files/.test(document.querySelector('#aside-small').textContent),
   }));
   check(after.focus === 'Set these aside again' && after.note === 'Added 204 to Kept. Kept is now 418.' && !after.hint, `T77 after Keep: focus on "${after.focus}", note "${after.note}"`);
   check(after.tinted.join('|') === 'Kept, sorted by date|Set aside, kept safe below', `T77 changed ledger rows tinted: ${after.tinted.join(', ')}`);
@@ -206,6 +267,136 @@ async function run(browser) {
   check(Object.entries(years).every(([y, c]) => sumYear(tl, y) === c), `G1/G2 timeline per year: ${got} (key 2024:28 2023:38 2022:44 2021:33 2020:29 2019:22)`);
   console.log(`timeline year chips: ${(await page.locator('nav.chips').first().locator('.chip').allInnerTexts()).join(', ')}`);
   await page.screenshot({ path: `${out}/3-review.png` });
+
+  // D24: the viewer in Review.
+  const vstate = () => page.evaluate(() => {
+    const d = document.querySelector('dialog.viewer');
+    const a = document.activeElement;
+    const img = d?.querySelector('img.viewer-media');
+    return {
+      open: !!d?.open, pos: d?.querySelector('.viewer-pos')?.textContent, h: d?.querySelector('h2')?.textContent,
+      labelled: d && document.getElementById(d.getAttribute('aria-labelledby'))?.textContent,
+      focus: a?.textContent || a?.getAttribute('aria-label') || a?.tagName, view: a?.dataset?.view,
+      inView: a ? (() => { const r = a.getBoundingClientRect(); return r.bottom > 0 && r.top < innerHeight; })() : false,
+      img: img ? { w: img.naturalWidth, src: img.src } : null, box: d?.querySelector('.viewer-chk input')?.checked,
+    };
+  });
+  const firstTile = page.locator('.tile-open').first();
+  const firstId = await firstTile.getAttribute('data-view');
+  await firstTile.click();
+  await page.locator('dialog.viewer[open]').waitFor();
+  let vs = await vstate();
+  check(vs.open && vs.focus === 'Close' && vs.pos === '1 of 214' && vs.labelled === vs.h && vs.h.length > 0, `D24 mouse: tile opens the viewer, focus on Close, "${vs.pos}", labelled by "${vs.h}"`);
+  await page.keyboard.press('ArrowRight');
+  await page.keyboard.press('ArrowRight');
+  vs = await vstate();
+  const pos3 = vs.pos;
+  await page.keyboard.press('ArrowLeft');
+  const pos2 = (await vstate()).pos;
+  check(pos3 === '3 of 214' && pos2 === '2 of 214', `D24 → → ← steps through: "${pos3}", then "${pos2}"`);
+  // Its own checkbox: unticking it changes the count, and the tile's.
+  await page.locator('dialog.viewer .viewer-chk input').click();
+  const afterUntick = { sel: num(await page.locator('dl.ledger dd[data-k=selected]').innerText()), box: (await vstate()).box };
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(100);
+  vs = await vstate();
+  const secondId = await page.locator('.tile-open').nth(1).getAttribute('data-view');
+  const tileBox = await page.locator('.tl-tile').nth(1).locator('.chk input').isChecked();
+  check(afterUntick.sel === 213 && afterUntick.box === false && !tileBox, `D24 checkbox in the viewer: ${afterUntick.sel} selected (was 214), tile unticked too: ${!tileBox}`);
+  check(!vs.open && vs.view === secondId, `D24 Esc closes and focus returns to the last photo shown (tile ${vs.view}, expected ${secondId})`);
+  // Keyboard: Enter on "View larger", then Tab goes on to the tile's checkbox.
+  await page.locator('.tl-tile').nth(1).locator('.chk input').check();
+  await page.locator('.tl-tile').nth(1).locator('.tile-open').focus();
+  await page.keyboard.press('Tab');
+  const afterTab = await page.evaluate(() => document.activeElement?.closest('.tl-tile') === document.querySelectorAll('.tl-tile')[1] && document.activeElement.matches('.chk input'));
+  await page.locator(`.tile-open[data-view="${firstId}"]`).focus();
+  await page.keyboard.press('Enter');
+  await page.locator('dialog.viewer[open]').waitFor();
+  vs = await vstate();
+  check(afterTab && vs.open && vs.focus === 'Close' && vs.pos === '1 of 214', `D24 keyboard: Tab goes View larger → its checkbox (${afterTab}); Enter opens the viewer ("${vs.pos}")`);
+  check(num(await page.locator('dl.ledger dd[data-k=selected]').innerText()) === 214, 'D24 ticking it again: 214 selected');
+  // Step through every file: find a HEIC (shown via our decoder: "Opening…" first) and go far down the list.
+  let heic = null;
+  for (let k = 1; k < 214; k++) {
+    await page.keyboard.press('ArrowRight');
+    const loading = await page.locator('dialog.viewer .viewer-msg[role=status]').count();
+    if (loading && !heic) {
+      await page.locator('dialog.viewer img.viewer-media').waitFor({ timeout: 20_000 }).catch(() => {});
+      const st = await vstate();
+      const made = await page.evaluate((src) => window.__urls.get(src), st.img?.src);
+      heic = { k, w: st.img?.w ?? 0, made, id: await page.evaluate(() => document.querySelector('dialog.viewer h2').textContent) };
+    }
+    if (k >= 150 && heic) break;
+  }
+  vs = await vstate();
+  check(!!heic && heic.w > 0 && heic.made && !heic.made.name && heic.made.type === 'image/jpeg', `D24 a HEIC opens (item ${heic?.k + 1}, "${heic?.id}"): decoded on this computer to a ${heic?.w}px-wide JPEG`);
+  const farPos = vs.pos;
+  await page.keyboard.press('Escape');
+  await page.waitForTimeout(300);
+  vs = await vstate();
+  check(!vs.open && vs.view && vs.inView && vs.view !== firstId, `D24 Esc after stepping to "${farPos}": focus back on that photo's tile (${vs.view}), drawn and on screen`);
+  // A video plays in the built app (blob: media allowed by the privacy lock-down, nothing fetched).
+  const vid = page.locator('.tile-open', { hasText: 'Save video' }).first();
+  await vid.scrollIntoViewIfNeeded();
+  await vid.click();
+  await page.locator('dialog.viewer[open] video.viewer-media').waitFor();
+  const played = await page.evaluate(async () => {
+    const v = document.querySelector('dialog.viewer video.viewer-media');
+    const auto = !v.paused;
+    v.muted = true;
+    try { await v.play(); } catch (e) { return { err: String(e) }; }
+    await new Promise((r) => setTimeout(r, 1200));
+    return { auto, t: v.currentTime, ready: v.readyState, controls: v.controls, preload: v.preload, err: v.error?.code };
+  });
+  check(!played.err && played.auto === false && played.controls && played.preload === 'metadata' && (played.t > 0 || played.ready >= 2), `D24 a video plays in the built app: not on its own (${played.auto === false}), currentTime ${played.t?.toFixed?.(2)}, readyState ${played.ready}${played.err ? `, error ${played.err}` : ''}`);
+  await page.locator('dialog.viewer .viewer-close').click();
+  await page.waitForTimeout(100);
+  check((await vstate()).view === (await vid.getAttribute('data-view')), 'D24 Close returns focus to the video tile');
+  // Open and close 50 times (stepping, and through the HEIC): every blob: URL the viewer made is given back.
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await page.waitForTimeout(1500);
+  await page.evaluate(() => { for (const m of window.__urls.values()) m.before = true; });
+  for (let c = 0; c < 50; c++) {
+    await page.locator(`.tile-open[data-view="${firstId}"]`).click();
+    await page.locator('dialog.viewer[open]').waitFor();
+    if (c % 10 === 0) for (let k = 0; k < 3; k++) await page.keyboard.press('ArrowRight');
+    if (c % 2) await page.keyboard.press('Escape'); else await page.locator('dialog.viewer .viewer-close').click();
+    await page.locator('dialog.viewer').waitFor({ state: 'detached' });
+    if (c % 10 === 0) await page.evaluate(() => window.scrollTo(0, 0));
+  }
+  // Through the HEIC decoder too, closed while decoding and after.
+  for (let c = 0; c < 4; c++) {
+    await page.locator(`.tile-open[data-view="${firstId}"]`).click();
+    for (let k = 0; k < heic.k; k++) await page.keyboard.press('ArrowRight');
+    if (c % 2) await page.locator('dialog.viewer img.viewer-media').waitFor({ timeout: 20_000 }).catch(() => {});
+    await page.keyboard.press('Escape');
+    await page.locator('dialog.viewer').waitFor({ state: 'detached' });
+    await page.evaluate(() => window.scrollTo(0, 0));
+  }
+  await page.waitForTimeout(2500);
+  const leak = await page.evaluate(() => {
+    const mine = [...window.__urls.values()].filter((m) => !m.before && m.viewer);
+    return { made: mine.length, live: mine.filter((m) => m.live).map((m) => `${m.name || m.type} ${m.size}`) };
+  });
+  check(leak.made > 50 && leak.live.length === 0, `D24 50+ opens and closes: the viewer made ${leak.made} blob: URLs, ${leak.live.length} still live${leak.live.length ? ` (${leak.live.slice(0, 5).join(', ')})` : ''}`);
+
+  // QA m1: the sticky bar stays under 30% of the window; at 1280×800 the bar doesn't stick (the count and Save sit at the bottom instead).
+  const barAt = async (h) => {
+    await page.setViewportSize({ width: 1280, height: h });
+    await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight / 3));
+    await page.waitForTimeout(300);
+    return page.evaluate(() => {
+      const el = document.querySelector('.tl-tools');
+      const foot = document.querySelector('.tl-footer');
+      return { sticky: getComputedStyle(el).position === 'sticky', share: el.offsetHeight / innerHeight, foot: getComputedStyle(foot).display !== 'none' ? foot.offsetHeight / innerHeight : 0 };
+    });
+  };
+  for (const h of [800, 880, 900]) {
+    const bs = await barAt(h);
+    check(bs.sticky ? bs.share < 0.3 : bs.foot > 0 && bs.foot < 0.3, `QA m1 at 1280×${h}: ${bs.sticky ? `sticky bar ${(bs.share * 100).toFixed(0)}%` : `bar not sticky, bottom bar ${(bs.foot * 100).toFixed(0)}%`} of the window (under 30%)`);
+  }
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await page.evaluate(() => window.scrollTo(0, 0));
 
   // G2: select only 2022.
   await page.getByRole('button', { name: 'Unselect all', exact: true }).click();

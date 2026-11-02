@@ -152,8 +152,18 @@ export function createPreviewQueue(o: PreviewQueueOptions) {
     };
   }
 
+  /** Give back every finished preview nobody is showing now (the large-photo viewer, when it closes). */
+  function dropUnused() {
+    for (const [key, e] of cache) {
+      if (e.users > 0 || !e.url) continue;
+      cache.delete(key);
+      revokeUrl(e.url);
+    }
+  }
+
   return {
     preview,
+    dropUnused,
     /** For tests: how many previews are cached, how many are being shown, and how many workers run. */
     stats: () => {
       const all = [...cache.values()];
