@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import { flushSync } from 'react-dom';
 import { PHOTO_KINDS } from '../engine/sniff';
 import { effectiveGroup, summarize } from '../engine/summary';
 import type { SetAsideGroup } from '../engine/summary';
@@ -27,14 +28,17 @@ const SHADES: Record<SetAsideGroup, string> = { small: '#B8C9C5', duplicate: '#9
 export function Results({ records, files, movedBack, onToggleGroup, onReview, onStartOver }: Props) {
   const s = useMemo(() => summarize(records, movedBack), [records, movedBack]);
   const [open, setOpen] = useState<SetAsideGroup | null>(null);
-  const [year, setYear] = useState<string>();
+  /** The chosen view of the Kept card: a year, or 'none' for the photos with no date (T77). */
+  const [view, setView] = useState<string>();
 
   const photos = useMemo(
     () => records.filter((r) => effectiveGroup(r, movedBack) === 'keep' && PHOTO_KINDS.has(r.kind)),
     [records, movedBack],
   );
-  const sheet = useMemo(() => buildSheet(photos, year), [photos, year]);
-  const chosenYear = sheet.groups[0]?.month.slice(0, 4);
+  const sheet = useMemo(() => buildSheet(photos, view === 'none' ? undefined : view), [photos, view]);
+  // No date is shown on its own: when chosen, or when no photo has a date at all.
+  const showNoDate = sheet.undated.count > 0 && (view === 'none' || sheet.years.length === 0);
+  const chosenYear = showNoDate ? undefined : sheet.groups[0]?.month.slice(0, 4);
 
   const byGroup = useMemo(() => {
     const m = { small: [], duplicate: [], damaged: [], system: [] } as Record<SetAsideGroup, FileRecord[]>;
@@ -46,18 +50,26 @@ export function Results({ records, files, movedBack, onToggleGroup, onReview, on
 
   // Tell screen-reader users when the ledger changes (not on first render).
   const [announce, setAnnounce] = useState('');
+  // The ledger rows that changed are tinted until the next change (T77); no motion.
+  const [changed, setChanged] = useState(false);
   const last = useRef(`${s.keep}/${s.setAside}`);
   useEffect(() => {
     const key = `${s.keep}/${s.setAside}`;
     if (key === last.current) return;
     last.current = key;
     setAnnounce(copy.results.ledgerChanged(s.keep, s.setAside));
+    setChanged(true);
   }, [s.keep, s.setAside]);
+  /** The group last kept or set aside again here, for the "Added … to Kept" note under its button. */
+  const [lastToggled, setLastToggled] = useState<SetAsideGroup>();
+  const toggleGroup = (g: SetAsideGroup) => {
+    setLastToggled(g);
+    onToggleGroup(g);
+  };
 
   const jumpToUndated = () => {
-    const h = document.getElementById('no-date-h');
-    h?.scrollIntoView({ block: 'start' });
-    h?.focus({ preventScroll: true });
+    flushSync(() => setView('none'));
+    document.getElementById('no-date-h')?.focus();
   };
 
   const allUndated = s.photos > 0 && s.undated === s.photos;
@@ -79,8 +91,8 @@ export function Results({ records, files, movedBack, onToggleGroup, onReview, on
 
         <dl className="ledger" aria-label={r.ledgerLabel}>
           <div><dt>{r.ledgerChecked}</dt><dd>{n(s.total)}</dd></div>
-          <div><dt>{r.ledgerKept}</dt><dd>{n(s.keep)}</dd></div>
-          <div className="ledger-total"><dt>{r.ledgerAside}</dt><dd>{n(s.setAside)}</dd></div>
+          <div className={changed ? 'changed' : undefined}><dt>{r.ledgerKept}</dt><dd>{n(s.keep)}</dd></div>
+          <div className={`ledger-total${changed ? ' changed' : ''}`}><dt>{r.ledgerAside}</dt><dd>{n(s.setAside)}</dd></div>
           <div className="ledger-safe">
             <dt><span aria-hidden="true">{r.ledgerSafe}</span><span className="sr-only">{r.ledgerSafeSr}</span></dt>
             <dd><span aria-hidden="true">{r.ledgerSafeValue}</span><span className="sr-only">{r.ledgerSafeValueSr}</span></dd>
@@ -102,25 +114,32 @@ export function Results({ records, files, movedBack, onToggleGroup, onReview, on
 
       <div className="sheet-col">
         {photos.length > 0 && (
-          <section className="sheet" aria-label={r.photosByDate}>
-            {(sheet.years.length > 1 || (sheet.years.length > 0 && sheet.undated.count > 0)) && (
+          <section className="sheet" aria-labelledby="kept-h">
+            <div className="aside-intro">
+              <h2 id="kept-h" className="month-h">
+                <span>{r.ledgerKept}</span>
+                <span className="month-count">{n(s.keep)}</span>
+              </h2>
+              <p className="sub">{r.keptPhotosOnly}</p>
+            </div>
+            {sheet.years.length > 0 && (sheet.years.length > 1 || sheet.undated.count > 0) && (
               <div className="chips" role="group" aria-label={r.jumpLabel}>
                 {sheet.years.map(({ year: y }) => (
-                  <button key={y} type="button" className="chip" aria-pressed={y === chosenYear} aria-controls="dated-groups" onClick={() => setYear(y)}>{y}</button>
+                  <button key={y} type="button" className="chip" aria-pressed={y === chosenYear} aria-controls="kept-view" onClick={() => setView(y)}>{y}</button>
                 ))}
                 {sheet.undated.count > 0 && (
-                  <button type="button" className="chip" onClick={jumpToUndated}>{r.undatedChip(sheet.undated.count)}</button>
+                  <button type="button" className="chip" aria-pressed={showNoDate} aria-controls="kept-view" onClick={jumpToUndated}>{r.undatedChip(sheet.undated.count)}</button>
                 )}
               </div>
             )}
 
-            <div id="dated-groups" className="months">
-              {sheet.groups.map((g, gi) => (
+            <div id="kept-view" className="months">
+              {!showNoDate && sheet.groups.map((g, gi) => (
                 <div key={g.month} className="month">
-                  <h2 className="month-h">
+                  <h3 className="month-h">
                     <span>{monthYear(g.month)}</span>
                     <span className="month-count">{r.monthCount(g.count)}</span>
-                  </h2>
+                  </h3>
                   <div className="prints">
                     {g.tiles.map((t, ti) => (
                       <figure key={t.index} className={`print${g.big && ti === 0 ? ' print-big' : ''}`}>
@@ -136,29 +155,30 @@ export function Results({ records, files, movedBack, onToggleGroup, onReview, on
                   </div>
                 </div>
               ))}
-            </div>
 
-            {sheet.undated.count > 0 && (
-              <div className="month">
-                <h2 className="month-h" id="no-date-h" tabIndex={-1}>
-                  <span>{r.noDateTitle}</span>
-                  <span className="month-count">{r.noDateCount(sheet.undated.count)}</span>
-                </h2>
-                <div className="prints">
-                  {sheet.undated.tiles.map((t) => (
-                    <figure key={t.index} className="print">
-                      <Preview file={files[t.index]} record={t} size="fill" />
-                      <figcaption className="tag tag-n">{r.noDateTag}</figcaption>
-                    </figure>
-                  ))}
-                  {sheet.undated.more > 0 && (
-                    <button type="button" className="print print-more" onClick={onReview}>
-                      <b>+{n(sheet.undated.more)}</b><span>{r.seeThemAll}</span>
-                    </button>
-                  )}
+              {showNoDate && (
+                <div className="month">
+                  <h3 className="month-h" id="no-date-h" tabIndex={-1}>
+                    <span>{r.noDateTitle}</span>
+                    <span className="month-count">{r.noDateCount(sheet.undated.count)}</span>
+                  </h3>
+                  <p className="sub-sm">{copy.timeline.noDateNote}</p>
+                  <div className="prints">
+                    {sheet.undated.tiles.map((t) => (
+                      <figure key={t.index} className="print">
+                        <Preview file={files[t.index]} record={t} size="fill" />
+                        <figcaption className="tag tag-n">{r.noDateTag}</figcaption>
+                      </figure>
+                    ))}
+                    {sheet.undated.more > 0 && (
+                      <button type="button" className="print print-more" onClick={onReview}>
+                        <b>+{n(sheet.undated.more)}</b><span>{r.seeThemAll}</span>
+                      </button>
+                    )}
+                  </div>
                 </div>
-              </div>
-            )}
+              )}
+            </div>
           </section>
         )}
 
@@ -200,9 +220,11 @@ export function Results({ records, files, movedBack, onToggleGroup, onReview, on
                     </button>
                     <div className="group-body" id={panelId} hidden={!isOpen}>
                       <p>{copy.groups[g].why}</p>
-                      <button type="button" className="btn btn-secondary btn-sm" onClick={() => onToggleGroup(g)}>
+                      <button type="button" className="btn btn-secondary btn-sm" onClick={() => toggleGroup(g)}>
                         {moved ? r.undo : r.moveBack}
                       </button>
+                      {!moved && <p className="sub-sm">{r.moveBackNote}</p>}
+                      {moved && lastToggled === g && <p className="note-box">{r.keptAdded(s.groups[g], s.keep)}</p>}
                     </div>
                   </li>
                 );

@@ -11,8 +11,8 @@ Same words as the results screen and `src/ui/copy.ts`:
 - **set aside, kept safe**: files from the Clean up step.
 - **No date**: photos without a date taken. Not "Undated". (Change `copy.ts` `results.undatedMore`, which still says "Undated".)
 - **save / copies**: what the last step does. Not "export". The step is called **Save** (change `copy.ts` `steps[4]` from "Export" to "Save" so it matches the mockups' "Step 5 of 5 · Save").
-- **Deleted · Uploaded 0 · 0**: the same box everywhere, with the same screen-reader text as results (`ledgerSafeSr`, `ledgerSafeValueSr`).
-- **Your files: 0 deleted** (T58, owner's D17; reworded by D18 (owner, Oct 22) so the zero sits next to "deleted"): while scanning and saving, and on the receipt ("Your files: deleted · uploaded 0 · 0"), the count is about *your* files. Saving may remove an empty file it made itself, so a bare "Deleted: 0" wouldn't be strictly true. Same idea as "None of your files were deleted".
+- **Your files · Not deleted, not sent anywhere** (T76, Nov 2 pilot: the "Deleted · Uploaded 0 · 0" counter made uploading sound like part of the process): the same box everywhere; the screen-reader text says the same words (`ledgerSafeSr`, `ledgerSafeValueSr`).
+- **Your files are not deleted or changed** (T58, owner's D17; D18 (owner, Oct 22); said in words by T76): while scanning and saving, and on the receipt ("Your files · None deleted, none sent anywhere"), the promise is about *your* files. Saving may remove an empty file it made itself, so a bare "Deleted: 0" wouldn't be strictly true. Same idea as "None of your files were deleted".
 
 ---
 
@@ -29,7 +29,7 @@ Same words as the results screen and `src/ui/copy.ts`:
 | Ledger | Not selected · 12 | keep | |
 | Ledger | **new** Size to save · 9.8 GB | | Size of what's selected now. |
 | Ledger | Still set aside, kept safe · 36,176 | keep | Matches the results screen. |
-| Ledger | Deleted · Uploaded · 0 · 0 | keep (screen reader: "How many of your files were deleted or uploaded" / "None deleted, none uploaded"; D18 (owner, Oct 22)) | Same as results. |
+| Ledger | Your files · Not deleted, not sent anywhere | T76 (was "Deleted · Uploaded · 0 · 0"); screen reader says the same words | Same as results. |
 | Note under ledger | Not selected means not saved. Nothing is deleted. | Photos you don't select stay where they are now. Nothing is deleted. | "not saved" can read as "lost". This says what really happens. |
 | Same (role) | role="status" on fixed text | Make the note plain text. Put a separate status line in the page that announces changes (see "Announcements"). | Fixed text in a status region is never announced. Changes should be. |
 | Main button | Save 2,224 photos and videos | **Save 2,224 selected** | Shorter (the owner said button text feels oversized). Still true when videos are included. Singular: "Save 1 selected". |
@@ -65,7 +65,7 @@ Same words as the results screen and `src/ui/copy.ts`:
 | Day row | Friday 28 June · 4 of 6 | keep | |
 | Photo and video aria-labels | as desktop | as desktop | |
 | Video tag | 0:42 ▶ (in place of the time) | 11:40 time tag, plus a separate 0:42 badge with an SVG triangle, as on desktop | Phone loses the time for videos; "▶" may render as an emoji on iOS. |
-| Footer status | 2,224 of 2,236 selected · Deleted: 0 | keep | |
+| Footer status | 2,224 of 2,236 selected · Nothing is deleted · Back to top (T79) | keep | |
 | Footer button | Save 2,224 | **Save 2,224 selected** | Same label on every screen size. |
 | Missing on phone | (Select all / Unselect all, filters, set-aside card) | Add the same strings as desktop, or confirm on purpose (open question 3) | |
 
@@ -76,7 +76,7 @@ Same words as the results screen and `src/ui/copy.ts`:
 | **new** Nothing selected | h1 number | 0 / selected | |
 | | Note under ledger | Nothing is selected, so there's nothing to save yet. Your photos are all still here. | Replaces the usual note. |
 | | Main button (disabled) | Save selected | Leave out "0". Keep it focusable with `aria-disabled="true"` and `aria-describedby` to the note. |
-| | Phone footer | 0 of 2,236 selected · Deleted: 0 | |
+| | Phone footer | 0 of 2,236 selected · Nothing is deleted · Back to top | |
 | **new** Month fully unselected | Month heading count | None of 148 selected | |
 | | Line under heading | These won't be saved. They stay where they are, and nothing is deleted. | Only in this state. |
 | | Phone month option | June 2024 · 0 of 148 | |
@@ -101,7 +101,7 @@ Same words as the results screen and `src/ui/copy.ts`:
 | Ledger | Selected to save · 2,224 | keep | |
 | Ledger | Total size · 9.8 GB | keep | |
 | Ledger | Free space on that drive · after you choose | Remove the row. Under the ledger: "You'll need at least 9.8 GB of free space." | A browser can't read a folder's free space (open question 1). |
-| Ledger | Deleted · Uploaded · 0 · 0 | keep | |
+| Ledger | Your files · Not deleted, not sent anywhere | T76 | |
 | Note | We make new copies. Your recovery folder stays exactly as it was. | We save new copies. Your recovery folder stays exactly as it was. | |
 | Section h2 | Choose a folder | Save to a folder | The h2 and the button said the same thing twice. |
 | Body | Pick or make a folder, for example in Pictures. We'll add your photos to it and won't change anything already there. | Choose a folder or make a new one, for example in Pictures. We'll put a folder called Keepsake photos inside it. Anything already there stays as it is. | Matches the receipt ("Pictures › Keepsake photos"). |
@@ -139,8 +139,8 @@ Same words as the results screen and `src/ui/copy.ts`:
 | h1 | Saving your photos and videos… | |
 | Progress | Saved {done} of 2,224 | Same pattern as "Checked {n} of {total} files". |
 | Zip progress | Making zip file {i} of 5… · Saved {done} of 2,224 | |
-| Reassurance | This happens on your computer. Nothing is uploaded, and your recovery folder isn't changed. | |
-| Safe count | Your files: 0 deleted | Was "Deleted: 0" (T58, D17), then "Your files deleted: 0"; reworded by D18 (owner, Oct 22). Same string on the scanning screen. |
+| Reassurance | This happens on your computer. Nothing is sent anywhere, and your recovery folder isn't changed. | |
+| Safe count | Your files are not deleted or changed | Was "Deleted: 0" (T58, D17), then "Your files deleted: 0", then "Your files: 0 deleted" (D18); said in words by T76. Same string on the scanning screen. |
 | Tip | Keep this tab open until it's done. If you can, keep the computer plugged in so it doesn't go to sleep. | |
 | Button | Stop saving / Stopping… | |
 | Announcements | Saved {done} of 2,224. | Polite, about every 10%. |
@@ -176,7 +176,7 @@ Same words as the results screen and `src/ui/copy.ts`:
 | Button | Show me where they are | Remove. Line: "To see them, open {folder} › Keepsake photos in File Explorer (Windows) or Finder (Mac)." | A browser can't open the folder. |
 | Line | You can close Keepsake now. Nothing else needs doing. | You can close Keepsake now. There's nothing else to do. | |
 | **new** Tip | (none) | If you can, keep a second copy too, on a USB drive or a backup you already use. | |
-| Receipt | Your receipt / date / Saved / Couldn't save / Saved to / Sorted into / Recovery folder · Untouched / Deleted · Uploaded | Last row: Your files: deleted · uploaded · 0 · 0 (screen reader: "How many of your files were deleted or uploaded" / "None deleted, none uploaded"); same row in the saved receipt file | T58, D17: Save may remove an empty file it made itself; none of *your* files. Reworded by D18 (owner, Oct 22). |
+| Receipt | Your receipt / date / Saved / Couldn't save / Saved to / Sorted into / Recovery folder · Untouched / Your files | Last row: Your files · None deleted, none sent anywhere (T76; screen reader says the same words); same row in the saved receipt file | T58, D17: Save may remove an empty file it made itself; none of *your* files. Reworded by D18 (owner, Oct 22). |
 | Note | Keep this so you can find your photos later, even after closing Keepsake. | Save or print this so you can find your photos later. | |
 | Button | Save this receipt | Save receipt | |
 | Button | Print | keep | |

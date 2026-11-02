@@ -98,6 +98,13 @@ export function Timeline({ records, files, movedBack, setAside, selection: sel, 
   // was showing at the top, and missed months shorter than the band or gaps between months.
   const [current, setCurrent] = useState<string>();
   const toolsRef = useRef<HTMLDivElement>(null);
+  const mainRef = useRef<HTMLElement>(null);
+  const envRef = useRef<HTMLElement>(null);
+  const footRef = useRef<HTMLDivElement>(null);
+  // T79: "Back to top" in the bar is hidden while the summary (the envelope) is still on screen.
+  // The envelope can be sticky, so this uses where its bottom would be in the page, not where it's drawn.
+  const [atTop, setAtTop] = useState(true);
+  const atTopNow = useRef(true);
   /** The month last jumped to: kept when the page can't scroll far enough to bring it to the top. */
   const jumped = useRef<string | undefined>(undefined);
   useEffect(() => {
@@ -105,6 +112,13 @@ export function Timeline({ records, files, movedBack, setAside, selection: sel, 
     const update = () => {
       frame = 0;
       setCurrent(monthAtTop(toolsRef.current, jumped));
+      const main = mainRef.current;
+      const env = envRef.current;
+      if (main && env) {
+        const top = main.getBoundingClientRect().top + parseFloat(getComputedStyle(main).paddingTop || '0');
+        const next = top + env.offsetHeight > 0;
+        if (next !== atTopNow.current) { atTopNow.current = next; setAtTop(next); }
+      }
     };
     const soon = () => { if (!frame) frame = requestAnimationFrame(update); };
     update();
@@ -120,6 +134,31 @@ export function Timeline({ records, files, movedBack, setAside, selection: sel, 
       if (frame) cancelAnimationFrame(frame);
     };
   }, [tl]);
+  // T80: while a bar sticks to the top or bottom of the window, keep what Tab moves to clear of it
+  // (WCAG 2.4.11), and jumps to a month land just under the bar.
+  useLayoutEffect(() => {
+    const html = document.documentElement;
+    const set = () => {
+      const tools = toolsRef.current;
+      const foot = footRef.current;
+      const top = tools && getComputedStyle(tools).position === 'sticky' ? tools.offsetHeight : 0;
+      const bottom = foot && getComputedStyle(foot).display !== 'none' ? foot.offsetHeight : 0;
+      html.style.scrollPaddingTop = top ? `${top}px` : '';
+      html.style.scrollPaddingBottom = bottom ? `${bottom}px` : '';
+    };
+    set();
+    const ro = new ResizeObserver(set);
+    if (toolsRef.current) ro.observe(toolsRef.current);
+    if (footRef.current) ro.observe(footRef.current);
+    window.addEventListener('resize', set);
+    return () => {
+      ro.disconnect();
+      window.removeEventListener('resize', set);
+      html.style.scrollPaddingTop = '';
+      html.style.scrollPaddingBottom = '';
+    };
+  }, []);
+
   const currentKey = current && tl.months.some((m) => m.key === current) ? current : tl.months[0]?.key;
   const currentYear = currentKey && currentKey !== NO_DATE ? currentKey.slice(0, 4) : undefined;
   const yearMonths = (currentKey !== NO_DATE && tl.years.find((y) => y.year === (currentYear ?? tl.years[0]?.year))?.months) || [];
@@ -129,10 +168,12 @@ export function Timeline({ records, files, movedBack, setAside, selection: sel, 
     const h = document.getElementById(`m-${monthKey}`);
     if (!h) return;
     h.scrollIntoView({ block: 'start' });
-    // When the jump bar stays at the top of the window, scroll the heading out from under it.
-    // scrollIntoView already left the heading's 16px scroll margin, so it ends 16px below the bar.
+    // The page's scroll padding (above) already keeps the heading clear of a sticky jump bar,
+    // 16px below it (its scroll margin). If the heading still ended up under the bar, move it out.
     const tools = toolsRef.current;
-    if (tools && getComputedStyle(tools).position === 'sticky') window.scrollBy(0, -tools.offsetHeight);
+    if (tools && getComputedStyle(tools).position === 'sticky' && h.getBoundingClientRect().top < tools.getBoundingClientRect().bottom) {
+      window.scrollBy(0, -tools.offsetHeight);
+    }
     h.focus({ preventScroll: true });
     setCurrent(monthKey);
   };
@@ -151,10 +192,24 @@ export function Timeline({ records, files, movedBack, setAside, selection: sel, 
     </button>
   );
   const everyId = () => kept.map((r) => r.index);
+  const backToTop = () => {
+    window.scrollTo(0, 0);
+    document.getElementById('choose-h')?.focus({ preventScroll: true });
+  };
+  /** In the bars, hidden while the summary is on screen; at the end of the list, always there. */
+  const topBtn = (inBar: boolean) => (
+    <button type="button" className="btn btn-link tl-top" style={inBar && atTop ? { visibility: 'hidden' } : undefined} onClick={backToTop}>{t.backToTop}</button>
+  );
+  const backBtn = (
+    <div className="tl-back">
+      <button type="button" className="btn btn-secondary btn-sm" onClick={onBack}>{t.back}</button>
+      <p className="sub-sm">{t.backKeeps}</p>
+    </div>
+  );
 
   return (
-    <main className="page results timeline">
-      <section className="envelope" aria-labelledby="choose-h">
+    <main className="page results timeline" ref={mainRef}>
+      <section className="envelope" aria-labelledby="choose-h" ref={envRef}>
         <h1 id="choose-h" tabIndex={-1}>
           {t.title}
           <span className="bignum">{n(sum.selected)}</span>
@@ -185,6 +240,11 @@ export function Timeline({ records, files, movedBack, setAside, selection: sel, 
 
       <div className="sheet-col tl-col" ref={colRef} style={{ '--cols': cols, '--gap': `${gap}px` } as CSSProperties}>
         <div className="tl-tools" ref={toolsRef}>
+          {/* T80: wide, tall windows. The count is announced by the live region above, so it's hidden here. */}
+          <div className="tl-tally">
+            <span className="tl-tally-count" aria-hidden="true">{t.footerCount(sum.selected, sum.total)}</span>
+            {topBtn(true)}
+          </div>
           {(tl.years.length > 1 || (tl.years.length > 0 && noDate)) && (
             <nav className="chips" aria-label={t.jumpYear}>
               {tl.years.map(({ year, months }) => (
@@ -232,18 +292,20 @@ export function Timeline({ records, files, movedBack, setAside, selection: sel, 
           <MonthSection key={m.key} m={m} sel={sel} byIndex={byIndex} files={files} width={width} cols={cols} gap={gap} onSet={set} onToggle={toggle} />
         ))}
 
+        <div>{topBtn(false)}</div>
+
         {setAside > 0 && (
           <section className="aside tl-aside" aria-label={copy.results.asideSafeTitle}>
             <p className="sub">{t.asideLine(setAside)}</p>
-            <button type="button" className="btn btn-secondary btn-sm" onClick={onBack}>{t.back}</button>
+            {backBtn}
           </section>
         )}
-        {setAside === 0 && <div><button type="button" className="btn btn-secondary btn-sm" onClick={onBack}>{t.back}</button></div>}
+        {setAside === 0 && backBtn}
       </div>
 
-      {/* Narrow screens: the count and the button stay at the bottom of the window. */}
-      <div className="tl-footer">
-        <p className="tl-footer-line" aria-hidden="true"><span>{t.footerCount(sum.selected, sum.total)}</span><span>{t.footerDeleted}</span></p>
+      {/* Narrow screens, and wide ones too short for the sticky jump bar: the count and the button stay at the bottom of the window. */}
+      <div className="tl-footer" ref={footRef}>
+        <div className="tl-footer-line"><span className="tl-footer-count" aria-hidden="true">{t.footerCount(sum.selected, sum.total)}</span><span>{t.footerDeleted}</span>{topBtn(true)}</div>
         {saveBtn('save-why')}
       </div>
     </main>

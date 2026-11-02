@@ -161,8 +161,15 @@ describe('receipt', () => {
     expect(txt).toMatch(/Saved to\s+Pictures › Keepsake photos/);
     expect(txt).toMatch(/Sorted into\s+6 years, 41 months, plus No date \(312\)/);
     expect(txt).toMatch(/Recovery folder\s+Untouched/);
-    expect(txt).toMatch(/Your files: deleted · uploaded\s+0 · 0/); // D18
+    // T76: the promise in words, no "0 · 0" counter or "upload" wording.
+    expect(txt).toMatch(/Your files\s+None deleted, none sent anywhere\n/);
+    expect(txt).not.toContain('0 · 0');
+    expect(txt).not.toMatch(/upload/i);
     expect(txt).not.toContain('Your files deleted');
+    // Rows line up: every value starts in the same column.
+    const rows = txt.split('\n').slice(3, 9);
+    expect(rows).toHaveLength(6);
+    expect(new Set(rows.map((l) => l.match(/^.*?\S {2,}(?=\S)/)?.[0].length)).size).toBe(1);
     expect(txt).toContain('  recup_dir.4/f0099.jpg');
   });
 });

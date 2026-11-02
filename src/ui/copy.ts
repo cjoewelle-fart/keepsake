@@ -392,6 +392,8 @@ export const copy = {
     body: 'Choose the folder your recovery program saved files into. We’ll find the photos and videos worth keeping and set the rest aside.',
     hint: 'Inside it, you’ll usually see folders named recup_dir.1, recup_dir.2 and so on.',
     choose: 'Choose recovery folder',
+    /** T76: right under the Choose button, where the folder is chosen. */
+    chooseNote: 'Keepsake works inside your browser, but only on this computer. Choosing a folder lets it read your files here. They aren’t sent to us or to any server, and nothing is deleted.',
     browserNote: 'Keepsake works best in Chrome or Edge on a computer. You can still scan your folder in this browser.',
     stopped: 'Scan stopped. Nothing was changed, and you can start again any time.',
     /** Inside the claude.ai preview the folder is chosen with the browser's upload dialog. */
@@ -405,10 +407,10 @@ export const copy = {
     copiesTitle: 'Looking for exact copies…',
     progress: (done: number, total: number) => `Checked ${n(done)} of ${n(total)} files`,
     copiesProgress: (done: number, total: number) => `Compared ${n(done)} of ${n(total)} possible copies`,
-    reassure: 'This happens on your computer. Nothing is uploaded, and you can stop any time.',
+    reassure: 'This happens on your computer. Nothing is sent anywhere, and you can stop any time.',
     // “Your files”: Save may remove an empty file it made itself (D17), never one of yours (T58).
-    // D18: the zero sits next to “deleted”.
-    deleted: 'Your files: 0 deleted',
+    // T76: said in words instead of a zero counter.
+    deleted: 'Your files are not deleted or changed',
     stagesLabel: 'Scan stages',
     stages: ['Check every file', 'Spot exact copies', 'Sort them by date'],
     stageDone: '(done)',
@@ -424,13 +426,18 @@ export const copy = {
     ledgerChecked: 'Files checked',
     ledgerKept: 'Kept, sorted by date',
     ledgerAside: 'Set aside, kept safe below',
-    ledgerSafe: 'Deleted · Uploaded',
-    ledgerSafeValue: '0 · 0',
-    ledgerSafeSr: 'How many of your files were deleted or uploaded', // D18
-    ledgerSafeValueSr: 'None deleted, none uploaded',
+    // T76: the privacy promise in plain words, not a "0 · 0" counter.
+    ledgerSafe: 'Your files',
+    ledgerSafeValue: 'Not deleted, not sent anywhere',
+    ledgerSafeSr: 'Your files',
+    ledgerSafeValueSr: 'Not deleted, not sent anywhere',
     ledgerChanged: (keep: number, aside: number) => `Now keeping ${n(keep)} ${plural(keep, 'file', 'files')}. ${n(aside)} set aside.`,
-    untouched: 'Your recovery folder is exactly as it was.',
-    takeYourTime: 'Take your time. Nothing changes until you choose.',
+    untouched: 'Nothing was deleted or sent anywhere. Every file is still in your recovery folder, just as it was.',
+    takeYourTime: 'No rush. Look through everything first, then review when you’re ready.',
+    /** T77: under the Kept heading. The contact sheet shows photos only (Results.tsx filters on PHOTO_KINDS). */
+    keptPhotosOnly: 'These previews show photos only. You’ll see videos too when you review.',
+    /** T77: under "Set these aside again", after keeping a group. */
+    keptAdded: (added: number, total: number) => `Added ${n(added)} to Kept. Kept is now ${n(total)}.`,
     photosByDate: 'Your photos by date',
     jumpLabel: 'Jump to a year',
     undatedChip: (x: number) => `No date · ${n(x)}`,
@@ -475,6 +482,8 @@ export const copy = {
     peek: 'Show',
     hide: 'Hide',
     moveBack: 'Keep these files',
+    /** T78: under "Keep these files", while it reads that. */
+    moveBackNote: 'Adds them to the photos you review and save. Nothing moves on your computer. You can set them aside again.',
     undo: 'Set these aside again',
     movedBack: 'Keeping these',
     previewUnavailable: 'No preview',
@@ -528,17 +537,19 @@ export const copy = {
     ledgerNotSelected: 'Not selected',
     ledgerSize: 'Size to save',
     ledgerAside: 'Still set aside, kept safe',
-    ledgerSafe: 'Deleted · Uploaded',
-    ledgerSafeValue: '0 · 0',
-    ledgerSafeSr: 'How many of your files were deleted or uploaded', // D18
-    ledgerSafeValueSr: 'None deleted, none uploaded',
+    ledgerSafe: 'Your files', // T76
+    ledgerSafeValue: 'Not deleted, not sent anywhere',
+    ledgerSafeSr: 'Your files',
+    ledgerSafeValueSr: 'Not deleted, not sent anywhere',
     notSelectedMeans: 'Photos you don’t select stay where they are now. Nothing is deleted.',
     nothingSelected: 'Nothing is selected, so there’s nothing to save yet. Your photos are all still here.',
     save: (x: number) => (x === 0 ? 'Save selected' : `Save ${n(x)} selected`),
     selectAll: 'Select all',
     selectNone: 'Unselect all',
     footerCount: (sel: number, total: number) => `${n(sel)} of ${n(total)} selected`,
-    footerDeleted: 'Deleted: 0',
+    footerDeleted: 'Nothing is deleted',
+    /** T79: back to the top of Review (the summary and the first month). */
+    backToTop: 'Back to top',
     announce: (sel: number, total: number) => (sel === 0 ? 'Nothing selected. Nothing is deleted.' : `${n(sel)} of ${n(total)} selected.`),
     announceGroup: (group: string, gSel: number, gTotal: number, sel: number, total: number) =>
       sel === 0 ? 'Nothing selected. Nothing is deleted.' : `${group}: ${n(gSel)} of ${n(gTotal)} selected. ${n(sel)} of ${n(total)} selected in all.`,
@@ -590,6 +601,8 @@ export const copy = {
     showAll: 'Show all',
     asideLine: (x: number) => `${n(x)} ${plural(x, 'file is', 'files are')} still set aside, kept safe. To look through them or keep any, go back to Clean up.`,
     back: 'Back to Clean up',
+    /** T79: next to both "Back to Clean up" buttons. */
+    backKeeps: 'Your choices here are kept if you go back.',
   },
 
   // Save step (T25). Source: team/brand/quiet-prints/EX-choose and EX-done (.dc.html), strings from
@@ -666,7 +679,7 @@ export const copy = {
     savingH: 'Saving your photos and videos…',
     progress: (done: number, total: number) => `Saved ${n(done)} of ${n(total)}`,
     zipProgress: (i: number, parts: number) => `Making zip file ${n(i)} of ${n(parts)}…`,
-    reassure: 'This happens on your computer. Nothing is uploaded, and your recovery folder isn’t changed.',
+    reassure: 'This happens on your computer. Nothing is sent anywhere, and your recovery folder isn’t changed.',
     keepOpen: 'Keep this tab open until it’s done. If you can, keep the computer plugged in so it doesn’t go to sleep.',
     stop: 'Stop saving',
     stopping: 'Stopping…',
@@ -727,7 +740,8 @@ export const copy = {
     rRecovery: 'Recovery folder',
     rRecoveryValue: 'Untouched',
     /** Receipt row (T58, D17): about the person's files, not the empty file Save may remove. */
-    rSafe: 'Your files: deleted · uploaded', // D18
+    rSafe: 'Your files', // T76
+    rSafeValue: 'None deleted, none sent anywhere',
     receiptNote: 'Save or print this so you can find your photos later.',
     saveReceipt: 'Save receipt',
     print: 'Print',

@@ -124,7 +124,9 @@ async function run(browser) {
   check(h1 === 'We found 214 photos and videos worth keeping.', `G1 title: "${h1}"`);
   const led = (await page.locator('dl.ledger dd').allInnerTexts()).map(flat);
   check(num(led[0]) === 523 && num(led[1]) === 214 && num(led[2]) === 309, `G1 ledger: checked ${led[0]}, kept ${led[1]}, set aside ${led[2]} (key 523/214/309)`);
-  check(/0 · 0/.test(led[3]), `T6 ledger: Deleted · Uploaded "${led[3]}"`);
+  // What's on screen (the screen-reader copies say the same words).
+  const safeRow = (await page.locator('dl.ledger .ledger-safe [aria-hidden=true]').allInnerTexts()).join(' · ');
+  check(safeRow === 'Your files · Not deleted, not sent anywhere' && !/0 · 0|[Uu]pload/.test(flat(await page.locator('main').innerText())), `T6/T76 ledger in words, no "0 · 0" or "upload": "${safeRow}"`);
   const chips = (await page.locator('main .chips[role=group] .chip').allInnerTexts()).map(flat);
   check(chips.join(',') === '2024,2023,2022,2021,2020,2019,No date · 20', `G1 year chips: ${chips.join(', ')}`);
 
@@ -138,16 +140,40 @@ async function run(browser) {
     check(h && new RegExp(`\\b${c}\\b`).test(h), `T2 group "${g}" shows ${c}: "${h ?? 'missing'}"`);
   }
 
-  // T4 on results: the No date chip and its heading.
-  await page.locator('main .chips[role=group] .chip', { hasText: /^No date/ }).click();
+  // T77: Kept is its own card, named by its heading.
+  const keptH = flat(await page.locator('#kept-h').innerText());
+  check(keptH === 'Kept, sorted by date 214' && (await page.locator('section.sheet').getAttribute('aria-labelledby')) === 'kept-h', `T77 Kept card heading: "${keptH}" (key 214)`);
+  check(!(await page.locator('#no-date-h').count()), 'T77 a year is showing: no No date block under it');
+
+  // T4 on results: the No date chip is a view of its own (T77), and its heading gets focus.
+  const ndChip = page.locator('main .chips[role=group] .chip', { hasText: /^No date/ });
+  await ndChip.click();
   await page.waitForTimeout(300);
   const nd = flat(await page.locator('main').innerText());
   check(/No date:? ?20 photos, kept together so none get lost/.test(nd), `T4 results: "${(nd.match(/No date[^.]{0,60}kept together so none get lost/) || ['(missing)'])[0]}"`);
+  const ndState = await page.evaluate(() => ({
+    focus: document.activeElement?.id,
+    months: document.querySelectorAll('#kept-view .month').length,
+    pressed: [...document.querySelectorAll('main .chips[role=group] .chip[aria-pressed=true]')].map((c) => c.textContent),
+  }));
+  check(ndState.focus === 'no-date-h' && ndState.months === 1 && ndState.pressed.join() === 'No date · 20', `T77 No date view: focus ${ndState.focus}, ${ndState.months} block shown, pressed "${ndState.pressed.join()}"`);
+  await page.locator('main .chips[role=group] .chip', { hasText: '2022' }).click();
+  check(!(await page.locator('#no-date-h').count()) && (await page.locator('#kept-view .month').count()) > 0, 'T77 choosing 2022 hides No date and shows its months');
 
   // T3: keep the Small preview copies; the change is announced (filled in after render, so wait for it).
   await page.getByRole('button', { name: /preview copies/i }).click();
   await page.waitForTimeout(300);
+  const keepNote = flat(await page.locator('#aside-small').innerText());
+  check(/Adds them to the photos you review and save\. Nothing moves on your computer\./.test(keepNote), 'T78 the line under "Keep these files" says what it does');
   await page.getByRole('button', { name: 'Keep these files' }).click();
+  const after = await page.evaluate(() => ({
+    focus: document.activeElement?.textContent,
+    note: document.querySelector('#aside-small .note-box')?.textContent,
+    tinted: [...document.querySelectorAll('dl.ledger > div.changed dt')].map((d) => d.textContent),
+    hint: /Adds them to the photos/.test(document.querySelector('#aside-small').textContent),
+  }));
+  check(after.focus === 'Set these aside again' && after.note === 'Added 204 to Kept. Kept is now 418.' && !after.hint, `T77 after Keep: focus on "${after.focus}", note "${after.note}"`);
+  check(after.tinted.join('|') === 'Kept, sorted by date|Set aside, kept safe below', `T77 changed ledger rows tinted: ${after.tinted.join(', ')}`);
   const h3 = flat(await page.locator('h1').innerText());
   const led3 = (await page.locator('dl.ledger dd').allInnerTexts()).map(num);
   check(h3 === 'We found 418 photos and videos worth keeping.' && led3[1] === 418 && led3[2] === 105, `T3 after Keep these files: "${h3}", ledger kept ${led3[1]}, set aside ${led3[2]} (key 418/105)`);
@@ -186,6 +212,34 @@ async function run(browser) {
   for (const k of Object.keys(tl).filter((k) => k.startsWith('2022'))) await page.locator(`.tl-month[data-month="${k}"]`).getByRole('button', { name: /^Select all of/ }).click();
   const sel = num(await page.locator('dl.ledger dd[data-k=selected]').innerText());
   check(sel === 44, `G2 selected only 2022: ${sel} selected (key 44)`);
+
+  // T80/T79 (1280×900, where the jump bar sticks): the count stays in view; Back to top; choices kept.
+  const bar = async () => page.evaluate(() => {
+    const tally = document.querySelector('.tl-tally');
+    const r = tally.getBoundingClientRect();
+    const top = tally.querySelector('.tl-top');
+    return { text: tally.querySelector('.tl-tally-count').textContent, inView: r.top >= 0 && r.bottom <= innerHeight, topShown: getComputedStyle(top).visibility === 'visible', pad: document.documentElement.style.scrollPaddingTop };
+  });
+  await page.evaluate(() => window.scrollTo(0, 0));
+  await page.waitForTimeout(300);
+  let b = await bar();
+  check(b.text === '44 of 214 selected' && b.inView && !b.topShown, `T80 count on the jump bar at the top: "${b.text}", Back to top hidden: ${!b.topShown}`);
+  await page.evaluate(() => window.scrollTo(0, document.documentElement.scrollHeight / 2));
+  await page.waitForTimeout(300);
+  b = await bar();
+  check(b.text === '44 of 214 selected' && b.inView && b.topShown && /px$/.test(b.pad), `T80 halfway down: count still in view ("${b.text}"), Back to top shown, scroll padding ${b.pad}`);
+  await page.locator('.tl-tally .tl-top').click();
+  await page.waitForTimeout(100);
+  const up = await page.evaluate(() => ({ y: scrollY, focus: document.activeElement?.id }));
+  check(up.y === 0 && up.focus === 'choose-h', `T79 Back to top: scrollY ${up.y}, focus on #${up.focus}`);
+  check((await page.locator('.tl-col > div > .tl-top').count()) === 1, 'T79 a second Back to top at the end of the list');
+  const keepsLine = flat(await page.locator('.tl-back').innerText());
+  check(/Your choices here are kept if you go back\./.test(keepsLine), `T79 next to Back to Clean up: "${keepsLine}"`);
+  await page.getByRole('button', { name: 'Back to Clean up' }).click();
+  await page.getByRole('button', { name: /^Review my/ }).click();
+  await page.getByRole('heading', { level: 1, name: /Choose what to save/ }).waitFor();
+  const selBack = num(await page.locator('dl.ledger dd[data-k=selected]').innerText());
+  check(selBack === 44, `T79 choices kept after Back to Clean up and back: ${selBack} selected (key 44)`);
   await page.locator('.tl-save:visible').click();
   await page.getByRole('heading', { level: 1, name: /Where should we save/ }).waitFor();
 
@@ -211,6 +265,9 @@ async function run(browser) {
   const [dl] = await Promise.all([page.waitForEvent('download'), page.getByRole('button', { name: 'Save receipt' }).click()]);
   const receipt = readFileSync(await dl.path(), 'utf8');
   check(/Recovery folder\s+Untouched/.test(receipt), `T6 receipt file: "${(receipt.match(/Recovery folder.*/) || ['(missing)'])[0]}"`);
+  check(/Your files\s+None deleted, none sent anywhere\n/.test(receipt) && !/0 · 0|upload/i.test(receipt), `T76 receipt file: "${(receipt.match(/Your files.*/) || ['(missing)'])[0]}"`);
+  const rRow = (await page.locator('.receipt .ledger-safe [aria-hidden=true]').allInnerTexts()).join(' · ');
+  check(rRow === 'Your files · None deleted, none sent anywhere', `T76 receipt screen: "${rRow}"`);
   const pics = await listIn(page, 'pictures');
   const months = new Set(pics.map((f) => f.p.split('/').slice(0, 3).join('/')));
   check(pics.length === 44 && pics.every((f) => f.p.startsWith('Keepsake photos/2022/') && f.s > 0), `G2 Pictures holds ${pics.length} files, all under Keepsake photos/2022/, none empty`);

@@ -345,12 +345,14 @@ export function Save({ records, files, ids, recoveryRoot, onBack, onDone }: Prop
   );
 }
 
-function SafeRow({ label = copy.results.ledgerSafe }: { label?: string }) {
+function SafeRow({ label = copy.results.ledgerSafe, value = copy.results.ledgerSafeValue }: { label?: string; value?: string }) {
   const r = copy.results;
+  // The receipt says it in the past tense (rSafeValue), so its screen-reader text is the same words.
+  const valueSr = value === r.ledgerSafeValue ? r.ledgerSafeValueSr : value;
   return (
     <div className="ledger-safe">
       <dt><span aria-hidden="true">{label}</span><span className="sr-only">{r.ledgerSafeSr}</span></dt>
-      <dd><span aria-hidden="true">{r.ledgerSafeValue}</span><span className="sr-only">{r.ledgerSafeValueSr}</span></dd>
+      <dd><span aria-hidden="true">{value}</span><span className="sr-only">{valueSr}</span></dd>
     </div>
   );
 }
@@ -417,7 +419,7 @@ function Done({ total, saved, failedRecords, mediaOnly, folderNames, zips, sorte
           <div><dt>{s.rSavedTo}</dt><dd className="plain" data-k="saved-to">{savedTo}</dd></div>
           <div><dt>{s.rSorted}</dt><dd className="plain">{s.rSortedValue(sorted.years, sorted.months, sorted.noDate)}</dd></div>
           <div className="ledger-total"><dt>{s.rRecovery}</dt><dd className="plain">{s.rRecoveryValue}</dd></div>
-          <SafeRow label={s.rSafe} />
+          <SafeRow label={s.rSafe} value={s.rSafeValue} />
         </dl>
         {failed > 0 && (
           <div>

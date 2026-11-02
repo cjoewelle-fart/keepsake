@@ -238,6 +238,7 @@ function Start({ note, noteKey, onChoose, onSamples, onInfo }: { note?: string; 
         <button type="button" className="btn btn-primary btn-lg" onClick={onChoose}>{copy.start.choose}</button>
         {onSamples && <button type="button" className="btn btn-secondary btn-lg" onClick={onSamples}>{copy.start.samples}</button>}
       </div>
+      <p className="sub-sm choose-note">{copy.start.chooseNote}</p>
       {onSamples && <p className="sub-sm">{copy.start.samplesNote}</p>}
       {!fullSupport && !framed && <p className="sub-sm">{copy.start.browserNote}</p>}
       {framed && <p className="sub-sm">{copy.start.uploadNote}</p>}
