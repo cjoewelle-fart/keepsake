@@ -19,9 +19,11 @@ import { copy } from './ui/copy';
 import { withPickedFolder } from './ui/recoveryFolder';
 import type { RecoveryRoot } from './ui/recoveryFolder';
 import { canUseFolderPicker, inFrame } from './ui/embedded';
+import { NOTE_DELAY_MS, shownNote } from './ui/liveNote';
 
 type Screen =
-  | { name: 'start'; note?: string }
+  /** `noteKey` changes on every note, so the same note twice is announced twice. */
+  | { name: 'start'; note?: string; noteKey?: number }
   | { name: 'scanning'; progress: Progress }
   | { name: 'results' }
   | { name: 'review' }
@@ -54,6 +56,9 @@ export default function App() {
   const runRef = useRef({ id: 0, stopped: false });
   const headingRef = useRef<HTMLHeadingElement>(null);
   const [saveDone, setSaveDone] = useState(false);
+  // Counts start-screen notes, so each one gets its own key.
+  const noteCount = useRef(0);
+  const startWithNote = (note: string) => setScreen({ name: 'start', note, noteKey: ++noteCount.current });
 
   useEffect(() => () => workerRef.current?.raw.terminate(), []);
   // Move keyboard and screen-reader focus to the new screen's heading.
@@ -85,7 +90,7 @@ export default function App() {
     }
     const list = picked.filter((f) => f instanceof File && !isOsClutter(f.name));
     if (list.length === 0) {
-      setScreen({ name: 'start', note: `${copy.empty.noFiles} ${copy.empty.noFilesBody}` });
+      startWithNote(`${copy.empty.noFiles} ${copy.empty.noFilesBody}`);
       return;
     }
     setRecoveryRoot(root);
@@ -125,7 +130,7 @@ export default function App() {
       await fed;
       if (!fedOk) throw new Error('hand-over failed');
       if (!result) {
-        setScreen({ name: 'start', note: copy.start.stopped });
+        startWithNote(copy.start.stopped);
         return;
       }
       setRecords(result);
@@ -167,7 +172,7 @@ export default function App() {
       <a className="skip" href="#main">{copy.skip}</a>
       <Header current={step} done={done} />
       <div id="main" ref={headingRef}>
-        {screen.name === 'start' && <Start note={screen.note} onChoose={chooseFolder} onSamples={SAMPLES_ENABLED ? trySamples : undefined} onInfo={(page) => setScreen({ name: 'info', page })} />}
+        {screen.name === 'start' && <Start note={screen.note} noteKey={screen.noteKey} onChoose={chooseFolder} onSamples={SAMPLES_ENABLED ? trySamples : undefined} onInfo={(page) => setScreen({ name: 'info', page })} />}
         {screen.name === 'info' && <InfoPage md={copy.info[screen.page].md} onBack={() => setScreen({ name: 'start' })} />}
         {screen.name === 'scanning' && <Scanning progress={screen.progress} onStop={() => { runRef.current.stopped = true; workerRef.current?.api.cancel(); }} />}
         {screen.name === 'results' && (
@@ -206,19 +211,21 @@ export default function App() {
   );
 }
 
-function Start({ note, onChoose, onSamples, onInfo }: { note?: string; onChoose: () => void; onSamples?: () => void; onInfo: (page: InfoName) => void }) {
+function Start({ note, noteKey, onChoose, onSamples, onInfo }: { note?: string; noteKey?: number; onChoose: () => void; onSamples?: () => void; onInfo: (page: InfoName) => void }) {
   const fullSupport = typeof window !== 'undefined' && 'showDirectoryPicker' in window;
   // The claude.ai preview: choosing the folder opens the browser's "upload" dialog.
   const framed = inFrame();
   // The live region must exist before its text arrives, or screen readers stay silent. Start
   // can mount with a note already ("Scan stopped"), so the text goes in a moment after mount.
-  const [ready, setReady] = useState<string>();
+  // A new key empties the region at once (the key isn't ready yet) and refills it after the
+  // delay, so picking an empty folder twice is announced twice.
+  const [ready, setReady] = useState<number>();
   useEffect(() => {
-    if (!note) return;
-    const t = setTimeout(() => setReady(note), 150);
+    if (!note || noteKey === undefined) return;
+    const t = setTimeout(() => setReady(noteKey), NOTE_DELAY_MS);
     return () => clearTimeout(t);
-  }, [note]);
-  const said = note && ready === note ? note : undefined;
+  }, [note, noteKey]);
+  const said = shownNote(note, noteKey, ready);
   return (
     <main className="page narrow start">
       <Prints />
