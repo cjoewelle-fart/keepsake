@@ -30,3 +30,6 @@ __pycache__/
 dist-artifact/
 dist-test/
 dist-artifact-test/
+
+# Agents' temporary worktrees
+.claude/worktrees/

@@ -6,7 +6,7 @@ import { describe, expect, it } from 'vitest';
 import type { FileRecord } from '../src/engine/types';
 import {
   NameBook, ZIP_LIMITS, classifyWriteError, dateParts, extFor, insideRecovery, orderForSave, placeFor,
-  planNames, receiptText, safeName, sortedInto, splitParts, zipPath,
+  NAME_LIMITS, planNames, receiptText, safeName, sortedInto, splitParts, utf8Bytes, ZipLog, zipPath,
 } from '../src/ui/savePlan';
 import type { ResolvingDir } from '../src/ui/savePlan';
 import { END_COST, ZipWriter, crc32, dosDateTime, dosFrom, entryCost } from '../src/ui/zip';
@@ -51,8 +51,97 @@ describe('where each copy goes', () => {
     expect(safeName('con.jpg')).toBe('_con.jpg');
     expect(safeName('photo. ')).toBe('photo');
     expect(safeName('..')).toBe('file');
-    expect(safeName(`${'x'.repeat(300)}.jpg`)).toHaveLength(180);
-    expect(safeName(`${'x'.repeat(300)}.jpg`).endsWith('.jpg')).toBe(true);
+    expect(safeName(`${'x'.repeat(300)}.jpg`)).toBe(`${'x'.repeat(115)}.jpg`); // 119 characters
+  });
+});
+
+describe('long names (T89): capped by UTF-8 bytes, cut between characters, extension kept', () => {
+  const ok = (name: string) => {
+    expect(utf8Bytes(name)).toBeLessThanOrEqual(NAME_LIMITS.bytes);
+    expect(name.length).toBeLessThanOrEqual(NAME_LIMITS.chars);
+    expect(name).toBe(name.normalize('NFC'));
+    expect(name).not.toMatch(/[\ud800-\udbff](?![\udc00-\udfff])|(?<![\ud800-\udbff])[\udc00-\udfff]/); // no half of a surrogate pair
+    expect(new TextDecoder('utf-8', { fatal: true }).decode(new TextEncoder().encode(name))).toBe(name);
+  };
+
+  it('counts UTF-8 bytes like TextEncoder', () => {
+    for (const t of ['abc', 'é', '日本', '😀', 'e\u0301', '\ud83d']) expect(utf8Bytes(t)).toBe(new TextEncoder().encode(t).length);
+  });
+
+  it('short names are unchanged, whatever the script', () => {
+    for (const t of ['f0001234.jpg', '家族旅行 2019.JPG', 'Café Noël 😀.png']) expect(safeName(t)).toBe(t);
+  });
+
+  it('CJK: 3 bytes a character, so about 48 fit; the extension stays as written', () => {
+    const out = safeName(`${'写真'.repeat(120)}.JPG`);
+    ok(out);
+    expect(out.endsWith('.JPG')).toBe(true);
+    expect(out).toBe(`${'写真'.repeat(24)}.JPG`); // 48 × 3 + 4 = 148 bytes
+  });
+
+  it('emoji: never splits a surrogate pair or a joined emoji', () => {
+    const family = '👨‍👩‍👧'; // one character on screen, 18 bytes
+    const out = safeName(`${'😀'.repeat(100)}${family.repeat(10)}.heic`);
+    ok(out);
+    expect(out.endsWith('.heic')).toBe(true);
+    expect(out).toBe(`${'😀'.repeat(36)}.heic`); // 36 × 4 + 5 = 149 bytes
+    const fam = safeName(`${family.repeat(20)}.jpg`);
+    ok(fam);
+    expect(fam).toBe(`${family.repeat(8)}.jpg`); // 8 × 18 + 4 = 148
+  });
+
+  it('combining characters stay with their letter', () => {
+    // NFC has no single character for "x" + combining acute, so each is a 3-byte pair that must not be split.
+    const out = safeName(`${'x\u0301'.repeat(100)}.jpg`);
+    ok(out);
+    expect(out).toBe(`${'x\u0301'.repeat(48)}.jpg`); // 48 × 3 + 4 = 148
+    expect(safeName(`${'e\u0301'.repeat(200)}.jpg`)).toBe(`${'é'.repeat(72)}.jpg`); // NFC first: 2 bytes each
+  });
+
+  it('no extension, or one too long to count: the whole name is cut, with no trailing dot or space', () => {
+    ok(safeName('a'.repeat(400)));
+    expect(safeName('a'.repeat(400))).toHaveLength(119);
+    const dotty = safeName(`${'ab. '.repeat(60)}notanextension`);
+    ok(dotty);
+    expect(dotty).not.toMatch(/[. ]$/);
+  });
+
+  it('Windows device names get a "_", in every form Windows reads them', () => {
+    for (const t of ['CON .jpg', 'con  .txt', 'COM0.jpg', 'COM¹.jpg', 'com².png', 'LPT³', 'lpt9.x', 'CONIN$', 'conout$.log', 'AUX', 'nul.tar.gz']) {
+      expect(safeName(t)).toBe(`_${t.replace(/[. ]+$/, '')}`);
+    }
+    for (const t of ['CONSOLE.jpg', 'com10.jpg', 'lpt.jpg', 'CONIN.jpg', 'conout$x.jpg', 'Auxiliary.png']) expect(safeName(t)).toBe(t);
+  });
+
+  it('lone surrogates become "_", so names are always valid UTF-8; two such names still get their own', () => {
+    const a = safeName('a\ud800b.jpg');
+    expect(a).toBe('a_b.jpg');
+    ok(a);
+    expect(safeName('x\udc00.jpg')).toBe('x_.jpg');
+    expect(safeName('😀\ud83d.jpg')).toBe('😀_.jpg'); // a real pair is kept
+    const plan = planNames([rec(undefined, 'r/a\ud800.jpg'), rec(undefined, 'r/a\udfff.jpg'), rec(undefined, 'r/a_.jpg')]);
+    expect(plan.map((p) => p.name).sort()).toEqual(['a_ (2).jpg', 'a_ (3).jpg', 'a_.jpg']);
+  });
+
+  it('a reserved name still gets its "_" and stays in the limits', () => {
+    const out = safeName(`con.${'x'.repeat(300)}`);
+    expect(out.startsWith('_con.')).toBe(true);
+    ok(out);
+  });
+
+  it('the full path stays under 160 characters, even with " (12)" added', () => {
+    const plan = planNames(Array.from({ length: 12 }, () => rec(undefined, `recup_dir.1/${'ü'.repeat(300)}.jpg`)));
+    for (const p of plan) expect(zipPath(p).length).toBeLessThan(160);
+    expect(plan[11].name.endsWith(' (12).jpg')).toBe(true);
+  });
+
+  it('names that become the same once cut still get their own (no collisions)', () => {
+    const long = (tail: string) => `recup_dir.1/${'長い名前'.repeat(40)}${tail}.jpg`;
+    const plan = planNames([rec(undefined, long('A')), rec(undefined, long('B')), rec(undefined, long('a'))]);
+    const names = plan.map((p) => p.name);
+    expect(new Set(names.map((n) => n.toLowerCase())).size).toBe(3);
+    expect(names[1]).toBe(names[0].replace(/\.jpg$/, ' (2).jpg'));
+    for (const n of names) expect(utf8Bytes(n)).toBeLessThan(255);
   });
 });
 
@@ -146,8 +235,74 @@ describe('receipt', () => {
     expect(copy.save.browserNote(4, true)).toMatch(/4 zip files instead\.$/);
     expect(copy.save.fullBody(1, 3, true, '2 GB', true)).toContain('They’re in zip files in your Downloads folder. None of your files were deleted');
     expect(copy.save.brokenBody(1, 3, true)).toContain('They’re in Keepsake photos. None of your files were deleted');
-    expect(copy.save.findZip(5)).toBe('In your Downloads folder, look for Keepsake photos 1 of 5.zip to Keepsake photos 5 of 5.zip.');
-    expect(copy.save.findZip(1)).toBe('In your Downloads folder, look for Keepsake photos.zip.');
+    const L = 'In your Downloads folder, look for';
+    const parts = (a: number, b: number) => Array.from({ length: b - a + 1 }, (_, k) => `Keepsake photos part ${a + k}.zip`);
+    expect(copy.save.findZip(parts(1, 5))).toEqual({ text: `${L} these 5 zip files: Keepsake photos part 1.zip to Keepsake photos part 5.zip.` });
+    expect(copy.save.findZip(['Keepsake photos.zip'])).toEqual({ text: `${L} Keepsake photos.zip.` });
+  });
+
+  it('zip find text (T89): built from the names; an unbroken run, 2 names in the sentence, 3 or more as a list', () => {
+    const L = 'In your Downloads folder, look for';
+    expect(copy.save.findZip(['Keepsake photos part 4.zip', 'Keepsake photos part 5.zip', 'Keepsake photos part 6.zip']))
+      .toEqual({ text: `${L} these 3 zip files: Keepsake photos part 4.zip to Keepsake photos part 6.zip.` });
+    expect(copy.save.findZip(['Keepsake photos.zip', 'Keepsake photos part 2.zip']))
+      .toEqual({ text: `${L} these 2 zip files: Keepsake photos.zip and Keepsake photos part 2.zip.` });
+    // A gap (a part with no readable file made no zip) is not an unbroken run.
+    expect(copy.save.findZip(['Keepsake photos part 1.zip', 'Keepsake photos part 3.zip', 'Keepsake photos part 4.zip']))
+      .toEqual({ text: `${L} these 3 zip files:`, list: ['Keepsake photos part 1.zip', 'Keepsake photos part 3.zip', 'Keepsake photos part 4.zip'] });
+    expect(copy.save.findZip(['Keepsake photos.zip', 'Keepsake photos part 2.zip', 'Keepsake photos part 3.zip']).list).toHaveLength(3);
+    expect(copy.save.findZip([])).toEqual({ text: '' });
+    expect(copy.save.findZip(['Keepsake photos part 2.zip', 'Keepsake photos part 3.zip']))
+      .toEqual({ text: `${L} these 2 zip files: Keepsake photos part 2.zip and Keepsake photos part 3.zip.` });
+    expect(copy.save.zipAgain('Keepsake photos part 2.zip')).toBe('Download Keepsake photos part 2.zip again');
+  });
+
+  it('zip names (T89): one name per zip for the whole page; "part N" counts every zip made', () => {
+    const log = new ZipLog();
+    const v1 = log.newVisit(1);
+    expect(log.add(v1, 1, [1, 2])).toBe('Keepsake photos.zip'); // first save fits in one zip
+    expect(log.add(v1, 1, [3])).toBe('Keepsake photos part 2.zip'); // Save the rest
+    log.finish(v1);
+    const v2 = log.newVisit(1);
+    expect(log.add(v2, 1, [1, 2, 3])).toBe('Keepsake photos part 3.zip'); // a later save never reuses "Keepsake photos.zip"
+    const multi = new ZipLog();
+    const m = multi.newVisit(1);
+    expect([multi.add(m, 3, [1]), multi.add(m, 3, [2]), multi.add(m, 3, [3])])
+      .toEqual(['Keepsake photos part 1.zip', 'Keepsake photos part 2.zip', 'Keepsake photos part 3.zip']);
+  });
+
+  it('earlier zips (T89): only from saves that did not finish, and whether this save has all of it', () => {
+    const log = new ZipLog();
+    const done = log.newVisit(1);
+    log.add(done, 1, [9]);
+    log.finish(done);
+    const stopped = log.newVisit(1);
+    log.add(stopped, 2, [1, 2]);
+    const now = log.newVisit(1);
+    log.add(now, 1, [1, 2, 3]);
+    expect(log.leftovers(now, new Set([1, 2, 3]))).toEqual({ names: ['Keepsake photos part 2.zip'], covered: true });
+    expect(log.leftovers(now, new Set([1, 3]))).toEqual({ names: ['Keepsake photos part 2.zip'], covered: false });
+    expect(log.leftovers(stopped, new Set([1, 2]))).toEqual({ names: [], covered: true }); // its own zips aren't "earlier"
+  });
+
+  it('earlier zips (T89): a zip from another scan is never mentioned, and never "covered", even with the same indices', () => {
+    const log = new ZipLog();
+    const a = log.newVisit(1); // folder A
+    expect(log.add(a, 1, [0, 1, 2])).toBe('Keepsake photos.zip'); // stopped; indices 0-2 of scan 1
+    const b = log.newVisit(2); // folder B: its indices also start at 0
+    expect(log.add(b, 1, [0, 1, 2, 3])).toBe('Keepsake photos part 2.zip'); // the name counter is page-wide
+    expect(log.leftovers(b, new Set([0, 1, 2, 3]))).toEqual({ names: [], covered: true });
+    // The same folder scanned again is a new scan too: its indices may point at other files.
+    const a2 = log.newVisit(3);
+    expect(log.leftovers(a2, new Set([0, 1, 2]))).toEqual({ names: [], covered: true });
+    // Back in scan 2, a later visit still sees only scan 2's unfinished zip.
+    const b2 = log.newVisit(2);
+    expect(log.leftovers(b2, new Set([0, 1, 2]))).toEqual({ names: ['Keepsake photos part 2.zip'], covered: false });
+    expect(log.leftovers(b2, new Set([0, 1, 2, 3]))).toEqual({ names: ['Keepsake photos part 2.zip'], covered: true });
+    expect(copy.save.earlierZips(['Keepsake photos.zip'], true, 1, true))
+      .toBe('Keepsake photos.zip is from an earlier save that didn’t finish. Everything in it is also in the zip file above.');
+    expect(copy.save.earlierZips(['Keepsake photos.zip', 'Keepsake photos part 2.zip'], false, 3, true))
+      .toBe('Keepsake photos.zip and Keepsake photos part 2.zip are from an earlier save that didn’t finish. They have some photos and videos that aren’t in this save.');
   });
 
   it('the text file says the same as the screen, and lists what could not be saved', () => {

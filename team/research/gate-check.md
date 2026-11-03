@@ -100,3 +100,196 @@ The answer-key numbers come from `pilot-folder.md`.
 | 9 | **Passed, 2 of 2 runs.** Recovery folder, `recup_dir.2`, `a/b/c/d/e` and an empty subfolder were all refused with "That's your recovery folder.". A folder whose check throws was refused with "We couldn't check that folder.". The parent folder was allowed (3 saved), and no file appeared in the recovery folder. |
 | P | **Passed, 3 of 3 runs, 31/31 checks.** Test build (title "Scan · Keepsake (test)", no example-files button), 523 files copied into OPFS, scan about 1 s. Every G1, T2, T3, T4, G2 and T6 number in the mapping table matched. G2 saved **44, 0 failed**: 44 files under `Keepsake photos/2022/` in 12 month folders (e.g. `2022/12 December/2022-12-25 10.10.mp4`, `2022/11 November/2022-11-27 08.12.heic`). The recovery folder and `recup_dir.2` were refused. Recovery folder after: **523 files, names and sizes unchanged**. No console errors. **Zero requests to other origins.** (The first two drafts of the probe had wrong selectors of my own. Those were fixed before these 3 runs.) |
 | 10 | **523 files, 0 differ from the key** (SHA-256), after all of the above. |
+
+## Zip save check (T89, Nov 3)
+
+**Nov 3, 2026, QA, commit `99359ea`** (risk R5: Safari and Firefox can't save to a folder, so they get zip downloads). Linux sandbox, Node 22.23.4, Chrome for Testing 153.0.8010.12, Playwright 1.64.1.
+
+**Browsers: Chromium only.** `npx playwright install firefox webkit` failed: the network proxy refused both download hosts (403 from `cdn.playwright.dev` and `playwright.download.prss.microsoft.com`). Playwright stayed at 1.64.1. Instead, an init script deleted `showDirectoryPicker`, `showOpenFilePicker` and `showSaveFilePicker` (`'showDirectoryPicker' in window` was false), so the app took the same branch Firefox and Safari take: `canSaveToFolder()` false, then the zip card, then `saveAsZip`. **Real Firefox and Safari were not tested.**
+
+**Rerun:** `npm run build && LANG=C.UTF-8 node scripts/qa-zip-check.mjs <recoveryDir> --exe <chrome> [--labels <labels.json>] [--stop-after <ms>] [--keep]`. The script scans the folder through the file input and saves all kept files as zips. It then runs `scripts/qa-zip-check.py`, which checks:
+- `unzip -t` and Python `zipfile.testzip()` on every zip.
+- The entry count against the receipt's Saved number.
+- Each entry's SHA-256 against the recovery folder (and no source file zipped twice).
+- The layout: `Keepsake photos/YYYY/MM Month/YYYY-MM-DD HH.MM[ (n)].ext` with the folder matching the name, plus the Exif date of each dated JPEG. Also the receipt's "Sorted into" line and the review timeline's per-month counts.
+- That names are safe: no characters illegal on Windows, no reserved names, no trailing dot or space, no `..` or absolute paths, NFC, no case-only clashes, each part at most 255 bytes, and the full path at most 160 characters (it flags longer paths).
+- That the recovery folder is unchanged: every file's size, mtime and SHA-256, the folder list and the root mtime.
+
+**Use a UTF-8 locale.** Under `LANG` unset (POSIX), Chromium on Linux gets `NotReadableError` (size 0) for every file with a non-ASCII name, and the app sets those aside as "Damaged or incomplete". That comes from this environment, not the app. With `LANG=C.UTF-8` the same files are kept and zipped correctly.
+
+| Folder | Checked / kept / receipt saved | Zips (bytes) | Entries = receipt | Bytes match source | Layout vs app | Names | Recovery folder after | Scan / zip build / on disk | Peak PSS (scan / save) |
+|---|---|---|---|---|---|---|---|---|---|
+| Synthetic fixture (`npm run fixture`, 1,407 files, no HEIC) | 1,407 / 323 / 323, 0 failed | 1: `Keepsake photos.zip` (53,097,209) | 323 = 323; unzip -t OK; zipfile OK | 323/323 | "13 years, 89 months, plus No date (80)" on the receipt and in the zip; timeline months equal; 243/243 dated JPEGs match Exif | all safe; longest 54 chars | 1,407 files unchanged | 2.9 s / 1.4 s / 1.4 s | 440 / 462 MB |
+| 5,000 files (`make_perf_folder.py --files 0 --big 600 --heic 200`, first 10 `recup_dir`s, 2.2 GB, no HEIC) | 5,000 / 1,387 / 1,387, 0 failed | 2: `1 of 2` (1,995,327,738), `2 of 2` (162,033,486); 2,157,361,224 in all | 1,387 = 1,387; unzip -t OK; zipfile OK | 1,387/1,387 | "10 years, 120 months, plus No date (460)" on both; timeline equal; 927/927 Exif match | all safe; longest 54 | 5,000 unchanged | 13.1 s / 15.8 s / 25.0 s | 486 / 698 MB |
+| Awkward names (37 files: reserved names, `:*?|<>"\`, tab, newline, NFD and NFC "Café Noël", CJK, emoji, a 240-character name, 120×"é", case clashes, nested folders, no extension, 0-byte, cut-off, bad dates) | 35 (2 dotfiles skipped on purpose, `src/App.tsx:39`) / 33 / 33 | 1 (7,632,869) | 33 = 33; OK | 33/33 | "1 year, 1 month, plus No date (30)" on both; timeline equal | 1 flagged: a 204-character path (finding 2) | 37 unchanged | 1.0 s / 0.4 s / 0.4 s | n/a |
+| 5,000 files, **Stop after 4 s, then Save the rest** | 1,387 / 1,387 | 2: `1 of 2` (614,218,901) and **`Keepsake photos.zip`** (1,543,142,323) | 1,387 = 1,387; OK | 1,387/1,387, none twice | equal | safe | unchanged | stopped at 351 of 1,387 | 609 / 833 MB |
+| Fixture, **Stop after 0.5 s, then Save the rest** | 323 / 323 | 2, **both named `Keepsake photos.zip`** | 323 = 323; OK | 323/323 | equal | safe | unchanged | stopped at 190 of 323 | n/a |
+
+How each field was measured:
+- **Times:** wall clock in a headless browser. "On disk" includes Playwright copying each download out of its temporary folder.
+- **PSS:** the whole process tree, sampled every 500 ms. That tree includes the `vite preview` server and the Playwright driver, so the browser alone used less.
+- **Memory on the 5,000-file run:** no memory problem. The zips are Blobs that point at the original Files, so the 2.16 GB of zips raised the peak by only about 210 MB over the scan.
+- **Labels:** every zipped file was a `keep` in the answer key (323/323 and 1,387/1,387).
+- **Network:** zero requests from the page to other origins in every run.
+- **Part size:** part 1 of 2 is 1,995,327,738 bytes, under the 2,000,000,000 limit.
+
+### Findings
+
+1. **Major (wording and file names, no data loss): after Stop then "Save the rest", the zip names don't match what the Done screen says.**
+   - **Cause:** `src/ui/Save.tsx:186` names each part `s.zipName(i, parts.length)`, where `parts` holds only the remaining files.
+   - **Single-part save:** both downloads are called `Keepsake photos.zip`. Chrome saves the second as `Keepsake photos (1).zip`.
+   - **Two-part save:** you get `Keepsake photos 1 of 2.zip`, then `Keepsake photos.zip`.
+   - **Done screen:** `findZip(zips.length)` (`src/ui/copy.ts:770-773`) says "look for Keepsake photos 1 of 2.zip to Keepsake photos 2 of 2.zip". In both cases no file has that name. The "Download zip file 2 of 2 again" button then downloads one named `Keepsake photos.zip`.
+   - **Repro:** `LANG=C.UTF-8 node scripts/qa-zip-check.mjs fixtures/recovery --exe <chrome> --stop-after 500`. It exits 1 with "the app gave two downloads the same name".
+   - **Fix:** name parts per save session, not per run. For example, number them on from `sess.zips.length` (`Keepsake photos 2.zip`), or name them from the saved and total counts. Build the Done text from the names in `sess.zips`, not from a count.
+2. **Minor: names are capped at 180 UTF-16 code units, not bytes, and the path isn't capped.** This is `safeName` in `src/ui/savePlan.ts:56-59`.
+   - **Seen:** a 240-character name became a 204-character path inside the zip, `Keepsake photos/No date/xxx…(180).jpg`. Windows Explorer extracts into a folder named after the zip, so the full path becomes `C:\Users\<name>\Downloads\Keepsake photos\Keepsake photos\No date\…`. That is about 250 characters, close to the 260 limit (MAX_PATH).
+   - **From the code, not reproduced:** 180 CJK or emoji characters are 540+ UTF-8 bytes, over the 255-byte name limit on macOS (APFS) and Linux. Such a source can only come from NTFS. The Linux test folder can't hold that name, so I didn't test it.
+   - **Who it affects:** only "No date" files with long original names. PhotoRec names files `f<number>.ext`.
+   - **Fix:** cap names by UTF-8 bytes (for example 150) and keep the whole path inside the zip under about 160 characters.
+3. **Minor (test setup): `npm test` fails 1 test**, in another agent's leftover worktree. Vitest's `tests` filter also matches `.claude/worktrees/agent-a23d9d648a17a5266/tests/previewQueue.test.ts`, which can't find `node_modules` there.
+   - **Repo's own tests:** `npx vitest run tests --exclude '.claude/**'` gives 19 files, **271 passed, 4 expected fail**.
+   - **Fix:** add `.claude/**` to vitest's `exclude`, or remove the stale worktree.
+4. Notes, not bugs:
+   - Files whose names start with `.` are skipped as OS clutter (by design).
+   - On Linux, Chromium itself turns `\` in a name into `/` in `webkitRelativePath`, so `back\slash.jpg` was saved as `slash.jpg`. The bytes were right.
+   - Exif dates before 1990 or after 2100, and invalid dates, go to No date (by design, `src/engine/scan.ts:80`).
+   - A file the browser can't read is reported as "Damaged or incomplete" ("Part of each file is missing"). That wording is wrong for a read error such as a lost permission or an unplugged drive. Seen only through the POSIX-locale problem above.
+
+### Still to do
+- Real Firefox and real Safari, especially Safari on a Mac. Check that the downloads aren't blocked or renamed, that a 2 GB Blob downloads, that a ~2 GB part opens in Archive Utility and in Windows Explorer, and how each browser renames a second `Keepsake photos.zip`.
+- HEIC in the zip. pillow-heif isn't installed here, so neither folder had HEIC files.
+- A real PhotoRec card (`CARD_DIR`), and folders over 2,000 kept files or with a single file over 2 GB (a part of its own, ZIP64). ZIP64 is covered only by unit tests.
+
+### Acceptance re-check of the fix (Nov 3, QA, `d4e1755` + uncommitted T89 fix)
+
+**Verdict: REJECT, one major.** "Save the rest" naming and the byte cap are fixed and nothing regressed. But Stop, then "Back to review", then Save again still gives two downloads the same name, and the Done screen then points at the old partial zip (finding 5).
+
+Same environment as above (Chrome for Testing 153.0.8010.12, `LANG=C.UTF-8`, file-input branch with the folder pickers deleted).
+
+| Run | Zips (names as downloaded) | Entries = receipt | Bytes match | Done text and "again" buttons | Recovery folder |
+|---|---|---|---|---|---|
+| Fixture, no stop | `Keepsake photos.zip` | 323 = 323 | 323/323 | match | 1,407 unchanged |
+| Fixture, Stop after 0.5 s (181 of 323), Save the rest | `Keepsake photos.zip`, `Keepsake photos 2.zip` | 323 = 323 | 323/323 | match ("these 2 zip files: …") | unchanged |
+| 5,000 files, no stop | `1 of 2`, `2 of 2` (2,157,361,224 bytes) | 1,387 = 1,387 | 1,387/1,387 | match | 5,000 unchanged |
+| 5,000 files, Stop after 4 s (467), Save the rest | `1 of 2`, `Keepsake photos 2.zip` | 1,387 | 1,387/1,387 | match | unchanged |
+| 5,000 files, Stop after 0.2 s (24) / 0.6 s (56), Save the rest (2 parts) | `1 of 2`, `Keepsake photos 2.zip`, `Keepsake photos 3.zip` (both runs) | 1,387 | 1,387/1,387, none twice | match | unchanged |
+| Long names (20 files, scratchpad `longnames`) | `Keepsake photos.zip` | 20 = 20 | 20/20 | match | unchanged |
+
+- **Long names in a zip:** the longest name is 123 characters or 152 bytes (with ` (n)`), and the longest path is 147. Names equal after the cut, and names differing only by case, got `(2)`…`(5)`. `con.` + 200×`y` became `_con.…` (120 characters).
+- **Long names in a folder** (`scripts/qa-save-longnames-opfs.mjs`, real OPFS): the folder was seeded with the cut names and with case variants (`É`×72). The run ended "done", with 22/22 saved and 0 failed. All 4 existing files were byte-for-byte unchanged, and the new copies started at `(3)`. There were no case-insensitive clashes and no temporary files. The longest name was 123 characters or 152 bytes.
+- **Largest first** (`scripts/qa-largest-first.mjs`):
+  - Fixture, 4 rows unticked: 319/4 in both views, and 319 in the month counts. The bar said "49.8 MB to save", and so did the ledger and the Save screen's Size to save. 319 saved. The 4 files missing from the zip were exactly the unticked ones (by size rank, SHA-256).
+  - 5,000 files, 5 rows unticked: 1,382/5. The bar showed "2.1 GB", and so did the ledger and the Save screen. 1,382 saved, and the missing 5 were exactly the unticked ones.
+- **safeName, 200,000 random names against the old code:** 0 differences for names of at most 119 characters and 149 bytes. None was over 150 bytes or 120 characters, and none was unsafe on Windows. Note: the cut starts above 149 bytes, not 150.
+
+5. **Major: Stop, then "Back to review", then Save again gives duplicate zip names, and the Done text names the old partial zip.**
+   - **Cause:** `sess` (and so `zipNamesFor(sess.zips.length, …)`, `src/ui/Save.tsx:74-79,178`) is per mount of `<Save>`. `src/App.tsx:200` unmounts it on Back.
+   - **Fixture:** the downloads were `Keepsake photos.zip` (246 files, partial) and `Keepsake photos.zip` (all 323).
+   - **5,000 files:** `Keepsake photos 1 of 2.zip` (464, partial), then `1 of 2` again, then `2 of 2`. Done says "look for Keepsake photos 1 of 2.zip to Keepsake photos 2 of 2.zip". Chrome saves the new part 1 as `… (1).zip`, so the Done text leads to the partial one, which is missing several hundred photos. No file is lost: they're in the `(1)` zip and in the recovery folder.
+   - **Repro:** the scratchpad script `backvisit.mjs` (fixture, stop at 500 ms; perf5k, stop at 4000 ms).
+   - **Fix:** keep the count of zips downloaded in this page session above `<Save>`, in `App` or a module, and number on from it.
+6. **Minor (copy):** after a resume, `Keepsake photos 1 of 2.zip` sits next to `2.zip` and `3.zip`, but there are 3 zips. The UX writer check is already flagged.
+7. **Minor (T60 copy):** a Largest first row's name keeps the date view's position, for example "6 MB. Save video with no date (207 of 460)". Here that number means nothing.
+8. **Minor, existing before this change, not regressions:**
+   - `RESERVED` (`src/ui/savePlan.ts:51`) misses `CON .jpg` (space before the dot), `COM¹`/`COM²`/`COM³` and `CONIN$`/`CONOUT$`.
+   - Lone surrogates pass through `safeName`, so 2 such names could become the same U+FFFD name in a zip.
+
+### Second acceptance re-check (Nov 3, QA, after the ZipLog rework)
+
+**Verdict: REJECT, one major (finding 9).** Naming is now unique across the page session in every sequence I tried, Done text and buttons match the real downloads, and uninterrupted saves are unchanged apart from "part N". But the earlier-zip note can claim "Everything in it is also in the zip file above" when none of it is, after Start over and a scan of a different folder.
+
+New rerunnable check: `LANG=C.UTF-8 node scripts/qa-zip-sequence.mjs --exe <chrome> <steps…>` (steps: `scan=<dir> review save stop=<ms> rest back results startover untick=<k> done`). It fails on any duplicate download name in the session, on a Done text, list or "again" button that doesn't name exactly that visit's zips, on an earlier note that names the wrong zips, on an earlier note whose claim is false by content (SHA-256 of the entries), and on any change to a recovery folder.
+
+| Sequence | Downloads (in order) | Done text / earlier note | Result |
+|---|---|---|---|
+| Fixture: save, Stop 0.5 s, Back, Save | `Keepsake photos.zip`, `… part 2.zip` | "look for … part 2.zip"; note: earlier zip, "Everything in it is also in the zip file above" (true) | OK |
+| Fixture: save, Stop 0.6 s (264), Back, untick 40, Save | `Keepsake photos.zip`, `… part 2.zip` | note: "It has some photos and videos that aren't in this save" (true); 283 saved | OK |
+| 5,000: save, Stop 4 s (434), Back, Save | `part 1`, `part 2`, `part 3` | "these 2 zip files: part 2 and part 3"; note on part 1, "Everything … also in" (true) | OK |
+| 5,000: save, Stop 0.3 s, Back, save, Stop, Save the rest, Stop, Back, Save | `part 1` … `part 5`, all different | "part 4 and part 5"; note names parts 1-3, "Everything … also in" (true) | OK |
+| 5,000: save, Stop 0.2 s (11), Save the rest | `part 1`, `part 2`, `part 3` | "part 1.zip to part 3.zip"; no note | OK |
+| 5,000 / fixture, no stop | `part 1`, `part 2` / `Keepsake photos.zip` | match | OK |
+| **Fixture: save, Stop 0.5 s (231), Back, Back to Clean up, Scan a different folder, scan a 1,500-photo folder, Save** | `Keepsake photos.zip`, `… part 2.zip` | note: "Keepsake photos.zip is from an earlier save that didn't finish. **Everything in it is also in the zip file above.**" Content: **231 of 231** earlier files are not in this save. | **FAIL** |
+
+The zip check (`qa-zip-check.mjs`), with the Done and "again" check, gave the same verdict for every run:
+- Exit 0, 0 fails, 0 outside requests, recovery folder unchanged.
+- Fixture: 323/323 bytes match.
+- Fixture with Stop at 0.5 s (151 saved): `Keepsake photos.zip` and `part 2`.
+- 5,000 files: `part 1` and `part 2`, 1,387/1,387.
+- 5,000 files with Stop at 4 s (439 saved): `part 1` and `part 2`.
+- 5,000 files with Stop at 0.2 s (18 saved): `part 1` to `part 3`.
+- Long names: 20/20, longest path 147.
+
+The other checks:
+- `backvisit.mjs` gave no duplicates: fixture `Keepsake photos.zip` and `part 2`, and 5,000 files `part 1` to `part 3`.
+- Largest first: OK on the fixture (49.8 MB in the bar, the ledger and the Save screen; 319 saved) and on 5,000 files (2.1 GB; 1,382 saved; the unticked files were missing by SHA-256). Row names no longer have "(n of m)".
+- Long names in a folder (OPFS): OK, 22/22 saved, 4 existing files unchanged.
+- `safeName`, 200,000 random names against the old code: 0 unexpected differences. The only differences were long names, the new reserved forms and lone surrogates. None was over 150 bytes or 120 characters, and none was unsafe on Windows. `con .jpg` → `_con .jpg`, `COM¹.jpg` → `_COM¹.jpg`, `conin$.jpg` → `_conin$.jpg`, and lone surrogates → `_`.
+
+Commands:
+- `npm test`: 19 files, 295 passed, 4 expected fail.
+- `npm run lint`: exit 0, 1 warning (`src/ui/Preview.tsx:68`, file not in this change).
+- `npm run build` and `tsc -b`: OK.
+- `scripts/e2e.mjs`: exit 0, `Keepsake photos.zip` 322 files, `unzip -t` OK.
+- `qa-save-opfs`: all expectations met.
+- `offline-check`: PASSED.
+- `a11y`: 0 serious, 0 minor, 0 info; 422 checks passed.
+
+9. **Major: the earlier-zip note says a zip from a different scan is fully covered by this save.**
+   - **Cause:** `ZipLog` is module-wide (`src/ui/Save.tsx:38`). `leftovers()` (`src/ui/savePlan.ts`, `covered`) compares `FileRecord.index` values, but indexes restart at 0 with every scan.
+   - **What happens:** after "Scan a different folder" (`src/App.tsx:185`), the old scan's zip ids (all under 1,407) are all "saved" in a new folder with 1,500 kept files. The note then tells the person the earlier zip's photos are all in the new zip. They aren't (231/231 missing), so the person may delete the only zip copy of those photos.
+   - **Repro:** `LANG=C.UTF-8 node scripts/qa-zip-sequence.mjs --exe <chrome> scan=fixtures/recovery review save stop=500 back results startover scan=<1,500-JPEG folder> review save done`. The folder was made by the scratchpad `longnames-gen/many.py <dir> 1500`.
+   - **Fix:** keep the name counter page-wide, but tag each zip with its scan and only count or compare zips from the current scan. Zips from another scan should either get no note, or a note that says they're from another folder, never "covered".
+10. **Minor (a11y, copy):** without "(n of m)", Largest first rows of the same size and kind now have the same checkbox name (e.g. 3 × "5.9 MB. Save video with no date, 42 seconds long"). A screen reader user can't tell them apart. Something like the file's own name or its folder could be added.
+11. **Note:** names restart at `Keepsake photos.zip` after a page reload. The browser then renames it `… (1).zip`, and the Done text can't know that. This is a known limit and not a blocker.
+
+### Third acceptance re-check (Nov 3, QA, after the scan-aware ZipLog)
+
+**Verdict: ACCEPT for the save fix (findings 1, 9 and 10 resolved), with one required fix before commit.** `npm run a11y` is red: 2 serious. That's a test-script mismatch, not an app problem (finding 12).
+
+`scripts/qa-zip-sequence.mjs` now expects earlier notes only for zips of the same scan (agreed behaviour, Lead's call). It still checks every note's claim against the zip contents (SHA-256). Every sequence exited 0 with no duplicate names, Done text and buttons matching the real zips, and recovery folders unchanged:
+
+| Sequence | Downloads | Earlier note |
+|---|---|---|
+| Fixture: Stop at 0.5 s (237), Back, Save | `Keepsake photos.zip`, `part 2` | "Everything in it is also in" (true) |
+| Fixture: Stop at 0.6 s (279), Back, untick 40, Save (283) | `Keepsake photos.zip`, `part 2` | "some … aren't in this save" (true) |
+| Fixture: Stop at 0.5 s, Back, Scan a different folder (1,500 photos), Save | `Keepsake photos.zip`, `part 2` | none (other scan) |
+| Fixture: Stop, Back, Scan a different folder: **the same fixture again**, Save | `Keepsake photos.zip`, `part 2` | none (other scan) |
+| Fixture: Stop, Back, new scan of the 1,500-photo folder, Stop (216), Back, Save | `Keepsake photos.zip`, `part 2`, `part 3` | names only `part 2`, "Everything … also in" (true) |
+| Fixture, Stop, then 1,500-photo folder, Stop, then fixture again, Stop (254), Back, untick 40, Save | `Keepsake photos.zip`, `part 2` … `part 4` | names only `part 3`, "some … aren't" (true) |
+| 5,000: Stop at 4 s (467), Back, Save | `part 1` … `part 3` | `part 1`, "Everything … also in" (true) |
+| 5,000: Stop, Back, Save, Stop, Save the rest, Stop, Back, Save | `part 1` … `part 5` | parts 1-3, "Everything … also in" (true) |
+| 5,000: Stop at 0.2 s (21), Save the rest | `part 1` … `part 3` | none |
+| 5,000 / fixture, no stop | `part 1`, `part 2` / `Keepsake photos.zip` | none |
+
+From the code:
+- "Covered" can only be claimed for zips of the same scan, keyed `scan:index`. The scan id is `run.id`, which goes up on every scan and is never reused (`src/App.tsx`). Within one scan, an index is the same `File`.
+- A file that failed in the current save isn't in `saved`, so the note then says "some … aren't".
+
+I found no sequence that gives a false "covered".
+
+Other runs:
+- **Zip check:** exit 0 for every run, 0 fails, 0 outside requests, recovery folder unchanged.
+  - Fixture: 323/323.
+  - Fixture, Stop at 0.5 s (229 saved): `Keepsake photos.zip` and `part 2`.
+  - 5,000 files: `part 1` and `part 2`, 1,387/1,387.
+  - 5,000 files, Stop at 4 s (465 saved): 2 zips.
+  - 5,000 files, Stop at 0.2 s (21 saved): 3 zips.
+  - Long names: 20/20.
+- **Largest first:** OK. Fixture: 49.8 MB in the bar and on the Save screen, 319 saved. 5,000 files: 2.1 GB, 1,382 saved. Rows are now named e.g. "6 MB, f4448889.mp4. Save video with no date, 42 seconds long".
+- **Long names in a folder (OPFS):** OK.
+
+Commands:
+- `npm test`: 19 files, 297 passed, 4 expected fail.
+- `npm run lint`: exit 0, 1 warning (`src/ui/Preview.tsx:68`).
+- `npm run build` and `tsc -b`: OK.
+- `e2e`: exit 0, `Keepsake photos.zip` 322 files, `unzip -t` OK.
+- `qa-save-opfs`: all expectations met.
+- `offline-check`: PASSED.
+- `a11y`: **exit 1, 2 serious, 420 checks passed.**
+
+12. **Required before commit (test script, not the app):** `scripts/a11y-check.mjs:525` and `:538` match row names with `/^… (KB|MB…)\. Save /`. The new name has the file name after the size ("6 MB, f4448889.mp4. Save …"), so these two serious checks now fail:
+    - "rows named size first and listed biggest first"
+    - "Tab reaches every row (0 of 323)"
+
+    A temporary copy with both patterns changed to also accept `, <file>` passed: **0 serious, 0 minor, 0 info, 422 checks**. The copy was then deleted, and the real script is unchanged. The owner of the a11y check should update the 2 patterns.

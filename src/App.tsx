@@ -47,6 +47,9 @@ export default function App() {
   // The recovery folder's own handle (Chromium's folder picker only), so Save can refuse it (T55).
   const [recoveryRoot, setRecoveryRoot] = useState<RecoveryRoot | undefined>(undefined);
   const [records, setRecords] = useState<FileRecord[]>([]);
+  // Which scan `records` came from (its run id, never reused while the page is open). FileRecord.index
+  // restarts at 0 with every scan, so Save keys what it remembers across visits by this too (T89).
+  const [scanId, setScanId] = useState(0);
   const [movedBack, setMovedBack] = useState<ReadonlySet<SetAsideGroup>>(new Set());
   // What's selected on the review timeline. Kept here so going back to Clean up keeps the choices.
   const [selection, setSelection] = useState(() => new Selection(0));
@@ -134,6 +137,7 @@ export default function App() {
         return;
       }
       setRecords(result);
+      setScanId(run.id);
       setSelection(new Selection(list.length));
       setScreen({ name: 'results' });
     } catch {
@@ -197,7 +201,7 @@ export default function App() {
           />
         )}
         {screen.name === 'save' && (
-          <Save records={records} files={files} ids={screen.ids} recoveryRoot={recoveryRoot} onBack={() => setScreen({ name: 'review' })} onDone={setSaveDone} />
+          <Save records={records} files={files} scanId={scanId} ids={screen.ids} recoveryRoot={recoveryRoot} onBack={() => setScreen({ name: 'review' })} onDone={setSaveDone} />
         )}
         {screen.name === 'error' && (
           <main className="page narrow">

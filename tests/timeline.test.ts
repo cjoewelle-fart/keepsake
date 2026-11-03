@@ -217,6 +217,14 @@ describe('timeline words', () => {
     expect(copy.timeline.tileLabel('photo', undefined, 3, 312)).toBe('Save photo with no date (3 of 312)');
     expect(copy.timeline.tileLabel('video', '2024-06-28T11:40:00', 4, 6, 42.4)).toBe('Save video from 28 June 2024, 11:40, 42 seconds long');
     expect(copy.timeline.tileLabel('video', undefined, 1, 2, 65)).toBe('Save video with no date (1 of 2), 1 minute 5 seconds long');
+    // Largest first (T60 QA): no place in the date view.
+    expect(copy.timeline.sizeRowLabel('6 MB', copy.timeline.tileLabel('video', undefined, undefined, undefined, 42)))
+      .toBe('6 MB. Save video with no date, 42 seconds long');
+    // T89 QA (a11y): rows with the same size, kind and date differ by the file's own name.
+    const same = copy.timeline.tileLabel('video', undefined, undefined, undefined, 42);
+    expect(copy.timeline.sizeRowLabel('5.9 MB', same, 'f0012345.mov')).toBe('5.9 MB, f0012345.mov. Save video with no date, 42 seconds long');
+    expect(copy.timeline.sizeRowLabel('5.9 MB', same, 'f0012345.mov')).not.toBe(copy.timeline.sizeRowLabel('5.9 MB', same, 'f0012346.mov'));
+    expect(copy.viewer.open(copy.timeline.sizeRowOpen(same, 'f0012345.mov'))).toBe('View larger: Save video with no date, 42 seconds long, f0012345.mov');
     expect(copy.timeline.tileLabel('photo', '2024-06-28T09:12:00', 1, 6, 9)).toBe('Save photo from 28 June 2024, 09:12');
     expect([0.2, 42, 59.6, 600, 725, 3723, 7200].map(runTime)).toEqual(['0:01', '0:42', '1:00', '10:00', '12:05', '1:02:03', '2:00:00']);
     expect([1, 60, 61, 3600, 3723].map(runTimeWords)).toEqual(['1 second', '1 minute', '1 minute 1 second', '1 hour', '1 hour 2 minutes']);

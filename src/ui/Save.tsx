@@ -6,7 +6,7 @@ import type { FileRecord } from '../engine/types';
 import type { SaveApi } from '../worker/save.worker';
 import SaveWorker from '../worker/save.worker.ts?worker&inline';
 import { bytes, copy, n } from './copy';
-import { ZIP_LIMITS, checkRecoveryFolder, insideRecovery, planNames, receiptText, scanFolders, sortedInto, splitParts, zipPath } from './savePlan';
+import { ZIP_LIMITS, checkRecoveryFolder, insideRecovery, planNames, receiptText, scanFolders, sortedInto, splitParts, ZipLog, zipPath } from './savePlan';
 import type { FolderCheck, Planned, RecoveryRootDir, ResolvingDir } from './savePlan';
 import type { RecoveryRoot } from './recoveryFolder';
 import { canSaveToFolder, download, ensureWritable, hasRoot, newFolderSession, pickFolder, saveAsZip, saveToFolder } from './saveRun';
@@ -18,6 +18,8 @@ import { mediaType } from './timeline';
 type Props = {
   records: FileRecord[];
   files: File[];
+  /** Which scan `records` came from (unique while the page is open), for the page-wide zip log (T89). */
+  scanId: number;
   /** Selected FileRecord indices, from the review timeline. */
   ids: number[];
   /** The recovery folder's own handle, when it was picked with the browser's folder picker. */
@@ -34,6 +36,8 @@ type Phase =
   | { k: 'done'; when: Date };
 
 const s = copy.save;
+/** Every zip downloaded while this page is open, across visits to the Save step (T89). */
+const zipLog = new ZipLog();
 const problemText = (problem: 'denied' | 'recovery' | 'unchecked' | 'unsupported', mediaOnly: boolean): readonly [string, string] =>
   problem === 'denied' ? [s.deniedH, s.deniedBody]
     : problem === 'recovery' ? [s.recoveryH, s.recoveryBody]
@@ -41,7 +45,7 @@ const problemText = (problem: 'denied' | 'recovery' | 'unchecked' | 'unsupported
         : [s.unsupportedH, s.unsupportedBody(mediaOnly)];
 const split = (list: readonly Planned[]) => splitParts(list, (p) => entryCost(zipPath(p), p.size), END_COST);
 
-export function Save({ records, files, ids, recoveryRoot, onBack, onDone }: Props) {
+export function Save({ records, files, scanId, ids, recoveryRoot, onBack, onDone }: Props) {
   // Zip downloads where the browser can't save into a folder safely (no folder picker, or no
   // move()); also if move() turns out not to work for the chosen folder.
   const [folderMode, setFolderMode] = useState(() => canSaveToFolder());
@@ -77,6 +81,8 @@ export function Save({ records, files, ids, recoveryRoot, onBack, onDone }: Prop
     folder: undefined as FolderSession | undefined,
     savedTo: [] as string[],
     zips: [] as { name: string; blob: Blob }[],
+    /** This visit in the page-wide zip log. */
+    visit: zipLog.newVisit(scanId),
     existed: false,
     /** A newly chosen folder (and whether it already had a "Keepsake photos" folder). */
     setFolder(f: FolderSession, existed: boolean) {
@@ -118,6 +124,7 @@ export function Save({ records, files, ids, recoveryRoot, onBack, onDone }: Prop
     stop.current = false;
     setStopping(false);
     if (end === 'done') {
+      zipLog.finish(sess.visit);
       setPhase({ k: 'done', when: new Date() });
     } else if (end === 'unsupported') {
       // Nothing was written: offer zip downloads instead.
@@ -174,6 +181,7 @@ export function Save({ records, files, ids, recoveryRoot, onBack, onDone }: Prop
   async function runZip() {
     const rest = new Set(remaining().map((r) => r.index));
     const parts = split(planned.filter((p) => rest.has(p.id)));
+    // Named from the page-wide log, so no name is ever used twice while the page is open (T89).
     sess.failed.clear();
     let worked = sess.saved.size;
     setProgress({ done: worked, part: 1, parts: parts.length });
@@ -182,8 +190,8 @@ export function Save({ records, files, ids, recoveryRoot, onBack, onDone }: Prop
       ...ev,
       onPart: (i) => setProgress((p) => ({ ...p, part: i })),
       onWorked: () => { worked++; setProgress((p) => ({ ...p, done: worked })); },
-      onZip: (blob, i) => {
-        const name = s.zipName(i, parts.length);
+      onZip: (blob, _i, ids) => {
+        const name = zipLog.add(sess.visit, parts.length, ids);
         sess.zips.push({ name, blob });
         download(blob, name);
       },
@@ -271,6 +279,7 @@ export function Save({ records, files, ids, recoveryRoot, onBack, onDone }: Prop
         mediaOnly={mediaOnly}
         folderNames={sess.savedTo}
         zips={folderMode ? undefined : sess.zips}
+        earlier={folderMode ? undefined : zipLog.leftovers(sess.visit, sess.saved)}
         sorted={sortedInto(folderMode
           ? [...(sess.folder?.placed.values() ?? [])].map((dir) => ({ dir }))
           : planned.filter((p) => sess.saved.has(p.id)))}
@@ -363,9 +372,21 @@ function ZipAgain({ zips }: { zips: { name: string; blob: Blob }[] }) {
       <p className="sub-sm">{s.zipAgainNote}</p>
       <div className="actions">
         {zips.map((z, i) => (
-          <button key={i} type="button" className="btn btn-secondary btn-sm" onClick={() => download(z.blob, z.name)}>{s.zipAgain(i + 1, zips.length)}</button>
+          <button key={i} type="button" className="btn btn-secondary btn-sm" onClick={() => download(z.blob, z.name)}>{s.zipAgain(z.name)}</button>
         ))}
       </div>
+    </div>
+  );
+}
+
+/** Where to find this save's zips: a sentence, or a sentence and a list of names (T89). */
+function FindZips({ names }: { names: string[] }) {
+  const f = s.findZip(names);
+  if (!f.list) return <p className="find" data-k="find">{f.text}</p>;
+  return (
+    <div className="find" data-k="find">
+      <p>{f.text}</p>
+      <ul className="zip-names">{f.list.map((name) => <li key={name}>{name}</li>)}</ul>
     </div>
   );
 }
@@ -377,11 +398,13 @@ type DoneProps = {
   mediaOnly: boolean;
   folderNames: string[];
   zips?: { name: string; blob: Blob }[];
+  /** Zips from an earlier save on this page that didn't finish. */
+  earlier?: { names: string[]; covered: boolean };
   sorted: { years: number; months: number; noDate: number };
   when: Date;
 };
 
-function Done({ total, saved, failedRecords, mediaOnly, folderNames, zips, sorted, when }: DoneProps) {
+function Done({ total, saved, failedRecords, mediaOnly, folderNames, zips, earlier, sorted, when }: DoneProps) {
   const [showFailed, setShowFailed] = useState(false);
   const failed = failedRecords.length;
   const savedTo = zips ? s.rSavedToZip(zips.length) : folderNames.map(s.rSavedToFolder).join(' and ');
@@ -402,7 +425,10 @@ function Done({ total, saved, failedRecords, mediaOnly, folderNames, zips, sorte
         </h1>
         {failed > 0 && <p className="note-box">{s.failedLine(failed)}</p>}
         <p className="lede">{zips ? s.doneZipLine(zips.length) : s.doneLine}</p>
-        <p className="find" data-k="find">{zips ? s.findZip(zips.length) : folderNames.map(s.findThem).join(' ')}</p>
+        {zips ? <FindZips names={zips.map((z) => z.name)} /> : <p className="find" data-k="find">{folderNames.map(s.findThem).join(' ')}</p>}
+        {zips && earlier && earlier.names.length > 0 && (
+          <p className="sub-sm" data-k="earlier">{s.earlierZips(earlier.names, earlier.covered, zips.length, mediaOnly)}</p>
+        )}
         {zips && zips.length > 0 && <div className="no-print"><ZipAgain zips={zips} /></div>}
         <p className="sub-sm">{s.closeNow}</p>
         <p className="sub-sm">{s.secondCopy}</p>

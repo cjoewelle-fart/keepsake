@@ -8,7 +8,9 @@ import { describe, expect, it } from 'vitest';
 import type { FileRecord } from '../src/engine/types';
 import { TEMP_PREFIX, newFolderSession, saveAsZip, saveToFolder } from '../src/ui/saveRun';
 import type { DirHandle } from '../src/ui/saveRun';
-import { planNames } from '../src/ui/savePlan';
+import { ZipLog, planNames, splitParts } from '../src/ui/savePlan';
+import type { Planned } from '../src/ui/savePlan';
+import { copy } from '../src/ui/copy';
 import { crc32 } from '../src/ui/zip';
 
 const err = (name: string) => new DOMException(name, name);
@@ -339,5 +341,98 @@ describe('saving as zip files', () => {
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }
+  });
+});
+
+// T89: what Save.tsx does. Each visit is one mount of <Save> (its own `saved` set, as "Back to review"
+// then Save again starts over); the ZipLog is shared by the whole page. In a visit, run 1 stops after
+// `stopAfter` files and "Save the rest" (run 2) saves only what's left.
+function zipPage(count: number, perPart: number, log = new ZipLog(), scan = 1) {
+  // Indices 0 … count-1, as in a real scan (each scan starts again at 0).
+  const recs = Array.from({ length: count }, (_, k) => ({ ...rec(`2024-06-${String(1 + (k % 28)).padStart(2, '0')}T10:${String(k % 60).padStart(2, '0')}:00`), index: k }));
+  const files: File[] = [];
+  recs.forEach((r, k) => { files[r.index] = new File([bytesOf(100, k)], `f${k}.jpg`); });
+  const plan = planNames(recs, (r) => files[r.index].size);
+  const split = (ps: readonly Planned[]) => splitParts(ps, () => 1, 0, { maxBytes: perPart, maxEntries: 1e9 });
+  const crc = async (f: File) => { const b = new Uint8Array(await f.arrayBuffer()); return { crc: crc32(b), size: b.length }; };
+  const all: string[] = [];
+  /** One visit: runs until done (Save the rest after a Stop) unless `thenBack`. */
+  async function visit(stopAfter: number, thenBack = false) {
+    const v = log.newVisit(scan);
+    const zips: string[] = [];
+    const saved = new Set<number>();
+    let worked = 0;
+    for (let run = 0; ; run++) {
+      const parts = split(plan.filter((p) => !saved.has(p.id)));
+      const end = await saveAsZip(parts, parts.map((_, k) => k + 1), files, crc, {
+        onSaved: (id) => saved.add(id), onFailed: () => {}, onPart: () => {}, onWorked: () => { worked++; },
+        shouldStop: () => run === 0 && worked >= stopAfter,
+        onZip: (_b, _i, ids) => { const name = log.add(v, parts.length, ids); zips.push(name); all.push(name); },
+      });
+      if (end === 'done') { log.finish(v); break; }
+      if (thenBack) break;
+    }
+    return { zips, saved: saved.size, find: copy.save.findZip(zips), earlier: log.leftovers(v, saved) };
+  }
+  return { visit, all, count };
+}
+
+describe('zip names across Stop, "Save the rest" and "Back to review" (T89)', () => {
+  it('an uninterrupted save: "Keepsake photos.zip", or parts 1 to N', async () => {
+    expect((await zipPage(5, 10).visit(Infinity)).zips).toEqual(['Keepsake photos.zip']);
+    const v = await zipPage(5, 2).visit(Infinity);
+    expect(v.zips).toEqual(['Keepsake photos part 1.zip', 'Keepsake photos part 2.zip', 'Keepsake photos part 3.zip']);
+    expect(v.find.text).toBe('In your Downloads folder, look for these 3 zip files: Keepsake photos part 1.zip to Keepsake photos part 3.zip.');
+  });
+
+  it('one part, Stop then Save the rest: two names, and the Done text names both (both are needed)', async () => {
+    const v = await zipPage(6, 10).visit(2);
+    expect(v.saved).toBe(6);
+    expect(v.zips).toEqual(['Keepsake photos.zip', 'Keepsake photos part 2.zip']);
+    expect(v.find.text).toBe('In your Downloads folder, look for these 2 zip files: Keepsake photos.zip and Keepsake photos part 2.zip.');
+    expect(v.earlier.names).toEqual([]);
+  });
+
+  it('several parts, Stop then Save the rest: numbering goes on, with no gap and no "of N"', async () => {
+    const v = await zipPage(7, 2).visit(3); // parts of 2: stopped after 1 file of part 2
+    expect(v.saved).toBe(7);
+    expect(v.zips).toEqual(['Keepsake photos part 1.zip', 'Keepsake photos part 2.zip', 'Keepsake photos part 3.zip', 'Keepsake photos part 4.zip']);
+    expect(v.find.text).toBe('In your Downloads folder, look for these 4 zip files: Keepsake photos part 1.zip to Keepsake photos part 4.zip.');
+  });
+
+  it('Stop, Back to review, Save again (one part): no name reused; Done names only this save and explains the old zip', async () => {
+    const page = zipPage(6, 10);
+    const first = await page.visit(2, true);
+    expect(first.zips).toEqual(['Keepsake photos.zip']);
+    const again = await page.visit(Infinity);
+    expect(again.saved).toBe(6); // everything again, not just the rest
+    expect(again.zips).toEqual(['Keepsake photos part 2.zip']);
+    expect(new Set(page.all).size).toBe(page.all.length);
+    expect(again.find.text).toBe('In your Downloads folder, look for Keepsake photos part 2.zip.');
+    expect(again.earlier).toEqual({ names: ['Keepsake photos.zip'], covered: true });
+  });
+
+  it('Stop, Back to review, Save again (several parts): every name new; the Done text is this save only', async () => {
+    const page = zipPage(7, 2);
+    const first = await page.visit(3, true);
+    expect(first.zips).toEqual(['Keepsake photos part 1.zip', 'Keepsake photos part 2.zip']);
+    const again = await page.visit(Infinity);
+    expect(again.zips).toEqual(['Keepsake photos part 3.zip', 'Keepsake photos part 4.zip', 'Keepsake photos part 5.zip', 'Keepsake photos part 6.zip']);
+    expect(new Set(page.all.map((n) => n.toLowerCase())).size).toBe(page.all.length);
+    expect(again.find.text).toBe('In your Downloads folder, look for these 4 zip files: Keepsake photos part 3.zip to Keepsake photos part 6.zip.');
+    expect(again.earlier).toEqual({ names: ['Keepsake photos part 1.zip', 'Keepsake photos part 2.zip'], covered: true });
+    // And after that save finished, a later one doesn't mention any of them.
+    expect((await page.visit(Infinity)).earlier.names).toEqual([]);
+  });
+
+  it('Stop on folder A, Start over, scan folder B, save: the Done screen for B never mentions the zip from A (indices restart per scan)', async () => {
+    const log = new ZipLog();
+    const a = zipPage(6, 10, log, 1);
+    expect((await a.visit(2, true)).zips).toEqual(['Keepsake photos.zip']);
+    const b = zipPage(8, 10, log, 2); // indices 0-7: they include all of A's 0-5
+    const v = await b.visit(Infinity);
+    expect(v.zips).toEqual(['Keepsake photos part 2.zip']);
+    expect(v.earlier).toEqual({ names: [], covered: true });
+    expect(v.find.text).toBe('In your Downloads folder, look for Keepsake photos part 2.zip.');
   });
 });

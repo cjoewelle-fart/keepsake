@@ -522,7 +522,7 @@ async function keyboard(browser) {
     await axe(page, run, screen);
     const unit = { bytes: 1, byte: 1, KB: 1e3, MB: 1e6, GB: 1e9, TB: 1e12 };
     const sizes = (await page.locator('.tl-row input[type=checkbox]').evaluateAll((els) => els.map((e) => e.getAttribute('aria-label') ?? '')))
-      .map((x) => { const m = x.match(/^([\d.,]+) (bytes?|KB|MB|GB|TB)\. Save /); return m ? Number(m[1].replace(/,/g, '')) * unit[m[2]] : NaN; });
+      .map((x) => { const m = x.match(/^([\d.,]+) (bytes?|KB|MB|GB|TB)(?:, [^]*?)?\. Save /); return m ? Number(m[1].replace(/,/g, '')) * unit[m[2]] : NaN; });
     check(sizes.length > 0 && sizes.every((x, k) => !Number.isNaN(x) && (k === 0 || x <= sizes[k - 1])), 'serious', run, screen, `rows named size first and listed biggest first (${sizes.length} drawn)`);
     const bytesBefore = await page.locator('dd[data-k=size]').innerText();
     await page.locator('.tl-row input[type=checkbox]').first().focus();
@@ -535,7 +535,7 @@ async function keyboard(browser) {
     await page.keyboard.press('Space');
     await sizeBtn.focus();
     const rStops = await sweep(page, run, screen, { max: total * 2 + 200 });
-    const rows = rStops.filter((s) => /^[\d.,]+ (bytes?|KB|MB|GB|TB)\. Save /.test(s.name)).length;
+    const rows = rStops.filter((s) => /^[\d.,]+ (bytes?|KB|MB|GB|TB)(?:, [^]*?)?\. Save /.test(s.name)).length;
     check(rows === total, 'serious', run, screen, `Tab reaches every row (${rows} of ${total}; lazy drawing must not skip any)`);
     const dateBtn = page.getByRole('button', { name: 'By date', exact: true });
     await dateBtn.focus();

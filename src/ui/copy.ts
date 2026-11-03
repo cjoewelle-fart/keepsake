@@ -588,14 +588,20 @@ export const copy = {
     // "Not selected" isn't in T22 (it has "Screenshots", which the app can't detect): needs UX writer review.
     filters: { all: 'All', photos: 'Photos', videos: 'Videos', unselected: 'Not selected' },
     // T60 "Largest first" (all new, needs UX writer review: see review-export-copy.md §3b).
-    orderLabel: 'Order',
+    orderLabel: 'Sort',
     orders: { date: 'By date', size: 'Largest first' },
     /** Said by the status line when the order changes. */
     orderAnnounce: { date: 'Showing by date.', size: 'Showing largest first.' },
     /** Above the list in the Largest first order. */
-    sizeNote: 'The biggest files are at the top, so you can see what takes the most space. Nothing is deleted.',
+    sizeNote: "Largest files first. If the drive you're saving to is small, you can unselect big files you don't need. They stay where they are now. Nothing is deleted.",
     /** A row's checkbox name: the size first (what this order is for), then the tile's own name. */
-    sizeRowLabel: (size: string, name: string) => `${size}. ${name}`,
+    /**
+     * `file`: the file's own name (e.g. f12345678.mov), so rows of the same size, kind and date get
+     * different names in Largest first (T89 QA, a11y). New, needs UX writer check.
+     */
+    sizeRowLabel: (size: string, name: string, file?: string) => (file ? `${size}, ${file}. ${name}` : `${size}. ${name}`),
+    /** The row's "View larger" name in Largest first, with the file's own name (T89 QA). New, needs UX writer check. */
+    sizeRowOpen: (name: string, file: string) => `${name}, ${file}`,
     /** The kind of file on a row, after its date. */
     rowKind: { photo: 'Photo', video: 'Video', other: 'File' },
     /** Next to the selected count in the bars, in the Largest first order. */
@@ -613,7 +619,8 @@ export const copy = {
     daySelected: (sel: number, total: number) =>
       sel === 0 ? 'none selected' : sel === total ? (total === 1 ? '1 selected' : `all ${n(total)} selected`) : `${n(sel)} of ${n(total)} selected`,
     /** Checkbox names. "Save …" says what ticking does. */
-    tileLabel: (type: 'photo' | 'video' | 'other', takenAt: string | undefined, pos: number, of: number, durationSec?: number, cantPlay = false) => {
+    /** `pos`/`of` (a no-date file's place in its day) are left out in Largest first, where they mean nothing. */
+    tileLabel: (type: 'photo' | 'video' | 'other', takenAt: string | undefined, pos: number | undefined, of: number | undefined, durationSec?: number, cantPlay = false) => {
       const what = type === 'other' ? 'file' : type;
       // Video length (not in T22: needs UX writer review). Mockup TL: "…, video, 0:42".
       const long = type === 'video' && durationSec !== undefined ? `, ${runTimeWords(durationSec)} long` : '';
@@ -621,7 +628,7 @@ export const copy = {
       const note = cantPlay ? `. ${copy.timeline.cantPlay}` : '';
       return takenAt
         ? `Save ${what} from ${Number(takenAt.slice(8, 10))} ${monthYear(takenAt.slice(0, 7))}, ${takenAt.slice(11, 16)}${long}${note}`
-        : `Save ${what} with no date (${n(pos)} of ${n(of)})${long}${note}`;
+        : `Save ${what} with no date${pos !== undefined && of !== undefined ? ` (${n(pos)} of ${n(of)})` : ''}${long}${note}`;
     },
     video: 'Video',
     /**
@@ -676,7 +683,10 @@ export const copy = {
     noDateFolder: 'No date',
     /** '06' → '06 June' */
     monthFolder: (mo: string) => `${mo} ${MONTHS[Number(mo) - 1]}`,
-    zipName: (i: number, total: number) => (total === 1 ? 'Keepsake photos.zip' : `Keepsake photos ${i} of ${total}.zip`),
+    // T89 (UX writer, Nov 3): one zip is "Keepsake photos.zip"; any other is "part N", N counting
+    // every zip made while the page is open (so a save after Stop never reuses a name).
+    zipName: 'Keepsake photos.zip',
+    zipPart: (k: number) => `Keepsake photos part ${k}.zip`,
     receiptFile: 'Keepsake receipt.txt', // new, not in T22
     /** "photos and videos", or "files" when the selection has files that are neither. */
     what: (x: number, mediaOnly: boolean) => (mediaOnly ? plural(x, 'photo or video', 'photos and videos') : plural(x, 'file', 'files')),
@@ -782,10 +792,35 @@ export const copy = {
         : `They’re in ${n(parts)} zip files in your Downloads folder. Open each one to see your photos, sorted into a folder for each year and month.`,
     /** Browsers can't open a folder in File Explorer or Finder (T25 finding), so say where it is. */
     findThem: (folder: string) => `To see them, open ${folder} › Keepsake photos in File Explorer (Windows) or Finder (Mac).`,
-    findZip: (parts: number) =>
-      parts === 1
-        ? 'In your Downloads folder, look for Keepsake photos.zip.'
-        : `In your Downloads folder, look for Keepsake photos 1 of ${n(parts)}.zip to Keepsake photos ${n(parts)} of ${n(parts)}.zip.`,
+    /**
+     * Built from the names of this save's zips (T89, UX writer, Nov 3). 2 names go in the sentence
+     * with "and"; 3 or more in an unbroken run read "… part 1.zip to … part 5.zip"; others come as a list.
+     */
+    findZip: (names: readonly string[]): { text: string; list?: string[] } => {
+      const total = names.length;
+      const lead = 'In your Downloads folder, look for';
+      if (total === 0) return { text: '' };
+      if (total === 1) return { text: `${lead} ${names[0]}.` };
+      const first = /^Keepsake photos part (\d+)\.zip$/.exec(names[0]);
+      const unbroken = !!first && names.every((name, i) => name === `Keepsake photos part ${Number(first[1]) + i}.zip`);
+      if (total === 2) return { text: `${lead} these 2 zip files: ${names[0]} and ${names[1]}.` };
+      if (unbroken) return { text: `${lead} these ${n(total)} zip files: ${names[0]} to ${names[total - 1]}.` };
+      return { text: `${lead} these ${n(total)} zip files:`, list: [...names] };
+    },
+    /**
+     * Zips left from an earlier save that didn't finish (Stop, then Back to review, then Save again).
+     * `covered`: everything in them is in this save too. T89, new, needs UX writer check.
+     */
+    earlierZips: (names: readonly string[], covered: boolean, zipsNow: number, mediaOnly: boolean) => {
+      const one = names.length === 1;
+      const list = one ? names[0] : `${names.slice(0, -1).join(', ')} and ${names[names.length - 1]}`;
+      const what = mediaOnly ? 'photos and videos' : 'files';
+      return `${list} ${one ? 'is' : 'are'} from an earlier save that didn’t finish. ${
+        covered
+          ? `Everything in ${one ? 'it' : 'them'} is also in the ${zipsNow === 1 ? 'zip file' : 'zip files'} above.`
+          : `${one ? 'It has' : 'They have'} some ${what} that aren’t in this save.`
+      }`;
+    },
     closeNow: 'You can close Keepsake now. There’s nothing else to do.',
     secondCopy: 'If you can, keep a second copy too, on a USB drive or a backup you already use.',
     receiptH: 'Your receipt',
@@ -811,7 +846,8 @@ export const copy = {
     seeWhich: 'See which ones',
     failedListLabel: 'Files that couldn’t be saved, by where they are in your recovery folder', // new, not in T22
     zipAgainNote: 'If a zip file didn’t download, download it again here. Your photos are fine, and nothing was deleted.', // adapted from T22 section 6
-    zipAgain: (i: number, parts: number) => (parts === 1 ? 'Download zip file again' : `Download zip file ${n(i)} of ${n(parts)} again`),
+    /** Built from the file's own name, so the button says what it downloads (T89, new, needs UX writer check). */
+    zipAgain: (name: string) => `Download ${name} again`,
     /** "16 October 2026, 16:05" (this computer's clock) */
     when: (d: Date) => `${d.getDate()} ${MONTHS[d.getMonth()]} ${d.getFullYear()}, ${String(d.getHours()).padStart(2, '0')}:${String(d.getMinutes()).padStart(2, '0')}`,
   },

@@ -374,6 +374,7 @@ progress::-moz-progress-bar { background: var(--accent); border-radius: 999px; }
 .done-side .fan { height: 170px; }
 .done-side h1 { font-size: clamp(30px, 4.6vw, 40px); line-height: 1.08; }
 .find { font-size: 17px; font-weight: 700; overflow-wrap: anywhere; }
+.find .zip-names { margin: 6px 0 0; padding-left: 1.2em; display: flex; flex-direction: column; gap: 2px; }
 .receipt { flex: 999 1 520px; min-width: 0; background: var(--surface); border-radius: 20px; padding: 30px; display: flex; flex-direction: column; gap: 16px; box-shadow: 0 1px 2px rgba(31, 36, 39, 0.08), 0 10px 30px rgba(31, 36, 39, 0.06); }
 .receipt-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
 .receipt-head h2 { font-size: 24px; }

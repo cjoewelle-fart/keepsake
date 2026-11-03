@@ -222,9 +222,10 @@ export function Timeline({ records, files, movedBack, setAside, selection: sel, 
     for (const m of tl.months) for (const d of m.days) d.ids.forEach((id, k) => at.set(id, { pos: k + 1, of: d.ids.length, month: m.key }));
     return at;
   }, [tl]);
+  // In Largest first, a no-date file's place in the date view ("207 of 460") means nothing, so it's left out (T60 QA).
   const labelOf = (id: number) => {
-    const p = place.get(id);
-    return tileName(byIndex[id], p?.pos ?? 1, p?.of ?? 1);
+    const p = bySize ? undefined : place.get(id);
+    return tileName(byIndex[id], p?.pos, p?.of);
   };
   /** Back to the opening control of the last file shown, drawing its day (and jumping to its month) if it isn't drawn. */
   const closeViewer = (lastId: number) => {
@@ -514,7 +515,7 @@ function DayHead({ ymd, state, count, total, onToggle }: { ymd: string; state: T
 }
 
 /** A tile's name (its checkbox's, and in the viewer the photo's). */
-function tileName(r: FileRecord, pos: number, of: number) {
+function tileName(r: FileRecord, pos?: number, of?: number) {
   const type = mediaType(r);
   return t.tileLabel(type, r.takenAt, pos, of, r.durationSec, type === 'video' && playableHere(r) === false);
 }
@@ -559,6 +560,13 @@ function Tile({ r, file, pos, of, on, onChange, onOpen }: TileProps) {
   );
 }
 
+/** The file's own name, for telling rows apart by ear (T89 QA); a very long one is cut to 40 characters. */
+function shortFileName(path: string): string {
+  const name = path.slice(path.lastIndexOf('/') + 1);
+  const chars = Array.from(name);
+  return chars.length > 40 ? `${chars.slice(0, 39).join('')}…` : name;
+}
+
 type RowProps = { r: FileRecord; file: File; name: string; on: boolean; onChange: (on: boolean) => void; onOpen: () => void };
 /**
  * T60: one file in the Largest first list: its checkbox, a small preview (which opens the viewer,
@@ -568,13 +576,14 @@ function SizeRow({ r, file, name, on, onChange, onOpen }: RowProps) {
   const type = mediaType(r);
   const cantPlay = type === 'video' && playableHere(r) === false;
   const size = bytes(r.size);
+  const own = shortFileName(r.path);
   return (
     <div className={`tl-row${on ? '' : ' off'}`}>
       <label className="tl-row-chk">
-        <input type="checkbox" checked={on} onChange={(e) => onChange(e.target.checked)} aria-label={t.sizeRowLabel(size, name)} />
+        <input type="checkbox" checked={on} onChange={(e) => onChange(e.target.checked)} aria-label={t.sizeRowLabel(size, name, own)} />
       </label>
       <button type="button" className="gf-open" data-view={r.index} onClick={onOpen}>
-        <span className="sr-only">{copy.viewer.open(name)}</span>
+        <span className="sr-only">{copy.viewer.open(t.sizeRowOpen(name, own))}</span>
         <span aria-hidden="true"><Preview file={file} record={r} size="sm" /></span>
       </button>
       <div className="gf-text" aria-hidden="true">

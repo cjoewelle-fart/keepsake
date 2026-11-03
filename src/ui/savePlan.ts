@@ -48,17 +48,68 @@ export function extFor(kind: Kind, path: string): string {
   return ALIASES[kind]?.includes(own) || own === DEFAULT_EXT[kind] ? own : DEFAULT_EXT[kind];
 }
 
-const RESERVED = /^(con|prn|aux|nul|com[1-9]|lpt[1-9])(\.|$)/i;
+/**
+ * Names Windows keeps for devices, whatever comes after them: "CON", "con.jpg", "CON .jpg"
+ * (spaces before the dot are ignored), COM0-9 and LPT0-9 with superscript ¹²³ too, CONIN$, CONOUT$.
+ */
+const RESERVED = /^(con|prn|aux|nul|com[0-9\u00b9\u00b2\u00b3]|lpt[0-9\u00b9\u00b2\u00b3]|conin\$|conout\$) *(\.|$)/i;
+/** Half of a surrogate pair with no other half: not text, and not valid UTF-8 in a zip or on disk. */
+const LONE_SURROGATE = /[\ud800-\udbff](?![\udc00-\udfff])|(?<![\ud800-\udbff])[\udc00-\udfff]/g;
+
+/**
+ * Longest name safeName gives, in UTF-8 bytes (macOS and Linux allow 255 per name) and in
+ * UTF-16 code units (for the path). NameBook may add " (n)" after it, and the longest folder
+ * part is "Keepsake photos/No date/" (24), so a full path inside the zip or the chosen folder
+ * stays under 160 characters (Windows Explorer adds the Downloads folder and the zip's own
+ * folder in front, and its limit is 260).
+ */
+export const NAME_LIMITS = { bytes: 150, chars: 120 } as const;
+
+/** UTF-8 length of a string, without encoding it. */
+export function utf8Bytes(s: string): number {
+  let b = 0;
+  for (let i = 0; i < s.length; i++) {
+    const c = s.charCodeAt(i);
+    if (c < 0x80) b += 1;
+    else if (c < 0x800) b += 2;
+    else if (c >= 0xd800 && c <= 0xdbff && i + 1 < s.length && (s.charCodeAt(i + 1) & 0xfc00) === 0xdc00) { b += 4; i++; }
+    else b += 3; // other BMP characters (a lone surrogate is written as U+FFFD, also 3)
+  }
+  return b;
+}
+
+const graphemes = typeof Intl !== 'undefined' && 'Segmenter' in Intl ? new Intl.Segmenter(undefined, { granularity: 'grapheme' }) : undefined;
+
+/** The longest start of `s` within both limits, cut between characters (never inside one). */
+function cut(s: string, maxBytes: number, maxChars: number): string {
+  let out = '';
+  let bytes = 0;
+  const pieces: Iterable<string> = graphemes ? [...graphemes.segment(s)].map((g) => g.segment) : Array.from(s); // code points
+  for (const g of pieces) {
+    const b = utf8Bytes(g);
+    if (bytes + b > maxBytes || out.length + g.length > maxChars) break;
+    out += g;
+    bytes += b;
+  }
+  return out;
+}
+
 /** A name that's safe on Windows, macOS and Linux (and that the File System Access API accepts). */
 export function safeName(name: string): string {
   // eslint-disable-next-line no-control-regex
-  let s = name.normalize('NFC').replace(/[<>:"/\\|?*\u0000-\u001f\u007f]/g, '_').replace(/[. ]+$/, '').trim();
+  let s = name.replace(LONE_SURROGATE, '_').normalize('NFC').replace(/[<>:"/\\|?*\u0000-\u001f\u007f]/g, '_').replace(/[. ]+$/, '').trim();
   if (!s || s === '.' || s === '..') s = 'file';
-  if (RESERVED.test(s)) s = `_${s}`;
-  if (s.length > 180) {
+  // One byte is kept for the "_" a reserved name gets.
+  const maxBytes = NAME_LIMITS.bytes - 1;
+  const maxChars = NAME_LIMITS.chars - 1;
+  if (s.length > maxChars || utf8Bytes(s) > maxBytes) {
     const e = extOf(s);
-    s = e ? `${s.slice(0, 180 - e.length - 1)}.${e}` : s.slice(0, 180);
+    const own = e ? s.slice(-e.length) : ''; // the extension as written (extOf lower-cases it)
+    const room = e ? e.length + 1 : 0;
+    const base = cut(e ? s.slice(0, -room) : s, maxBytes - room, maxChars - room).replace(/[. ]+$/, '').trim() || 'file';
+    s = e ? `${base}.${own}` : base;
   }
+  if (RESERVED.test(s)) s = `_${s}`;
   return s;
 }
 
@@ -158,6 +209,57 @@ export function planNames(records: readonly FileRecord[], sizeOf: (r: FileRecord
     const { dir, base, ext } = placeFor(r);
     return { id: r.index, dir, name: book.claim(dirKey(dir), base, ext), size: sizeOf(r), takenAt: r.takenAt };
   });
+}
+
+/**
+ * Every zip downloaded while this page is open (T89), so no two downloads ever share a name, even
+ * after Stop, "Back to review" and Save again (which starts a new visit to the Save step).
+ * - The very first zip, when its save fits in one, is "Keepsake photos.zip".
+ * - Every other zip is "Keepsake photos part N.zip", N counting every zip made on this page.
+ * Names are given out when a zip is made, not when it's planned, so a stopped part or one with no
+ * readable file never leaves a gap.
+ */
+export class ZipLog {
+  /** Files are remembered as "scan:index", since FileRecord.index restarts at 0 with every scan. */
+  private made: { name: string; files: ReadonlySet<string>; visit: number }[] = [];
+  /** Visit → the scan it saved from. */
+  private visitScan: number[] = [0];
+  private finished = new Set<number>();
+
+  /** A new visit to the Save step, saving files from scan `scan` (unique while the page is open). */
+  newVisit(scan: number): number {
+    this.visitScan.push(scan);
+    return this.visitScan.length - 1;
+  }
+  /** The name for the next zip; `partsInRun` is how many zips this run of the save planned. */
+  nextName(partsInRun: number): string {
+    return this.made.length === 0 && partsInRun === 1 ? copy.save.zipName : copy.save.zipPart(this.made.length + 1);
+  }
+  /** A zip was made and downloaded, holding these files (FileRecord indices). Returns its name. */
+  add(visit: number, partsInRun: number, ids: readonly number[]): string {
+    const name = this.nextName(partsInRun);
+    const scan = this.visitScan[visit];
+    this.made.push({ name, files: new Set(ids.map((id) => `${scan}:${id}`)), visit });
+    return name;
+  }
+  /** That visit's save finished: its zips hold everything it saved. */
+  finish(visit: number): void {
+    this.finished.add(visit);
+  }
+  /**
+   * Zips from visits before this one, from the same scan, whose save didn't finish (Stop, then
+   * "Back to review"), since the last save from that scan that did (its Done screen already spoke
+   * for them). They hold only some files. Zips from another scan (another folder, or the same one
+   * scanned again) are never mentioned. `covered`: is everything in them also in this save (`saved`)?
+   */
+  leftovers(visit: number, saved: ReadonlySet<number>): { names: string[]; covered: boolean } {
+    const scan = this.visitScan[visit];
+    const sameScan = (v: number) => v < visit && this.visitScan[v] === scan;
+    const since = Math.max(0, ...[...this.finished].filter(sameScan));
+    const old = this.made.filter((z) => z.visit > since && sameScan(z.visit) && !this.finished.has(z.visit));
+    const savedKeys = new Set([...saved].map((id) => `${scan}:${id}`));
+    return { names: old.map((z) => z.name), covered: old.every((z) => [...z.files].every((k) => savedKeys.has(k))) };
+  }
 }
 
 /** Full path inside a zip ("Keepsake photos/2024/06 June/…"). */

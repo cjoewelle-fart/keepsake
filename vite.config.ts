@@ -1,5 +1,6 @@
 import react from '@vitejs/plugin-react'
 import { defineConfig } from 'vite'
+import { configDefaults } from 'vitest/config'
 import type { Plugin } from 'vite'
 import { VitePWA } from 'vite-plugin-pwa'
 
@@ -121,6 +122,8 @@ export default defineConfig(({ mode }) => ({
   // Test builds never show the example-files button, whatever the environment says.
   define: mode === TEST_BUILD || mode === ARTIFACT_TEST ? { 'import.meta.env.VITE_SAMPLES': JSON.stringify('0') } : {},
   worker: { format: 'es' },
+  // Agents' leftover worktrees (.claude/worktrees/…) hold copies of tests/ without node_modules.
+  test: { exclude: [...configDefaults.exclude, '.claude/**'] },
   build: isArtifact(mode)
     ? {
         outDir: mode === ARTIFACT_TEST ? 'dist-artifact-test' : 'dist-artifact',

@@ -91,7 +91,7 @@ Same words as the results screen and `src/ui/copy.ts`:
 | | After a day, month or all changes | June 2024: 148 of 148 selected. {selected} of {total} selected in all. | |
 | | Nothing selected | Nothing selected. Nothing is deleted. | |
 
-## 3b. Review timeline: Largest first (T60, new, needs UX writer check)
+## 3b. Review timeline: Largest first (T60, checked by the UX writer Nov 3)
 
 <!-- T60 · front-end dev · 2026-11-03. Drafted by the developer from voice.md; every row below is **new** and waits for the UX writer. Strings live in copy.ts `timeline` (orderLabel … announceSize). -->
 
@@ -99,12 +99,14 @@ For people saving to a small drive: the same files, biggest first, so they can s
 
 | Location | Proposed (new) | Notes |
 |---|---|---|
-| Order group aria-label | Order | Two pressed/not-pressed buttons next to the filters, like the filter group. [CONFIRM wording: "Order" vs "Sort" vs "Show in order".] |
+| Sort group aria-label | Sort | Two pressed/not-pressed buttons next to the filters. Writer: "Order" reads as a purchase in Philippine English; "Show in order" clashes with "Show only". |
 | Order buttons | By date · Largest first | "By date" is the default and is the timeline as before. |
 | Status line, on switching | Showing by date. / Showing largest first. | Polite, said straight away. Focus stays on the button. |
-| Note above the list | The biggest files are at the top, so you can see what takes the most space. Nothing is deleted. | Only in Largest first. |
+| Note above the list | Largest files first. If the drive you're saving to is small, you can unselect big files you don't need. They stay where they are now. Nothing is deleted. | Only in Largest first. Writer: says where the space is and that unselected files are not deleted. Never use "free up space", "remove" or "clean up" in this view. |
 | Row (visible) | 48 MB / 28 June 2024, 09:12 · Video · 0:42 | Size in bold; "No date" for files without one; "Can’t play. Can save it." added for videos this browser can’t play. |
 | Row checkbox name | 48 MB. Save video from 28 June 2024, 09:12, 42 seconds long | Size first (what this view is for), then the tile’s usual name. |
+| Row checkbox name, no date (T89 QA fix, **needs UX writer check**) | 6 MB, f0012345.mov. Save video with no date, 42 seconds long | The date view’s "(207 of 460)" is left out here, where it means nothing. The file’s own name (cut to 40 characters) comes after the size, so rows of the same size, kind and date sound different. Applies to every row in Largest first. The viewer’s own title is unchanged. |
+| Row "View larger" name (T89 QA fix, **needs UX writer check**) | View larger: Save video with no date, 42 seconds long, f0012345.mov | Same reason: the open buttons of look-alike rows need different names. |
 | Bar and phone footer count | 2,224 of 2,236 selected · 9.8 GB to save | Only in Largest first; the date view’s bars are unchanged. Same number as the ledger’s "Size to save". |
 | Status line after a change | 2,224 of 2,236 selected. 9.8 GB to save. | Only in Largest first, so screen-reader users hear the size too. Not added when nothing is selected. |
 | Viewer detail line | 48 MB | Under the file’s name in the viewer, only when opened from Largest first. |
@@ -182,7 +184,7 @@ Not new: the filters, empty messages, "Not selected" note and Save button are th
 | | Body | We saved {done} of 2,224 photos and videos. None of your files were deleted. Choose the folder again to save the rest. |
 | | Button | Choose the folder again |
 | **Zip download didn't start** | Body | Zip file {i} of 5 didn't download. Your photos are fine, and nothing was deleted. |
-| | Button | Download zip file {i} again |
+| | Button | Download {zip file name} again, e.g. "Download Keepsake photos part 2.zip again" (T89, UX writer approved Nov 3) |
 | **Some files couldn't be saved** (Done screen) | h1 | {saved} of your 2,224 photos and videos are saved. |
 | | Line | {failed} files couldn't be copied. They may be damaged. They're still in your recovery folder, so nothing is lost. |
 | | Receipt row / button | Couldn't save · {failed} / See which ones |
@@ -206,7 +208,9 @@ Not new: the filters, empty messages, "Not selected" note and Save button are th
 | Location | Proposed |
 |---|---|
 | Line | They're in 5 zip files in your Downloads folder. Open each one to see your photos, sorted into a folder for each year and month. |
-| Location text | In your Downloads folder, look for Keepsake photos 1 of 5.zip to Keepsake photos 5 of 5.zip. |
+| Location text | One zip: "In your Downloads folder, look for Keepsake photos.zip." An unbroken run of 3 or more: "In your Downloads folder, look for these 5 zip files: Keepsake photos part 1.zip to Keepsake photos part 5.zip." Any 2 names (developer choice, "to" read oddly for 2; **needs UX writer check**): "… look for these 2 zip files: Keepsake photos.zip and Keepsake photos part 2.zip." Three or more that aren't a run: "… look for these 3 zip files:" then the names, one per line. Built from the names of this save's zips. (T89, UX writer approved Nov 3) |
+| Zip file names | One zip in the save: Keepsake photos.zip. More than one, or any zip after the first while the page is open: Keepsake photos part N.zip, N counting on across the page (so a save after Stop never reuses a name). No "of N". (T89, UX writer approved Nov 3) |
+| Earlier zip note (T89, new, **needs UX writer check**) | After Stop, Back to review, then Save again, under the location text: "Keepsake photos.zip is from an earlier save that didn't finish. Everything in it is also in the zip file above." If it has files this save doesn't: "… It has some photos and videos that aren't in this save." Plural: "Keepsake photos part 1.zip and Keepsake photos part 2.zip are from … Everything in them …" / "They have some …" |
 | Receipt row | Saved to · Downloads, 5 zip files |
 
 ---

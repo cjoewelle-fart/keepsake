@@ -273,7 +273,8 @@ export type ZipEvents = RunEvents & {
   /** A part is starting (1-based). */
   onPart(i: number): void;
   /** A part is built; hand it to the browser to download. */
-  onZip(blob: Blob, i: number): void;
+  /** A zip was made: part `i` of the run, holding the files `ids` (T89: the page-wide log keeps these). */
+  onZip(blob: Blob, i: number, ids: readonly number[]): void;
   /** One more file looked at (for progress within a part). */
   onWorked(): void;
 };
@@ -315,7 +316,7 @@ export async function saveAsZip(
     }
     if (ids.length) {
       blobParts.push(w.finish());
-      ev.onZip(new Blob(blobParts, { type: 'application/zip' }), i);
+      ev.onZip(new Blob(blobParts, { type: 'application/zip' }), i, ids);
       for (const id of ids) ev.onSaved(id);
     }
     if (stopped) return 'stopped';
