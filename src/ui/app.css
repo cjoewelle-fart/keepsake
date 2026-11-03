@@ -279,6 +279,16 @@ progress::-moz-progress-bar { background: var(--accent); border-radius: 999px; }
 .vid-row .vid { flex: 0 1 auto; min-width: 0; padding-top: 0; padding-bottom: 0; flex-direction: row-reverse; flex-wrap: wrap; justify-content: center; align-content: flex-start; overflow: hidden; }
 .vid-row .vid-len { order: -1; line-height: 24px; }
 .vid-row .tag { display: flex; align-items: center; padding-top: 0; padding-bottom: 0; margin-right: auto; overflow: visible; }
+/* T60 "Largest first": a flat list, one row per file (checkbox, small preview, size and date). */
+.tl-rows, .tl-rows-block { display: flex; flex-direction: column; gap: 8px; }
+.tl-row { display: flex; align-items: center; gap: 8px; min-height: 56px; min-width: 0; }
+.tl-row-chk { flex: none; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
+.tl-row-chk input { width: 22px; height: 22px; margin: 0; accent-color: var(--accent); cursor: pointer; }
+.tl-row .gf-text { padding-left: 4px; }
+.tl-row-size { font-weight: 700; color: var(--ink); font-variant-numeric: tabular-nums; }
+.tl-row.off .tile img, .tl-row.off .tile canvas { opacity: 0.55; }
+.tl-row.off .tl-row-size { color: var(--ink-soft); font-weight: 400; }
+.tl-size-total { font-weight: 400; }
 .tl-aside { flex-direction: row; flex-wrap: wrap; justify-content: space-between; align-items: center; padding: 18px 22px; }
 .tl-aside .btn-sm { align-self: center; }
 .tl-empty { display: flex; flex-direction: column; gap: 12px; align-items: flex-start; }

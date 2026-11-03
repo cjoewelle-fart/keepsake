@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { SetAsideGroup } from '../src/engine/summary';
 import { summarize } from '../src/engine/summary';
 import type { FileRecord, Group } from '../src/engine/types';
-import { NO_DATE, Selection, blocksOf, buildTimeline, columnsFor, inPlay, selectedIds, tally } from '../src/ui/timeline';
+import { NO_DATE, Selection, blocksOf, buildTimeline, chunks, columnsFor, inPlay, largestFirst, selectedIds, tally } from '../src/ui/timeline';
 import { bytes, copy, runTime, runTimeWords, weekdayDayMonth } from '../src/ui/copy';
 
 let i = 0;
@@ -127,12 +127,91 @@ describe('selection', () => {
   });
 });
 
+describe('largest first (T60)', () => {
+  const big = rec('2024-06-28T09:00:00', 'mp4', 'keep', 48_000_000);
+  const mid = rec(undefined, 'jpeg', 'keep', 3_400_000);
+  const small = rec('2019-01-01T10:00:00', 'jpeg', 'keep', 840_000);
+  const tieA = rec('2020-01-01T10:00:00', 'jpeg', 'keep', 3_400_000);
+  const vid = rec('2021-05-05T10:00:00', 'mov', 'keep', 120_000_000);
+  const files = [small, mid, big, tieA, vid];
+
+  it('sorts every shown file by size, biggest first, with a fixed order for equal sizes', () => {
+    const ids = largestFirst(files);
+    expect(ids).toEqual([vid.index, big.index, mid.index < tieA.index ? mid.index : tieA.index, mid.index < tieA.index ? tieA.index : mid.index, small.index]);
+    // Same files, same order, whatever order they came in.
+    expect(largestFirst([...files].reverse())).toEqual(ids);
+    // Dated and undated files are in one list (no "No date last" here).
+    expect(new Set(ids)).toEqual(new Set(files.map((r) => r.index)));
+  });
+
+  it('applies the same filters as the date view', () => {
+    expect(largestFirst(files, 'videos')).toEqual([vid.index, big.index]);
+    expect(largestFirst(files, 'photos')).toEqual(largestFirst(files).filter((id) => id !== vid.index && id !== big.index));
+    const sel = new Selection(i);
+    sel.set([small.index, vid.index], false);
+    const snap = sel.snapshot();
+    sel.set([vid.index], true); // ticked again: still listed under Not selected until the filter changes
+    expect(largestFirst(files, 'unselected', (r) => !snap(r.index))).toEqual([vid.index, small.index]);
+    // The same files as the date view shows, just in another order.
+    for (const f of ['all', 'photos', 'videos'] as const) {
+      expect([...largestFirst(files, f)].sort()).toEqual(buildTimeline(files, f).months.flatMap((m) => m.ids).sort());
+    }
+  });
+
+  it('ticking in the size list keeps the ledger and selected size right, and doesn’t change what is saved otherwise', () => {
+    const sel = new Selection(i);
+    const ids = largestFirst(files);
+    const before = selectedIds(files, sel);
+    // Unselect the two biggest, as someone short of space would.
+    sel.set([ids[0]], false);
+    sel.set([ids[1]], false);
+    const s = tally(files, sel);
+    expect(s.selected + s.notSelected).toBe(s.total);
+    expect(s.selectedBytes).toBe(3_400_000 * 2 + 840_000);
+    expect(s.selectedVideos).toBe(0);
+    // Saving gets exactly the files still selected, in date order as before.
+    expect(selectedIds(files, sel)).toEqual(before.filter((id) => id !== vid.index && id !== big.index));
+    sel.set(ids, true);
+    expect(tally(files, sel).selectedBytes).toBe(files.reduce((a, r) => a + r.size, 0));
+  });
+
+  it('chunks the list for lazy drawing without losing or repeating a file', () => {
+    const ids = Array.from({ length: 123 }, (_, k) => k);
+    const c = chunks(ids, 50);
+    expect(c.map((b) => b.length)).toEqual([50, 50, 23]);
+    expect(c.flat()).toEqual(ids);
+    expect(chunks([], 50)).toEqual([]);
+  });
+
+  it('sorts 40,000 files quickly', () => {
+    const many = Array.from({ length: 40_000 }, (_, k) => rec(k % 9 === 0 ? undefined : '2022-02-02T10:00:00', k % 5 === 0 ? 'mp4' : 'jpeg', 'keep', ((k * 7919) % 100_000) * 1000));
+    const t0 = performance.now();
+    const ids = largestFirst(many);
+    const ms = performance.now() - t0;
+    expect(ids.length).toBe(40_000);
+    const byId = new Map(many.map((r) => [r.index, r.size]));
+    for (let k = 1; k < ids.length; k++) expect(byId.get(ids[k - 1])! >= byId.get(ids[k])!).toBe(true);
+    expect(ms).toBeLessThan(1000);
+  });
+});
+
 describe('timeline words', () => {
   it('formats dates, sizes and checkbox names', () => {
     expect(weekdayDayMonth('2024-06-28')).toBe('Friday 28 June');
     expect(bytes(999)).toBe('999 bytes');
     expect(bytes(1_500_000)).toBe('1.5 MB');
     expect(bytes(9_800_000_000)).toBe('9.8 GB');
+    // T60: sizes on the Largest first rows.
+    expect(bytes(48_000_000)).toBe('48 MB');
+    expect(bytes(48_400_000)).toBe('48.4 MB');
+    expect(bytes(840_000)).toBe('840 KB');
+    expect(bytes(1)).toBe('1 byte');
+    expect(bytes(0)).toBe('0 bytes');
+    expect(bytes(1_000_000_000_000)).toBe('1 TB');
+    expect(bytes(123_456_789)).toBe('123 MB');
+    expect(copy.timeline.sizeRowLabel(bytes(48_000_000), copy.timeline.tileLabel('video', '2024-06-28T11:40:00', 1, 1, 42)))
+      .toBe('48 MB. Save video from 28 June 2024, 11:40, 42 seconds long');
+    expect(copy.timeline.footerSize(bytes(9_800_000_000))).toBe('9.8 GB to save');
     expect(copy.timeline.tileLabel('photo', '2024-06-28T09:12:00', 1, 6)).toBe('Save photo from 28 June 2024, 09:12');
     expect(copy.timeline.tileLabel('video', '2024-06-28T11:40:00', 4, 6)).toBe('Save video from 28 June 2024, 11:40');
     expect(copy.timeline.tileLabel('photo', undefined, 3, 312)).toBe('Save photo with no date (3 of 312)');

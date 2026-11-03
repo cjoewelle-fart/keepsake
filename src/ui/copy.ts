@@ -587,6 +587,21 @@ export const copy = {
     filterLabel: 'Show only',
     // "Not selected" isn't in T22 (it has "Screenshots", which the app can't detect): needs UX writer review.
     filters: { all: 'All', photos: 'Photos', videos: 'Videos', unselected: 'Not selected' },
+    // T60 "Largest first" (all new, needs UX writer review: see review-export-copy.md §3b).
+    orderLabel: 'Order',
+    orders: { date: 'By date', size: 'Largest first' },
+    /** Said by the status line when the order changes. */
+    orderAnnounce: { date: 'Showing by date.', size: 'Showing largest first.' },
+    /** Above the list in the Largest first order. */
+    sizeNote: 'The biggest files are at the top, so you can see what takes the most space. Nothing is deleted.',
+    /** A row's checkbox name: the size first (what this order is for), then the tile's own name. */
+    sizeRowLabel: (size: string, name: string) => `${size}. ${name}`,
+    /** The kind of file on a row, after its date. */
+    rowKind: { photo: 'Photo', video: 'Video', other: 'File' },
+    /** Next to the selected count in the bars, in the Largest first order. */
+    footerSize: (size: string) => `${size} to save`,
+    /** Added to the status line in the Largest first order, so the size is heard too. */
+    announceSize: (size: string) => ` ${size} to save.`,
     monthSelected: (sel: number, total: number) => (sel === 0 ? `None of ${n(total)} selected` : `${n(sel)} of ${n(total)} selected`),
     monthNoneNote: 'These won’t be saved. They stay where they are, and nothing is deleted.',
     selectMonth: (name: string) => `Select all of ${name}`,

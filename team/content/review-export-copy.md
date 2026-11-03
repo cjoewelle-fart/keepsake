@@ -91,6 +91,26 @@ Same words as the results screen and `src/ui/copy.ts`:
 | | After a day, month or all changes | June 2024: 148 of 148 selected. {selected} of {total} selected in all. | |
 | | Nothing selected | Nothing selected. Nothing is deleted. | |
 
+## 3b. Review timeline: Largest first (T60, new, needs UX writer check)
+
+<!-- T60 · front-end dev · 2026-11-03. Drafted by the developer from voice.md; every row below is **new** and waits for the UX writer. Strings live in copy.ts `timeline` (orderLabel … announceSize). -->
+
+For people saving to a small drive: the same files, biggest first, so they can see what takes the most space. Ticks work the same as in the date view; nothing else changes what is saved.
+
+| Location | Proposed (new) | Notes |
+|---|---|---|
+| Order group aria-label | Order | Two pressed/not-pressed buttons next to the filters, like the filter group. [CONFIRM wording: "Order" vs "Sort" vs "Show in order".] |
+| Order buttons | By date · Largest first | "By date" is the default and is the timeline as before. |
+| Status line, on switching | Showing by date. / Showing largest first. | Polite, said straight away. Focus stays on the button. |
+| Note above the list | The biggest files are at the top, so you can see what takes the most space. Nothing is deleted. | Only in Largest first. |
+| Row (visible) | 48 MB / 28 June 2024, 09:12 · Video · 0:42 | Size in bold; "No date" for files without one; "Can’t play. Can save it." added for videos this browser can’t play. |
+| Row checkbox name | 48 MB. Save video from 28 June 2024, 09:12, 42 seconds long | Size first (what this view is for), then the tile’s usual name. |
+| Bar and phone footer count | 2,224 of 2,236 selected · 9.8 GB to save | Only in Largest first; the date view’s bars are unchanged. Same number as the ledger’s "Size to save". |
+| Status line after a change | 2,224 of 2,236 selected. 9.8 GB to save. | Only in Largest first, so screen-reader users hear the size too. Not added when nothing is selected. |
+| Viewer detail line | 48 MB | Under the file’s name in the viewer, only when opened from Largest first. |
+
+Not new: the filters, empty messages, "Not selected" note and Save button are the same strings as the date view. Year pills and month jump are hidden in Largest first (there are no months to jump to).
+
 ## 4. Choose where to save (EX-choose)
 
 | Location | Current | Proposed | Why |

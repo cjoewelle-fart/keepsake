@@ -2,12 +2,12 @@ import { useEffect, useLayoutEffect, useMemo, useRef, useState } from 'react';
 import { flushSync } from 'react-dom';
 import type { CSSProperties, ReactNode } from 'react';
 import type { FileRecord } from '../engine/types';
-import { bytes, clock, copy, monthName, monthYear, n, runTime, weekdayDayMonth } from './copy';
+import { bytes, clock, copy, dateTime, monthName, monthYear, n, runTime, weekdayDayMonth } from './copy';
 import { Preview } from './Preview';
 import { Viewer } from './Viewer';
 import { playableHere } from './playable';
-import { NO_DATE, blocksOf, buildTimeline, columnsFor, inPlay, mediaType, selectedIds, tally } from './timeline';
-import type { Block, Filter, Month, Selection, TriState } from './timeline';
+import { NO_DATE, blocksOf, buildTimeline, chunks, columnsFor, inPlay, largestFirst, mediaType, selectedIds, tally } from './timeline';
+import type { Block, Filter, Month, Order, Selection, TriState } from './timeline';
 import type { SetAsideGroup } from '../engine/summary';
 
 type Props = {
@@ -24,6 +24,10 @@ type Props = {
 
 const t = copy.timeline;
 const FILTERS: Filter[] = ['all', 'photos', 'videos', 'unselected'];
+const ORDERS: Order[] = ['date', 'size'];
+/** Largest first: rows per lazily drawn block, and one row's height with its gap (a 56 px preview and 8 px). */
+const ROW_CHUNK = 50;
+const ROW = 64;
 
 /**
  * "Choose what to save": every kept photo and video on a timeline, all selected to start with.
@@ -37,6 +41,9 @@ export function Timeline({ records, files, movedBack, setAside, selection: sel, 
   const [filter, setFilter] = useState<Filter>('all');
   // "Not selected" shows what was unticked when it was chosen, so ticking a file doesn't hide it.
   const [snapshot, setSnapshot] = useState<(id: number) => boolean>();
+  // T60: "By date" (default) or "Largest first".
+  const [order, setOrder] = useState<Order>('date');
+  const bySize = order === 'size';
 
   const kept = useMemo(() => inPlay(records, movedBack), [records, movedBack]);
   const byIndex = useMemo(() => {
@@ -49,6 +56,12 @@ export function Timeline({ records, files, movedBack, setAside, selection: sel, 
     () => buildTimeline(kept, filter, filter === 'unselected' && snapshot ? (r) => !snapshot(r.index) : undefined),
     [kept, filter, snapshot],
   );
+  // T60: sorted once per filter (or order) change, never on a tick: `version` isn't a dependency.
+  const sizeIds = useMemo(
+    () => (bySize ? largestFirst(kept, filter, filter === 'unselected' && snapshot ? (r) => !snapshot(r.index) : undefined) : []),
+    [bySize, kept, filter, snapshot],
+  );
+  const sizeBlocks = useMemo(() => chunks(sizeIds, ROW_CHUNK), [sizeIds]);
   // `sel` is mutated in place, so `version` is what tells this to re-count.
   const sum = useMemo(() => { void version; return tally(kept, sel); }, [kept, sel, version]);
 
@@ -68,16 +81,20 @@ export function Timeline({ records, files, movedBack, setAside, selection: sel, 
     bump();
   };
 
+  // Read by the announcement below when it fires, without making a switch of order re-announce the count.
+  const bySizeNow = useRef(bySize);
+  useEffect(() => { bySizeNow.current = bySize; }, [bySize]);
   // Tell screen-reader users the new count once they pause (not on first render).
   const [announce, setAnnounce] = useState('');
   useEffect(() => {
     if (version === 0) return;
     const id = setTimeout(() => {
       const g = lastGroup.current;
-      setAnnounce(g ? t.announceGroup(g.label, sel.count(g.ids), g.ids.length, sum.selected, sum.total) : t.announce(sum.selected, sum.total));
+      const said = g ? t.announceGroup(g.label, sel.count(g.ids), g.ids.length, sum.selected, sum.total) : t.announce(sum.selected, sum.total);
+      setAnnounce(bySizeNow.current && sum.selected > 0 ? said + t.announceSize(bytes(sum.selectedBytes)) : said);
     }, 1000);
     return () => clearTimeout(id);
-  }, [version, sel, sum.selected, sum.total]);
+  }, [version, sel, sum.selected, sum.total, sum.selectedBytes]);
 
   // Grid columns follow the column's width (also used to size placeholders).
   const colRef = useRef<HTMLDivElement>(null);
@@ -90,6 +107,22 @@ export function Timeline({ records, files, movedBack, setAside, selection: sel, 
     ro.observe(el);
     return () => ro.disconnect();
   }, []);
+  // T60: switching the order. The order buttons stay where they are, so focus stays on the one
+  // pressed; the new order is said by the status line; and if the list had been scrolled, it goes
+  // back to its start (the bar with the buttons stays in view).
+  const scrollOnSwitch = useRef(false);
+  const chooseOrder = (o: Order) => {
+    if (o === order) return;
+    scrollOnSwitch.current = (colRef.current?.getBoundingClientRect().top ?? 0) < 0;
+    setOrder(o);
+    setAnnounce(t.orderAnnounce[o]);
+  };
+  useLayoutEffect(() => {
+    if (!scrollOnSwitch.current) return;
+    scrollOnSwitch.current = false;
+    colRef.current?.scrollIntoView({ block: 'start' });
+  }, [order]);
+
   const cols = columnsFor(width);
   const gap = cols === 3 ? 8 : 12;
 
@@ -183,7 +216,7 @@ export function Timeline({ records, files, movedBack, setAside, selection: sel, 
   const [viewing, setViewing] = useState<number>();
   /** A file whose day must be drawn now (focus is going back to it after the viewer closes). */
   const [hold, setHold] = useState<number>();
-  const shownIds = useMemo(() => tl.months.flatMap((m) => m.ids), [tl]);
+  const shownIds = useMemo(() => (bySize ? sizeIds : tl.months.flatMap((m) => m.ids)), [bySize, sizeIds, tl]);
   const place = useMemo(() => {
     const at = new Map<number, { pos: number; of: number; month: string }>();
     for (const m of tl.months) for (const d of m.days) d.ids.forEach((id, k) => at.set(id, { pos: k + 1, of: d.ids.length, month: m.key }));
@@ -200,7 +233,7 @@ export function Timeline({ records, files, movedBack, setAside, selection: sel, 
     let el = find();
     if (!el) {
       const m = place.get(lastId)?.month;
-      if (m) jump(m);
+      if (m && !bySize) jump(m);
       flushSync(() => setHold(lastId));
       el = find();
     }
@@ -272,10 +305,10 @@ export function Timeline({ records, files, movedBack, setAside, selection: sel, 
         <div className="tl-tools" ref={toolsRef}>
           {/* T80: wide, tall windows. The count is announced by the live region above, so it's hidden here. */}
           <div className="tl-tally">
-            <span className="tl-tally-count" aria-hidden="true">{t.footerCount(sum.selected, sum.total)}</span>
+            <span className="tl-tally-count" aria-hidden="true">{t.footerCount(sum.selected, sum.total)}{bySize && <span className="tl-size-total"> · {t.footerSize(bytes(sum.selectedBytes))}</span>}</span>
             {topBtn(true)}
           </div>
-          {(tl.years.length > 1 || (tl.years.length > 0 && noDate)) && (
+          {!bySize && (tl.years.length > 1 || (tl.years.length > 0 && noDate)) && (
             <nav className="chips" aria-label={t.jumpYear}>
               {tl.years.map(({ year, months }) => (
                 <button key={year} type="button" className="chip" aria-current={year === currentYear || undefined} onClick={() => jump(months[0])}>{year}</button>
@@ -284,14 +317,14 @@ export function Timeline({ records, files, movedBack, setAside, selection: sel, 
             </nav>
           )}
           <div className="tl-tools-row">
-            {yearMonths.length > 1 && (
+            {!bySize && yearMonths.length > 1 && (
               <nav className="chips tl-months-pills" aria-label={t.jumpMonthIn(currentYear ?? '')}>
                 {yearMonths.map((k) => (
                   <button key={k} type="button" className="chip chip-sm" aria-current={k === currentKey || undefined} onClick={() => jump(k)}>{monthName(k)}</button>
                 ))}
               </nav>
             )}
-            {tl.months.length > 1 && (
+            {!bySize && tl.months.length > 1 && (
               <label className="tl-month-select">
                 <span>{t.jumpMonth}</span>
                 <select value={currentKey} onChange={(e) => jump(e.target.value)}>
@@ -301,6 +334,11 @@ export function Timeline({ records, files, movedBack, setAside, selection: sel, 
                 </select>
               </label>
             )}
+            <div className="tl-filter" role="group" aria-label={t.orderLabel}>
+              {ORDERS.map((o) => (
+                <button key={o} type="button" className="chip chip-sm" aria-pressed={order === o} onClick={() => chooseOrder(o)}>{t.orders[o]}</button>
+              ))}
+            </div>
             <div className="tl-filter" role="group" aria-label={t.filterLabel}>
               {FILTERS.map((f) => (
                 <button key={f} type="button" className="chip chip-sm" aria-pressed={filter === f} onClick={() => chooseFilter(f)}>{t.filters[f]}</button>
@@ -318,9 +356,27 @@ export function Timeline({ records, files, movedBack, setAside, selection: sel, 
 
         {filter === 'unselected' && tl.months.length > 0 && <p className="note-box">{t.unselectedNote}</p>}
 
-        {tl.months.map((m) => (
+        {bySize && sizeIds.length > 0 && <p className="sub-sm">{t.sizeNote}</p>}
+
+        {!bySize && tl.months.map((m) => (
           <MonthSection key={m.key} m={m} sel={sel} byIndex={byIndex} files={files} width={width} cols={cols} gap={gap} onSet={set} onToggle={toggle} onOpen={setViewing} hold={hold} />
         ))}
+
+        {bySize && sizeIds.length > 0 && (
+          <div className="tl-rows">
+            {sizeBlocks.map((b) => (
+              <Lazy key={b[0]} estimate={b.length * ROW - 8} sizeKey="size" hold={hold !== undefined && b.includes(hold)}>
+                {() => (
+                  <div className="tl-rows-block">
+                    {b.map((id) => (
+                      <SizeRow key={id} r={byIndex[id]} file={files[id]} name={labelOf(id)} on={sel.has(id)} onChange={(on) => set([id], on)} onOpen={() => setViewing(id)} />
+                    ))}
+                  </div>
+                )}
+              </Lazy>
+            ))}
+          </div>
+        )}
 
         <div>{topBtn(false)}</div>
 
@@ -335,7 +391,7 @@ export function Timeline({ records, files, movedBack, setAside, selection: sel, 
 
       {/* Narrow screens, and wide ones too short for the sticky jump bar: the count and the button stay at the bottom of the window. */}
       <div className="tl-footer" ref={footRef}>
-        <div className="tl-footer-line"><span className="tl-footer-count" aria-hidden="true">{t.footerCount(sum.selected, sum.total)}</span><span>{t.footerDeleted}</span>{topBtn(true)}</div>
+        <div className="tl-footer-line"><span className="tl-footer-count" aria-hidden="true">{t.footerCount(sum.selected, sum.total)}{bySize && <span className="tl-size-total"> · {t.footerSize(bytes(sum.selectedBytes))}</span>}</span><span>{t.footerDeleted}</span>{topBtn(true)}</div>
         {saveBtn('save-why')}
       </div>
 
@@ -346,6 +402,7 @@ export function Timeline({ records, files, movedBack, setAside, selection: sel, 
           record={(id) => byIndex[id]}
           files={files}
           label={labelOf}
+          detail={bySize ? (id) => bytes(byIndex[id].size) : undefined}
           selected={(id) => sel.has(id)}
           onSelect={(id, on) => set([id], on)}
           onClose={closeViewer}
@@ -499,6 +556,36 @@ function Tile({ r, file, pos, of, on, onChange, onOpen }: TileProps) {
         r.takenAt && <figcaption className="tag" aria-hidden="true">{clock(r.takenAt)}</figcaption>
       )}
     </figure>
+  );
+}
+
+type RowProps = { r: FileRecord; file: File; name: string; on: boolean; onChange: (on: boolean) => void; onOpen: () => void };
+/**
+ * T60: one file in the Largest first list: its checkbox, a small preview (which opens the viewer,
+ * like a tile), its size and its date. The checkbox's name has all of it, size first.
+ */
+function SizeRow({ r, file, name, on, onChange, onOpen }: RowProps) {
+  const type = mediaType(r);
+  const cantPlay = type === 'video' && playableHere(r) === false;
+  const size = bytes(r.size);
+  return (
+    <div className={`tl-row${on ? '' : ' off'}`}>
+      <label className="tl-row-chk">
+        <input type="checkbox" checked={on} onChange={(e) => onChange(e.target.checked)} aria-label={t.sizeRowLabel(size, name)} />
+      </label>
+      <button type="button" className="gf-open" data-view={r.index} onClick={onOpen}>
+        <span className="sr-only">{copy.viewer.open(name)}</span>
+        <span aria-hidden="true"><Preview file={file} record={r} size="sm" /></span>
+      </button>
+      <div className="gf-text" aria-hidden="true">
+        <span className="tl-row-size">{size}</span>
+        <span className="sub-sm">
+          {r.takenAt ? dateTime(r.takenAt) : t.noDate} · {t.rowKind[type]}
+          {type === 'video' && r.durationSec !== undefined && ` · ${runTime(r.durationSec)}`}
+          {cantPlay && ` · ${t.cantPlayShort}`}
+        </span>
+      </div>
+    </div>
   );
 }
 

@@ -507,6 +507,44 @@ async function keyboard(browser) {
   check(await h1(page, /Choose what to save/).isVisible(), 'serious', run, 'review', 'Enter on the disabled Save does nothing');
   await page.getByRole('button', { name: 'Select all', exact: true }).focus();
   await page.keyboard.press('Enter');
+  // T60: Largest first, by keyboard. Focus stays on the order button, the change is announced,
+  // the list is biggest first, Space works on a row, Tab reaches every row, and back to By date.
+  {
+    const screen = 'review: largest first';
+    const sizeBtn = page.getByRole('button', { name: 'Largest first', exact: true });
+    await sizeBtn.focus();
+    await page.keyboard.press('Enter');
+    await page.waitForTimeout(300);
+    const f = await page.evaluate(focusInfo);
+    check(f.name === 'Largest first' && f.inView, 'serious', run, screen, `focus stays on the order button after switching ("${f.name}", in view: ${f.inView})`);
+    check((await sizeBtn.getAttribute('aria-pressed')) === 'true', 'serious', run, screen, 'order button says it is pressed');
+    check(/Showing largest first/.test(await statusText(page)), 'serious', run, screen, `new order announced (4.1.3): "${await statusText(page)}"`);
+    await axe(page, run, screen);
+    const unit = { bytes: 1, byte: 1, KB: 1e3, MB: 1e6, GB: 1e9, TB: 1e12 };
+    const sizes = (await page.locator('.tl-row input[type=checkbox]').evaluateAll((els) => els.map((e) => e.getAttribute('aria-label') ?? '')))
+      .map((x) => { const m = x.match(/^([\d.,]+) (bytes?|KB|MB|GB|TB)\. Save /); return m ? Number(m[1].replace(/,/g, '')) * unit[m[2]] : NaN; });
+    check(sizes.length > 0 && sizes.every((x, k) => !Number.isNaN(x) && (k === 0 || x <= sizes[k - 1])), 'serious', run, screen, `rows named size first and listed biggest first (${sizes.length} drawn)`);
+    const bytesBefore = await page.locator('dd[data-k=size]').innerText();
+    await page.locator('.tl-row input[type=checkbox]').first().focus();
+    await page.keyboard.press('Space');
+    const selR = Number((await page.locator('dd[data-k=selected]').innerText()).replace(/\D/g, ''));
+    const bytesAfter = await page.locator('dd[data-k=size]').innerText();
+    check(selR === total - 1 && bytesAfter !== bytesBefore, 'serious', run, screen, `Space unticks a row; ledger and size follow (${selR} of ${total}, ${bytesBefore} → ${bytesAfter})`);
+    await page.waitForTimeout(1300);
+    check(/to save\./.test(await statusText(page)), 'minor', run, screen, `size to save announced with the count: "${await statusText(page)}"`);
+    await page.keyboard.press('Space');
+    await sizeBtn.focus();
+    const rStops = await sweep(page, run, screen, { max: total * 2 + 200 });
+    const rows = rStops.filter((s) => /^[\d.,]+ (bytes?|KB|MB|GB|TB)\. Save /.test(s.name)).length;
+    check(rows === total, 'serious', run, screen, `Tab reaches every row (${rows} of ${total}; lazy drawing must not skip any)`);
+    const dateBtn = page.getByRole('button', { name: 'By date', exact: true });
+    await dateBtn.focus();
+    await page.keyboard.press('Enter');
+    await page.waitForTimeout(300);
+    const f2 = await page.evaluate(focusInfo);
+    check(f2.name === 'By date' && f2.inView, 'serious', run, screen, `focus stays on "By date" after switching back ("${f2.name}")`);
+    check((await page.locator('.tl-grid').count()) > 0 && /Showing by date/.test(await statusText(page)), 'serious', run, screen, 'back to the date view, announced');
+  }
   await page.evaluate(fakeFolder);
   await page.locator('.tl-wide .tl-save').focus();
   await page.keyboard.press('Enter');

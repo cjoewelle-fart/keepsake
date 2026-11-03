@@ -47,6 +47,36 @@ export function inPlay(records: readonly FileRecord[], movedBack: ReadonlySet<Se
   return records.filter((r) => effectiveGroup(r, movedBack) === 'keep');
 }
 
+/** The filter test shared by both orders ("By date" and "Largest first"). */
+const passes = (filter: Filter, keep?: (r: FileRecord) => boolean) => (r: FileRecord) => {
+  if (filter === 'photos' && mediaType(r) !== 'photo') return false;
+  if (filter === 'videos' && mediaType(r) !== 'video') return false;
+  return keep ? keep(r) : true;
+};
+
+/** How the review screen lists files: grouped by date (the default) or largest first (T60). */
+export type Order = 'date' | 'size';
+
+/**
+ * T60 "Largest first": the ids of the files shown (same filter as the timeline), biggest first.
+ * Files of the same size keep a fixed order (by path), so the list doesn't shuffle between visits.
+ * Sorted once per filter change; ticking a file never re-sorts (the "Not selected" filter uses the
+ * same frozen snapshot as the timeline).
+ */
+export function largestFirst(files: readonly FileRecord[], filter: Filter = 'all', keep?: (r: FileRecord) => boolean): number[] {
+  return files
+    .filter(passes(filter, keep))
+    .sort((a, b) => b.size - a.size || byPath(a, b))
+    .map((r) => r.index);
+}
+
+/** Cut a flat list of ids into chunks, for lazily drawn blocks. */
+export function chunks(ids: readonly number[], size = 50): number[][] {
+  const out: number[][] = [];
+  for (let s = 0; s < ids.length; s += size) out.push(ids.slice(s, s + size));
+  return out;
+}
+
 const byTakenAtThenPath = (a: FileRecord, b: FileRecord) =>
   a.takenAt! < b.takenAt! ? -1 : a.takenAt! > b.takenAt! ? 1 : a.path < b.path ? -1 : a.path > b.path ? 1 : 0;
 const byPath = (a: FileRecord, b: FileRecord) => (a.path < b.path ? -1 : a.path > b.path ? 1 : 0);
@@ -57,11 +87,7 @@ const byPath = (a: FileRecord, b: FileRecord) => (a.path < b.path ? -1 : a.path 
  *   so a file doesn't vanish from under the pointer the moment it's ticked).
  */
 export function buildTimeline(files: readonly FileRecord[], filter: Filter = 'all', keep?: (r: FileRecord) => boolean): Timeline {
-  const shownFiles = files.filter((r) => {
-    if (filter === 'photos' && mediaType(r) !== 'photo') return false;
-    if (filter === 'videos' && mediaType(r) !== 'video') return false;
-    return keep ? keep(r) : true;
-  });
+  const shownFiles = files.filter(passes(filter, keep));
   const dated = shownFiles.filter((r) => r.takenAt).sort(byTakenAtThenPath);
   const undated = shownFiles.filter((r) => !r.takenAt).sort(byPath);
 
