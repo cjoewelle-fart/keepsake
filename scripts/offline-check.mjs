@@ -1,23 +1,37 @@
 // Offline check: proves "turn off your Wi-Fi and it still works" in a real browser.
 // Loads the production build once, waits for the service worker, cuts the network,
 // reloads, and scans the fixture folder (plus a HEIC photo, to load the decoder) offline.
+// Fails on any CSP violation, in the page or in its workers.
 // Usage: npm run build && npm run fixture && npm run offline-check -- [chromiumPath]
+// Against a hosted copy instead of a local preview server (T85): set BASE_URL, or pass --base-url.
+//   BASE_URL=https://example.pages.dev/ npm run offline-check
+// Still needs `npm run fixture` locally: the fixture folder is picked from this computer.
 import { spawn } from 'node:child_process';
 import { cpSync, existsSync, mkdtempSync, readdirSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { chromium } from 'playwright';
+import { checkHeicPreview, watchCsp } from './lib/browser-checks.mjs';
 
-const exe = process.argv[2] || process.env.CHROMIUM_PATH;
+const args = process.argv.slice(2);
+const opt = (k, d) => { const i = args.indexOf(k); return i >= 0 ? args.splice(i, 2)[1] : d; };
+const baseUrl = opt('--base-url', process.env.BASE_URL);
+const exe = args[0] || process.env.CHROMIUM_PATH;
 const PORT = 4174;
-const ORIGIN = `http://localhost:${PORT}`;
-if (!existsSync('dist/sw.js')) throw new Error('dist/sw.js missing: run `npm run build` first');
+const APP_URL = baseUrl ? new URL(baseUrl).href : `http://localhost:${PORT}/`;
+const ORIGIN = new URL(APP_URL).origin;
+/** Same origin as the app (blob: and data: URLs are checked separately). */
+const sameOrigin = (url) => { try { return new URL(url).protocol !== 'blob:' && new URL(url).origin === ORIGIN; } catch { return false; } };
+if (!baseUrl && !existsSync('dist/sw.js')) throw new Error('dist/sw.js missing: run `npm run build` first');
 if (!existsSync('fixtures/recovery')) throw new Error('fixtures/recovery missing: run `npm run fixture` first');
 
 // The fixture plus one HEIC photo, so the HEIC decoder (WASM worker) is needed offline too.
 const folder = mkdtempSync(join(tmpdir(), 'keepsake-offline-'));
 cpSync('fixtures/recovery', join(folder, 'recovery'), { recursive: true });
 cpSync('tests/heic/iphone.heic', join(folder, 'recovery', 'recup_dir.1', 'f99999999.heic'));
+// A folder with only that HEIC photo: its tile is the first on the results screen, so the
+// preview check below looks at a tile that is really on screen.
+cpSync('tests/heic/iphone.heic', join(folder, 'heic-only', 'recup_dir.1', 'f99999999.heic'));
 const fileCount = readdirSync(join(folder, 'recovery'), { recursive: true, withFileTypes: true }).filter((d) => d.isFile()).length;
 
 const failures = [];
@@ -27,22 +41,24 @@ const heicLoads = [];
 const check = (ok, msg) => { console.log(`${ok ? 'PASS' : 'FAIL'}  ${msg}`); if (!ok) failures.push(msg); };
 let offline = false;
 // Start the server and the browser inside try/finally, so a failed launch never leaves the port held.
-const server = spawn('npx', ['vite', 'preview', '--port', String(PORT), '--strictPort'], { stdio: 'pipe', detached: true });
-const stopServer = () => { try { process.kill(-server.pid); } catch { /* already gone */ } }; // the server and its children
+// With BASE_URL there is no local server: the hosted copy is used as it is.
+const server = baseUrl ? null : spawn('npx', ['vite', 'preview', '--port', String(PORT), '--strictPort'], { stdio: 'pipe', detached: true });
+const stopServer = () => { try { if (server) process.kill(-server.pid); } catch { /* already gone */ } }; // the server and its children
 process.once('SIGINT', () => { stopServer(); rmSync(folder, { recursive: true, force: true }); process.exit(130); });
 let browser;
 try {
-  await new Promise((r, j) => { server.stdout.on('data', (d) => String(d).includes(String(PORT)) && r()); server.on('exit', () => j(new Error(`preview server exited (port ${PORT} in use?)`))); });
+  if (server) await new Promise((r, j) => { server.stdout.on('data', (d) => String(d).includes(String(PORT)) && r()); server.on('exit', () => j(new Error(`preview server exited (port ${PORT} in use?)`))); });
+  else console.log(`testing the hosted app at ${APP_URL}`);
   browser = await chromium.launch({ executablePath: exe });
   const context = await browser.newContext({ viewport: { width: 1280, height: 900 } });
   // Watch every request from pages and workers, including the service worker's own fetches.
   context.on('request', (r) => {
     const url = r.url();
     if (url.startsWith('blob:') || url.startsWith('data:')) return;
-    if (!url.startsWith(ORIGIN)) outside.push(url);
+    if (!sameOrigin(url)) outside.push(url);
   });
   context.on('requestfinished', async (r) => {
-    if (!offline || !r.url().startsWith(ORIGIN)) return; // blob: URLs are the user's own files, in memory
+    if (!offline || !sameOrigin(r.url())) return; // blob: URLs are the user's own files, in memory
     const res = await r.response();
     if (/heic\.worker-.*\.js$/.test(r.url())) heicLoads.push({ url: r.url(), ok: res?.ok(), sw: res?.fromServiceWorker() });
     // Offline, every app file must come from the service worker's cache.
@@ -53,6 +69,9 @@ try {
   page.on('pageerror', (e) => errors.push(`page error: ${e.message}`));
   page.on('console', (m) => m.type() === 'error' && errors.push(`console: ${m.text()}`));
   page.on('requestfailed', (r) => offline && errors.push(`request failed offline: ${r.url()} (${r.failure()?.errorText})`));
+  // CSP violations in the page and in its workers (a worker's never reach the page console).
+  const cspViolations = [];
+  await watchCsp(context, page, (v) => cspViolations.push(v));
   // Force the file-input fallback (the folder picker dialog can't be automated).
   await context.addInitScript(() => {
     for (const k of ['showDirectoryPicker', 'showOpenFilePicker', 'showSaveFilePicker']) {
@@ -62,7 +81,7 @@ try {
   });
 
   // 1. First visit, online: the service worker installs and precaches the app.
-  await page.goto(`${ORIGIN}/`);
+  await page.goto(APP_URL);
   const sw = await page.evaluate(async () => {
     const reg = await navigator.serviceWorker.ready;
     if (!navigator.serviceWorker.controller) {
@@ -126,18 +145,19 @@ try {
   await page.getByText('Files checked').waitFor({ timeout: 120_000 });
   check(true, `scan of ${fileCount} files finished offline in ${((Date.now() - t0) / 1000).toFixed(1)}s: "${await page.locator('h1').innerText()}"`);
 
-  // The results screen previews the HEIC photo, which needs the HEIC decoder worker
-  // (libheif WASM) offline. A HEIC tile shows a "HEIC" label until its picture is decoded,
-  // and keeps the label if decoding fails.
-  const waiting = page.locator('.tile-label', { hasText: /^HEIC$/ });
-  for (let i = 0; i < 40 && (!heicLoads.length || (await waiting.count()) > 0); i++) await page.waitForTimeout(500);
-  const workerFiles = [...new Set(heicLoads.map((l) => l.url.replace(ORIGIN, '')))];
-  check(workerFiles.length >= 2 && heicLoads.every((l) => l.ok && l.sw), `HEIC decoder files served offline by the service worker: ${workerFiles.join(', ') || 'none'}`);
-  check(heicLoads.length > 0 && (await waiting.count()) === 0, 'HEIC photo previewed offline (decoded on this computer)');
   await page.getByRole('button', { name: /^Review my/ }).click();
   await page.locator('h1').filter({ hasText: /\S/ }).waitFor();
   check(true, `review screen renders offline: "${await page.locator('h1').innerText()}"`);
   await page.waitForTimeout(3000);
+
+  // HEIC previews need the HEIC decoder worker (libheif WASM) offline. In a folder holding only
+  // a HEIC photo, its tile is on screen; it must show the decoded picture, not the "HEIC" label
+  // that stays when decoding fails (e.g. a CSP that blocks WebAssembly in the worker).
+  const heic = await checkHeicPreview(context, APP_URL, join(folder, 'heic-only'));
+  check(heic.ok, `HEIC photo previewed offline (decoded on this computer): ${heic.detail}`);
+  const workerFiles = [...new Set(heicLoads.map((l) => new URL(l.url).pathname))];
+  check(workerFiles.length >= 2 && heicLoads.every((l) => l.ok && l.sw), `HEIC decoder files served offline by the service worker: ${workerFiles.join(', ') || 'none'}`);
+  check(cspViolations.length === 0, cspViolations.length ? `CSP violations (page or workers):\n  ${cspViolations.join('\n  ')}` : 'no CSP violations in the page or its workers');
   check(errors.length === 0, errors.length ? `errors offline:\n  ${errors.join('\n  ')}` : 'no console errors or failed requests offline');
   check(offlineFromNetwork.length === 0, offlineFromNetwork.length ? `served from network while offline: ${offlineFromNetwork.join(', ')}` : 'every offline request was answered by the service worker');
   await context.close();

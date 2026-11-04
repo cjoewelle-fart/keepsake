@@ -3,6 +3,7 @@ import { defineConfig } from 'vite'
 import { configDefaults } from 'vitest/config'
 import type { Plugin } from 'vite'
 import { VitePWA } from 'vite-plugin-pwa'
+import { cspMeta as csp, deployFiles } from './vite.deploy.ts'
 
 // `npm run build:test` (vite build --mode testbuild): the production build for usability
 // sessions, in dist-test/. Same privacy lock-down and offline install, but the example-files
@@ -20,29 +21,8 @@ const APP_SHORT_NAME = 'Keepsake'
 const THEME = '#23596B'
 const BACKGROUND = '#ECF1F0'
 
-// The privacy lock-down: the built app may only load its own files and may not
-// send data to any other address. Added at build time only, because the dev
-// server needs inline scripts and a live-reload connection.
-const CSP = [
-  "default-src 'self'",
-  "script-src 'self'",
-  "style-src 'self' 'unsafe-inline'",
-  "img-src 'self' blob: data:",
-  "media-src 'self' blob:",
-  "font-src 'self' data:",
-  "worker-src 'self' blob:",
-  "connect-src 'self'",
-  "object-src 'none'",
-  "base-uri 'none'",
-  "form-action 'none'",
-].join('; ')
-
-const csp = (): Plugin => ({
-  name: 'keepsake-csp',
-  apply: 'build',
-  transformIndexHtml: (html) =>
-    html.replace('<head>', `<head>\n    <meta http-equiv="Content-Security-Policy" content="${CSP}" />`),
-})
+// The privacy lock-down (CSP) and the hosting headers live in vite.deploy.ts: one policy,
+// sent both as a <meta> tag and as the `_headers` file read by Cloudflare Pages and Netlify.
 
 // Test build only: mark the page title, and refuse to finish if the example-files code
 // (which fetches ./sample-pack.wasm) made it into the bundle.
@@ -117,8 +97,8 @@ export default defineConfig(({ mode }) => ({
   base: './',
   plugins: mode === 'artifact' ? [react()]
     : mode === ARTIFACT_TEST ? [react(), testBuild()]
-    : mode === TEST_BUILD ? [react(), csp(), offline(), installTags(), testBuild()]
-    : [react(), csp(), offline(), installTags()],
+    : mode === TEST_BUILD ? [react(), csp(), offline(), installTags(), testBuild(), deployFiles()]
+    : [react(), csp(), offline(), installTags(), deployFiles()],
   // Test builds never show the example-files button, whatever the environment says.
   define: mode === TEST_BUILD || mode === ARTIFACT_TEST ? { 'import.meta.env.VITE_SAMPLES': JSON.stringify('0') } : {},
   worker: { format: 'es' },

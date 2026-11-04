@@ -1,16 +1,23 @@
 // End-to-end check of the built app in a real browser.
 // Usage: npm run build && node scripts/e2e.mjs [chromiumPath] [--port 4173]
+// Against a hosted copy instead of a local preview server (T85): set BASE_URL, or pass --base-url.
+//   BASE_URL=https://example.pages.dev/ npm run e2e
+// Still needs `npm run fixture` locally: the fixture folder is picked from this computer.
 import { execFileSync, spawn } from 'node:child_process';
 import { mkdirSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
 import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { chromium } from 'playwright';
+import { watchCsp } from './lib/browser-checks.mjs';
 
 const args = process.argv.slice(2);
 const opt = (k, d) => { const i = args.indexOf(k); return i >= 0 ? args.splice(i, 2)[1] : d; };
 // Its own port, so several people (or worktrees) can run it at once.
 const port = String(Number(opt('--port', '4173')));
-const base = `http://localhost:${port}`;
+const baseUrl = opt('--base-url', process.env.BASE_URL);
+const appUrl = baseUrl ? new URL(baseUrl).href : `http://localhost:${port}/`;
+// Requests are judged by origin: anything not from the app's own origin "left this computer".
+const base = new URL(appUrl).origin;
 const exe = args[0] || process.env.CHROMIUM_PATH;
 const out = 'e2e-shots';
 mkdirSync(out, { recursive: true });
@@ -365,12 +372,14 @@ async function saveAsZip(page, label, selected) {
 const problems = [];
 const requests = [];
 // Start the server and the browser inside try/finally, so a failed launch never leaves the port held.
-const server = spawn('npx', ['vite', 'preview', '--port', port, '--strictPort'], { stdio: 'pipe', detached: true });
-const stopServer = () => { try { process.kill(-server.pid); } catch { /* already gone */ } }; // the server and its children
+// With BASE_URL there is no local server: the hosted copy is used as it is.
+const server = baseUrl ? null : spawn('npx', ['vite', 'preview', '--port', port, '--strictPort'], { stdio: 'pipe', detached: true });
+const stopServer = () => { try { if (server) process.kill(-server.pid); } catch { /* already gone */ } }; // the server and its children
 process.once('SIGINT', () => { stopServer(); process.exit(130); });
 let browser;
 try {
-  await new Promise((r, j) => { server.stdout.on('data', (d) => String(d).includes(port) && r()); server.on('exit', () => j(new Error(`preview server exited (port ${port} in use?)`))); });
+  if (server) await new Promise((r, j) => { server.stdout.on('data', (d) => String(d).includes(port) && r()); server.on('exit', () => j(new Error(`preview server exited (port ${port} in use?)`))); });
+  else console.log(`testing the hosted app at ${appUrl}`);
   browser = await chromium.launch({ executablePath: exe });
   // 'zoom200' is the desktop window at 200% browser zoom: half the CSS pixels, twice the density.
   const runs = [['desktop', { width: 1280, height: 900 }, 1], ['phone', { width: 390, height: 844 }, 1], ['zoom200', { width: 640, height: 450 }, 2]];
@@ -378,7 +387,13 @@ try {
     const page = await browser.newPage({ viewport, deviceScaleFactor });
     page.on('console', (m) => m.type() === 'error' && problems.push(`[${label}] console: ${m.text()}`));
     page.on('pageerror', (e) => problems.push(`[${label}] page error: ${e.message}`));
-    page.on('request', (r) => { if (!r.url().startsWith(base) && !r.url().startsWith('blob:') && !r.url().startsWith('data:')) requests.push(r.url()); });
+    page.on('request', (r) => {
+      const url = r.url();
+      if (url.startsWith('blob:') || url.startsWith('data:')) return; // the user's own files, in memory
+      if (new URL(url).origin !== base) requests.push(url);
+    });
+    // CSP violations in the page and in its workers (a worker's never reach the page console).
+    await watchCsp(page.context(), page, (v) => problems.push(`[${label}] ${v}`));
     // Force the file-input fallback (the folder picker dialog can't be automated).
     await page.addInitScript(() => {
       for (const k of ['showDirectoryPicker', 'showOpenFilePicker', 'showSaveFilePicker']) {
@@ -386,7 +401,7 @@ try {
         delete Window.prototype[k];
       }
     });
-    await page.goto(`${base}/`);
+    await page.goto(appUrl);
     await page.screenshot({ path: `${out}/${label}-1-start.png`, fullPage: true });
     await checkNoSideScroll(page, label, 'start');
 

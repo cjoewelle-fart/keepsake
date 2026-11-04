@@ -16,6 +16,7 @@
     "e2e": "node scripts/e2e.mjs",
     "notices": "node scripts/make_notices.mjs",
     "offline-check": "node scripts/offline-check.mjs",
+    "serve-dist": "node scripts/serve-dist.mjs",
     "a11y": "node scripts/a11y-check.mjs",
     "pilot-e2e": "node scripts/pilot-e2e.mjs",
     "gate": "npm test && npm run build && npm run build:test && npm run fixture && npm run eval -- --silent=false && npm run e2e && npm run offline-check && npm run a11y && node scripts/a11y-check.mjs --fixture \"fixtures/pilot/Recovered from old phone\" --shots e2e-shots/a11y-pilot && node scripts/qa-save-opfs/run.mjs && npm run pilot-e2e"
