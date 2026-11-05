@@ -17,6 +17,7 @@ import { InfoPage } from './ui/InfoPage';
 import { Selection } from './ui/timeline';
 import { copy } from './ui/copy';
 import { withPickedFolder } from './ui/recoveryFolder';
+import { progressFor, type ScanRun } from './ui/scanRun';
 import type { RecoveryRoot } from './ui/recoveryFolder';
 import { canUseFolderPicker, inFrame } from './ui/embedded';
 import { NOTE_DELAY_MS, shownNote } from './ui/liveNote';
@@ -115,13 +116,15 @@ export default function App() {
     setMovedBack(new Set());
     setScreen({ name: 'scanning', progress: { stage: 'checking', done: 0, total: list.length } });
     runRef.current.stopped = true;
-    const run: { id: number; stopped: boolean } = { id: runRef.current.id + 1, stopped: false };
+    const run: ScanRun = { id: runRef.current.id + 1, stopped: false };
     runRef.current = run;
     try {
       const api = getWorker();
       // Paths first, so the scan starts at once; the files and their sizes follow in small
       // batches so the page keeps answering (all at once froze it for seconds on 40,000 files, T52).
-      const scanning = api.scan(run.id, paths, Comlink.proxy((p: Progress) => setScreen({ name: 'scanning', progress: p })));
+      // Progress can arrive after the scan's answer (T100, see ui/scanRun.ts): only while it runs.
+      const onProgress = progressFor(run, () => runRef.current, (p: Progress) => setScreen({ name: 'scanning', progress: p }));
+      const scanning = api.scan(run.id, paths, Comlink.proxy(onProgress));
       let fedOk = true;
       const send = (start: number, batch: File[], sizes: number[]) => api.add(run.id, start, batch, sizes);
       // The first batch waits for the next task, so it doesn't add to the browser's own
@@ -130,6 +133,7 @@ export default function App() {
         .then(() => handOver(list, (f) => f.size, send, () => run.stopped))
         .catch(() => { fedOk = false; api.cancel(); });
       const result = await scanning;
+      run.stopped = true; // answered: a progress update still on its way is stale
       await fed;
       if (!fedOk) throw new Error('hand-over failed');
       if (!result) {

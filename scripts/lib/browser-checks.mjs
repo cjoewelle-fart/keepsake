@@ -42,24 +42,13 @@ export async function checkHeicPreview(context, url, folder) {
   const violations = [];
   const watch = await watchCsp(context, page, (v) => violations.push(v));
   try {
-    // A scan of a very small folder sometimes ends up stuck on "Checked 1 of 1 files, 100%",
-    // sometimes after the results were already shown (a separate app bug, seen 2026-11-04 with
-    // 1-3 file folders, HEIC or not). Try up to 3 times and say so, so this check stays about
-    // the HEIC preview.
-    let stalls = 0;
-    for (let attempt = 0; attempt < 3; attempt++) {
-      await page.goto(url);
-      const [chooser] = await Promise.all([page.waitForEvent('filechooser'), page.getByRole('button', { name: 'Choose recovery folder' }).click()]);
-      await chooser.setFiles(folder);
-      // The results screen (the progress screen also says "Files checked").
-      const review = page.getByRole('button', { name: /^Review my/ });
-      // ...and still there a moment later (the bug can show the results, then go back to 100%).
-      const reached = await review.waitFor({ timeout: 20_000 }).then(() => true, () => false)
-        && await page.waitForTimeout(1500).then(() => review.isVisible());
-      if (reached) break;
-      stalls++;
-    }
-    if (stalls) console.log(`NOTE  the HEIC-only scan stalled at 100% ${stalls} time(s) and was retried (small-folder scan bug, not HEIC)`);
+    await page.goto(url);
+    const [chooser] = await Promise.all([page.waitForEvent('filechooser'), page.getByRole('button', { name: 'Choose recovery folder' }).click()]);
+    await chooser.setFiles(folder);
+    // The results screen (the progress screen also says "Files checked"). One try: the scan of
+    // a 1-file folder used to fall back to "Checked 1 of 1, 100%" (T100, fixed); a stall here
+    // is a real failure, reported below as "no preview tile".
+    await page.getByRole('button', { name: /^Review my/ }).waitFor({ timeout: 20_000 }).catch(() => {});
     const tile = page.locator('.tile').first();
     const found = await tile.waitFor({ timeout: 10_000 }).then(() => true, () => false);
     if (!found) {

@@ -72,10 +72,10 @@ Then open the saved folder (or zip) and check a few photos. Do they look right? 
 
 ### What Keepsake won't do
 
-- **It won't delete anything.** Not in your recovery folder, and not in the folder you save to.
+- **It won't delete your files.** Nothing in your recovery folder, and nothing that was already in the folder you save to.
 - **It won't change or move your files.** It can't save into your recovery folder.
 - **It won't upload anything.** Your photos are not sent to me, to the team, or to anyone else. There's no account and no tracking.
-- **It won't need the internet after the page opens.** After your first visit, it keeps working offline.
+- [KEEP ONLY IF THE T85 OFFLINE CHECK PASSED ON THE HOSTED ADDRESS] **It won't need the internet after the page opens.** After your first visit, it keeps working offline.
 
 <!-- [CONFIRM: offline after first visit works end to end on the hosted beta (T85 offline check), including iPhone (HEIC) previews. Voice rule 4: keep this line only once QA confirms. If QA confirms, you may add: "To check for yourself, turn off Wi-Fi after the page loads. It still works."] -->
 
@@ -100,7 +100,8 @@ You didn't do anything wrong. Finding these problems is the reason for the test.
 1. **Use Keepsake once** on a real recovery folder or on the example folder, from start to saving. Try to do it on your own, the way you would if I weren't there.
 2. **Fill in the form** when you're done. It's 5 short questions and takes about 2 minutes: [FORM LINK]
 3. **A call, if you'd like.** I'd love a 20-minute chat about how it went. This is optional. Just say so in the form or reply to me.
-4. **Please don't send us your photos.** Words are enough. If you want to show us a screen, describe it, or send a screenshot only if no photos show in it.
+4. **Please don't share the link.** It's only for testers right now.
+5. **Please don't send us your photos.** Words are enough. If you want to show us a screen, describe it, or send a screenshot only if no photos show in it.
 
 Please do this by [END DATE].
 
@@ -118,14 +119,13 @@ Please read this before you use Keepsake.
 
 - **This is a test version.** It may have mistakes. Some words and screens may change, and so may the name.
 - **Keep your recovery folder.** Keepsake doesn't change it. But please don't delete it after you save, even if the sorted copy looks right. A test version could miss a photo.
-- **Your photos stay on your computer.** Keepsake doesn't send them anywhere, and we never see them.
+- **Your photos stay on your computer.** Keepsake doesn't send them anywhere. If I watch you use it, in person or by sharing your screen, I'll see what's on your screen. You can use the example folder instead if you'd rather.
 - **You can stop any time.** You don't need to give a reason, and you don't need to fill in the form if you stop.
-- **What we do with your answers.** Only I and the small team making Keepsake read them. We use them to fix the app before it comes out. We won't share your name or answers with anyone else, and we won't use them to sell you anything.
+- **What we do with your answers.** Only I read them. I share what we learn with the small team making Keepsake, without your name or contact details. We use them to fix the app before it comes out. We won't share your name or answers with anyone else, and we won't use them to sell you anything.
 - **The form is a Google Form.** Google stores what you type in it. Keepsake itself sends nothing to Google or anyone else.
-- **If you join a call.** We only record it if you say yes first. You can say no and still have the call.
+- **If you join a call.** [OWNER DECIDES: whether calls are recorded. If never: "We don't record the call." If sometimes: "We only record it if you say yes first. You can say no and still have the call."]
+- [OWNER DECIDES: how long form answers are kept. Then add: "I delete your answers by [date]."]
 
-<!-- [CONFIRM: where form answers are stored (form tool), how long they're kept, and whether they're deleted after launch. If known, add one line: "We delete your answers by [date]."] -->
-<!-- [CONFIRM: whether calls will be recorded at all. If never, change the last point to "We don't record the call."] -->
 
 If you have any questions, just ask me.
 
