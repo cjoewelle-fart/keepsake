@@ -339,6 +339,17 @@ async function run(browser) {
   const vid = page.locator('.tile-open', { hasText: 'Save video' }).first();
   await vid.scrollIntoViewIfNeeded();
   await vid.click();
+  // Playwright's bundled Chromium has no H.264, so the viewer rightly shows its "can't play here" note.
+  // Then check that note instead of playback (real Chrome and Edge play these videos).
+  const h264 = await page.evaluate(() => document.createElement('video').canPlayType('video/mp4; codecs="avc1.640028"') !== '');
+  if (!h264) {
+    await page.locator('dialog.viewer[open]').waitFor();
+    await page.waitForTimeout(1500);
+    const note = await page.evaluate(() => !document.querySelector('dialog.viewer video.viewer-media') && (document.querySelector('dialog.viewer')?.textContent ?? '').length > 0);
+    check(note, 'D24 a video in a browser without H.264 shows the can\'t-play note instead of a player (playback itself needs real Chrome or Edge)');
+    await page.keyboard.press('Escape');
+    await page.waitForTimeout(300);
+  } else {
   await page.locator('dialog.viewer[open] video.viewer-media').waitFor();
   const played = await page.evaluate(async () => {
     const v = document.querySelector('dialog.viewer video.viewer-media');
@@ -352,6 +363,7 @@ async function run(browser) {
   await page.locator('dialog.viewer .viewer-close').click();
   await page.waitForTimeout(100);
   check((await vstate()).view === (await vid.getAttribute('data-view')), 'D24 Close returns focus to the video tile');
+  }
   // Open and close 50 times (stepping, and through the HEIC): every blob: URL the viewer made is given back.
   await page.evaluate(() => window.scrollTo(0, 0));
   await page.waitForTimeout(1500);
