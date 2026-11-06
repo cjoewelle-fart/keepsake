@@ -113,7 +113,7 @@ try {
       await page.getByRole('button', { name: 'Back to review' }).click();
       await h1(/Choose what to save/).waitFor();
     } else if (what === 'results') {
-      await page.getByRole('button', { name: 'Back to Clean up' }).first().click();
+      await page.getByRole('button', { name: 'Back to Sort' }).first().click();
       await page.getByText('Files checked').waitFor();
     } else if (what === 'startover') {
       await page.getByRole('button', { name: /Sort a different folder/ }).first().click();

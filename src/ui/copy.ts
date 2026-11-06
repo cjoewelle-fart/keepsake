@@ -394,24 +394,31 @@ Your card and the files already found are fine. Nothing here deletes anything.
 
 export const copy = {
   appName: APP,
-  steps: ['Recover', 'Scan', 'Clean up', 'Review', 'Save'],
+  /** The steps inside the app (warmth spec §1). Recovering with PhotoRec happens before, so it isn't one. */
+  steps: ['Scan', 'Sort', 'Choose', 'Save'],
   stepOf: (i: number, total: number, name: string) => `Step ${i + 1} of ${total} · ${name}`,
-  /** The browser tab's title on each step: "Clean up · Keepsake". `app` keeps the test build's "(test)". */
+  /** Read after a finished step's name in the step indicator. */
+  stepDone: '(done)',
+  stepsLabel: 'Steps',
+  /** The browser tab's title on each step: "Sort · Keepsake". `app` keeps the test build's "(test)". */
   pageTitle: (step: string, app: string) => `${step} · ${app}`,
   skip: 'Skip to content',
 
   start: {
-    eyebrow: 'Step 2 of 5',
-    // T83 (owner walkthrough, UX writer copy): fewer words, a headline that says what it does.
-    title: 'We find the photos in your recovered files and sort them by date.',
+    // Warmth (Nov 6, UX writer option A): one plain sentence that doesn't promise a result.
+    title: 'Find your photos and sort them by date.',
     body: 'Choose the folder your recovery program made. We’ll put your photos in a folder for each year and month.',
     choose: 'Choose recovery folder',
     /** Small text under the button. */
     hint: 'Look for the one that holds recup_dir.1, recup_dir.2 and so on.',
+    /** Under the button: takes over from the old "Recover" step. Opens the PhotoRec guide. */
+    noFolder: 'No recovery folder yet? Here’s how to make one',
+    /** On the illustration's middle print (decorative). */
+    fanDate: '12 Jun',
     /** T83: the privacy promise, in a highlighted note next to the button. */
     promise: 'Your photos stay on this computer. Nothing is uploaded or deleted.',
     /** T83: "Before you start", a short Q&A under the button. */
-    faqH: 'Before you start',
+    faqH: 'Good to know',
     faq: [
       { q: 'Do you see my photos?', a: 'No. We have no way to see them.' },
       { q: 'Do I need an account?', a: 'No. There’s nothing to sign up for.' },
@@ -449,13 +456,10 @@ export const copy = {
     ledgerChecked: 'Files checked',
     ledgerKept: 'Kept, sorted by date',
     ledgerAside: 'Set aside, kept safe below',
-    // T76: the privacy promise in plain words, not a "0 · 0" counter.
-    ledgerSafe: 'Your files',
-    ledgerSafeValue: 'Not deleted, not sent anywhere',
-    ledgerSafeSr: 'Your files',
-    ledgerSafeValueSr: 'Not deleted, not sent anywhere',
+    // Warmth (Nov 6): one safety note under the ledger, a heading line and a line under it.
+    safeH: 'None of your files were deleted or sent anywhere.',
+    safeLine: 'They’re all still in your recovery folder, just as they were.',
     ledgerChanged: (keep: number, aside: number) => `Now keeping ${n(keep)} ${plural(keep, 'file', 'files')}. ${n(aside)} set aside.`,
-    untouched: 'Nothing was deleted or sent anywhere. Every file is still in your recovery folder, just as it was.',
     takeYourTime: 'No rush. Look through everything first, then review when you’re ready.',
     /** T77: under the Kept heading. The contact sheet shows photos only (Results.tsx filters on PHOTO_KINDS). Videos are only mentioned when some are kept (QA m4). */
     keptPhotosOnly: (videos: boolean) => (videos ? 'These previews show photos only. You’ll see videos too when you review.' : 'These previews show photos only.'),
@@ -581,11 +585,8 @@ export const copy = {
     ledgerNotSelected: 'Not selected',
     ledgerSize: 'Size to save',
     ledgerAside: 'Still set aside, kept safe',
-    ledgerSafe: 'Your files', // T76
-    ledgerSafeValue: 'Not deleted, not sent anywhere',
-    ledgerSafeSr: 'Your files',
-    ledgerSafeValueSr: 'Not deleted, not sent anywhere',
-    notSelectedMeans: 'Photos you don’t select stay where they are now. Nothing is deleted.',
+    safeH: 'None of your files are deleted or sent anywhere.',
+    safeLine: 'Anything you don’t select stays where it is now.',
     nothingSelected: 'Nothing is selected, so there’s nothing to save yet. Your photos are all still here.',
     save: (x: number) => (x === 0 ? 'Save selected' : `Save ${n(x)} selected`),
     selectAll: 'Select all',
@@ -665,9 +666,9 @@ export const copy = {
     /** Above the list while the Not selected filter is on. */
     unselectedNote: 'Select any you want to save after all. They stay in this list until you choose another filter.',
     showAll: 'Show all',
-    asideLine: (x: number) => `${n(x)} ${plural(x, 'file is', 'files are')} still set aside, kept safe. To look through them or keep any, go back to Clean up.`,
-    back: 'Back to Clean up',
-    /** T79: next to both "Back to Clean up" buttons. */
+    asideLine: (x: number) => `${n(x)} ${plural(x, 'file is', 'files are')} still set aside, kept safe. To look through them or keep any, go back to Sort.`,
+    back: 'Back to Sort',
+    /** T79: next to both "Back to Sort" buttons. */
     backKeeps: 'Your choices here are kept if you go back.',
   },
 
@@ -716,7 +717,8 @@ export const copy = {
     ledgerSelected: 'Selected to save',
     ledgerSize: 'Total size',
     needSpace: (size: string) => `You’ll need at least ${size} of free space.`,
-    newCopies: 'We save new copies. Your recovery folder stays exactly as it was.',
+    safeH: 'None of your files are deleted or sent anywhere.',
+    safeLine: 'We save new copies. Your recovery folder stays as it was.',
     // The claude.ai preview (a sandboxed frame), where neither folder saving nor downloads work.
     previewH: 'Saving isn’t available in this preview.',
     previewBody: 'In the real app, your photos are saved to a folder you choose.',

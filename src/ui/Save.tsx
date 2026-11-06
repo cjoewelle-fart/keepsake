@@ -14,6 +14,8 @@ import type { DirHandle, FolderSession, RunEnd } from './saveRun';
 import { END_COST, entryCost } from './zip';
 import { canDownload } from './embedded';
 import { mediaType } from './timeline';
+import { SafeNote } from './Results';
+import { CautionIcon, CheckCircleIcon, DownloadIcon, FolderIcon, FolderOpenIcon, PhotoIcon, Prints } from './icons';
 
 type Props = {
   records: FileRecord[];
@@ -312,10 +314,9 @@ export function Save({ records, files, scanId, ids, recoveryRoot, onBack, onDone
         <dl className="ledger" aria-label={s.ledgerLabel}>
           <div><dt>{s.ledgerSelected}</dt><dd data-k="selected">{n(total)}</dd></div>
           <div className="ledger-total"><dt>{s.ledgerSize}</dt><dd data-k="size">{bytes(totalBytes)}</dd></div>
-          <SafeRow />
         </dl>
         <p className="sub-sm">{s.needSpace(bytes(totalBytes))}</p>
-        <p className="sub-sm">{s.newCopies}</p>
+        <SafeNote h={s.safeH} line={s.safeLine} />
         <div><button type="button" className="btn btn-link" onClick={onBack}>{s.back}</button></div>
       </section>
 
@@ -341,7 +342,7 @@ export function Save({ records, files, scanId, ids, recoveryRoot, onBack, onDone
             <p className="card-body">{s.folderBody}</p>
             <p className="card-body">{s.notTheCard}</p>
             <div>
-              <button type="button" className="btn btn-primary" onClick={chooseFolder}>{phase.problem ? s.chooseDifferent : s.chooseFolder}</button>
+              <button type="button" className="btn btn-primary btn-icon" onClick={chooseFolder}><FolderOpenIcon />{phase.problem ? s.chooseDifferent : s.chooseFolder}</button>
             </div>
             <p className="sub-sm">{s.browserNote(partCount, bigFile)}</p>
           </section>
@@ -351,7 +352,7 @@ export function Save({ records, files, scanId, ids, recoveryRoot, onBack, onDone
             <p className="card-body">{s.zipBody(total, mediaOnly, partCount, bigFile)}</p>
             {bigFile && <p className="card-body">{s.zipBigFile}</p>}
             {partCount > 1 && <p className="sub-sm">{s.zipAllowTip}</p>}
-            <div><button type="button" className="btn btn-primary" onClick={runZip}>{s.downloadZips(partCount)}</button></div>
+            <div><button type="button" className="btn btn-primary btn-icon" onClick={runZip}><DownloadIcon />{s.downloadZips(partCount)}</button></div>
             {/* T64: after 'unsupported' they're most likely in Chrome or Edge already. */}
             {phase.problem !== 'unsupported' && <p className="sub-sm">{s.zipChromeTip}</p>}
           </section>
@@ -359,11 +360,11 @@ export function Save({ records, files, scanId, ids, recoveryRoot, onBack, onDone
         <section className="card card-quiet" aria-labelledby="tree-h">
           <h2 id="tree-h">{s.treeH}</h2>
           <ul className="tree" aria-label={s.treeLabel}>
-            <li className="tree-root"><FolderIcon />{s.rootFolder}</li>
-            <li style={{ paddingLeft: 30 }}><FolderIcon />{s.treeExample.year}</li>
-            <li style={{ paddingLeft: 60 }}><FolderIcon />{s.monthFolder(s.treeExample.month)}</li>
-            {s.treeExample.files.map((f) => <li key={f} className="tree-file" style={{ paddingLeft: 90 }}><PhotoIcon />{f}</li>)}
-            <li style={{ paddingLeft: 30 }}><FolderIcon />{s.noDateFolder}</li>
+            <li className="tree-root"><FolderIcon className="tree-folder" />{s.rootFolder}</li>
+            <li style={{ paddingLeft: 30 }}><FolderIcon className="tree-folder" />{s.treeExample.year}</li>
+            <li style={{ paddingLeft: 60 }}><FolderIcon className="tree-folder" />{s.monthFolder(s.treeExample.month)}</li>
+            {s.treeExample.files.map((f) => <li key={f} className="tree-file" style={{ paddingLeft: 90 }}><PhotoIcon className="tree-photo" />{f}</li>)}
+            <li style={{ paddingLeft: 30 }}><FolderIcon className="tree-folder" />{s.noDateFolder}</li>
           </ul>
           <p className="sub-sm">{s.treeCaption}</p>
         </section>
@@ -372,14 +373,12 @@ export function Save({ records, files, scanId, ids, recoveryRoot, onBack, onDone
   );
 }
 
-function SafeRow({ label = copy.results.ledgerSafe, value = copy.results.ledgerSafeValue }: { label?: string; value?: string }) {
-  const r = copy.results;
-  // The receipt says it in the past tense (rSafeValue), so its screen-reader text is the same words.
-  const valueSr = value === r.ledgerSafeValue ? r.ledgerSafeValueSr : value;
+/** The receipt's "Your files: None deleted, none sent anywhere" row (T76). A printed record, so it stays a ledger row. */
+function SafeRow() {
   return (
     <div className="ledger-safe">
-      <dt><span aria-hidden="true">{label}</span><span className="sr-only">{r.ledgerSafeSr}</span></dt>
-      <dd><span aria-hidden="true">{value}</span><span className="sr-only">{valueSr}</span></dd>
+      <dt><span aria-hidden="true">{s.rSafe}</span><span className="sr-only">{s.rSafe}</span></dt>
+      <dd><span aria-hidden="true">{s.rSafeValue}</span><span className="sr-only">{s.rSafeValue}</span></dd>
     </div>
   );
 }
@@ -390,7 +389,7 @@ function ZipAgain({ zips }: { zips: { name: string; blob: Blob }[] }) {
       <p className="sub-sm">{s.zipAgainNote}</p>
       <div className="actions">
         {zips.map((z, i) => (
-          <button key={i} type="button" className="btn btn-secondary btn-sm" onClick={() => download(z.blob, z.name)}>{s.zipAgain(z.name)}</button>
+          <button key={i} type="button" className="btn btn-secondary btn-sm btn-icon" onClick={() => download(z.blob, z.name)}><DownloadIcon />{s.zipAgain(z.name)}</button>
         ))}
       </div>
     </div>
@@ -432,10 +431,10 @@ function Done({ total, saved, failedRecords, mediaOnly, folderNames, zips, earli
   return (
     <main className="page done">
       <div className="done-side">
-        <div className="fan no-print" aria-hidden="true">
-          <div className="fan-print fan-l"><div className="ph ph-a"><i /><i /><i /></div></div>
-          <div className="fan-print fan-r"><div className="ph ph-b"><i /><i /><i /></div></div>
-          <div className="fan-print fan-c"><div className="ph ph-c"><i /><i /><i /></div></div>
+        <div className="no-print">
+          <Prints settle>
+            <span className="done-check"><CheckCircleIcon size={48} /></span>
+          </Prints>
         </div>
         <h1 tabIndex={-1}>
           {failed === 0 || saved === total
@@ -468,7 +467,7 @@ function Done({ total, saved, failedRecords, mediaOnly, folderNames, zips, earli
           <div><dt>{s.rSavedTo}</dt><dd className="plain" data-k="saved-to">{savedTo}</dd></div>
           <div><dt>{s.rSorted}</dt><dd className="plain">{s.rSortedValue(sorted.years, sorted.months, sorted.noDate)}</dd></div>
           <div className="ledger-total"><dt>{s.rRecovery}</dt><dd className="plain">{s.rRecoveryValue}</dd></div>
-          <SafeRow label={s.rSafe} value={s.rSafeValue} />
+          <SafeRow />
         </dl>
         {failed > 0 && (
           <div>
@@ -487,24 +486,3 @@ function Done({ total, saved, failedRecords, mediaOnly, folderNames, zips, earli
     </main>
   );
 }
-
-/** A warning triangle for the problem alert. Decorative: the heading says it. */
-const CautionIcon = () => (
-  <svg width="26" height="26" viewBox="0 0 26 26" fill="none" aria-hidden="true" className="icon problem-icon">
-    <path d="M13 3.5L24 22.5H2z" fill="currentColor" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
-    <path d="M13 10v6" stroke="#FFFFFF" strokeWidth="2.2" strokeLinecap="round" />
-    <circle cx="13" cy="19.2" r="1.3" fill="#FFFFFF" />
-  </svg>
-);
-
-const FolderIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true" className="icon">
-    <path d="M2 5.5a1.5 1.5 0 011.5-1.5h4l2 2h7A1.5 1.5 0 0118 7.5v7a1.5 1.5 0 01-1.5 1.5h-13A1.5 1.5 0 012 14.5z" stroke="#23596B" strokeWidth="1.6" />
-  </svg>
-);
-const PhotoIcon = () => (
-  <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true" className="icon">
-    <rect x="3" y="3" width="14" height="14" rx="3" stroke="#8A4B08" strokeWidth="1.6" />
-    <path d="M5 14l3.5-4 3 3 2-2 2 3" stroke="#8A4B08" strokeWidth="1.4" strokeLinejoin="round" />
-  </svg>
-);

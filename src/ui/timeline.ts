@@ -3,7 +3,7 @@
 //
 // Selection is stored as the files the person has *unticked* (everything starts selected), in a
 // byte per file keyed by FileRecord.index. That keeps it flat on 40,000+ files, and a group the
-// person moves back to Keep on the Clean up step joins the selection without any extra work.
+// person moves back to Keep on the Sort step joins the selection without any extra work.
 import { PHOTO_KINDS, VIDEO_KINDS } from '../engine/sniff';
 import { effectiveGroup } from '../engine/summary';
 import type { SetAsideGroup } from '../engine/summary';

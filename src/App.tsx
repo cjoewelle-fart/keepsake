@@ -23,6 +23,7 @@ import { canUseFolderPicker, inFrame } from './ui/embedded';
 import { NOTE_DELAY_MS, shownNote } from './ui/liveNote';
 import { dropUnusedThumbs } from './ui/thumbs';
 import { dropUnusedHeicPreviews } from './ui/heicPreview';
+import { BlankPrint, BookOpenIcon, EyeOffIcon, FileCheckIcon, FolderOpenIcon, LockIcon, Prints, StageIcon, UserXIcon } from './ui/icons';
 
 const dropUnusedPreviews = () => { dropUnusedThumbs(); dropUnusedHeicPreviews(); };
 
@@ -30,9 +31,10 @@ type Screen =
   /** `noteKey` changes on every note, so the same note twice is announced twice. */
   | { name: 'start'; note?: string; noteKey?: number }
   | { name: 'scanning'; progress: Progress }
-  | { name: 'results' }
+  /** `fresh`: just arrived from scanning, so the big number counts up (once). */
+  | { name: 'results'; fresh?: boolean }
   | { name: 'review' }
-  /** Step 5: save new copies of the selected files (T25). */
+  /** Step 4: save new copies of the selected files (T25). */
   | { name: 'save'; ids: number[] }
   | { name: 'error' }
   /** The privacy page or the PhotoRec guide, from the start screen (T67). */
@@ -56,7 +58,7 @@ export default function App() {
   // restarts at 0 with every scan, so Save keys what it remembers across visits by this too (T89).
   const [scanId, setScanId] = useState(0);
   const [movedBack, setMovedBack] = useState<ReadonlySet<SetAsideGroup>>(new Set());
-  // What's selected on the review timeline. Kept here so going back to Clean up keeps the choices.
+  // What's selected on the review timeline. Kept here so going back to Sort keeps the choices.
   const [selection, setSelection] = useState(() => new Selection(0));
   const setAside = useMemo(() => summarize(records, movedBack).setAside, [records, movedBack]);
   const workerRef = useRef<{ raw: Worker; api: Comlink.Remote<ScanApi> } | null>(null);
@@ -147,7 +149,7 @@ export default function App() {
       setRecords(result);
       setScanId(run.id);
       setSelection(new Selection(list.length));
-      setScreen({ name: 'results' });
+      setScreen({ name: 'results', fresh: true });
     } catch {
       setScreen({ name: 'error' });
     } finally {
@@ -190,7 +192,8 @@ export default function App() {
       return next;
     });
 
-  const step = screen.name === 'results' ? 2 : screen.name === 'review' ? 3 : screen.name === 'save' ? 4 : 1;
+  // Steps inside the app: Scan (start, scanning, error and the reading pages), Sort, Choose, Save.
+  const step = screen.name === 'results' ? 1 : screen.name === 'review' ? 2 : screen.name === 'save' ? 3 : 0;
   const done = screen.name === 'save' && saveDone;
   const info = screen.name === 'info' ? screen.page : undefined;
   // Which step you're on, in the browser tab too (2.4.2).
@@ -217,6 +220,7 @@ export default function App() {
             records={records}
             files={files}
             movedBack={movedBack}
+            countUp={!!screen.fresh}
             onToggleGroup={toggleGroup}
             onReview={() => setScreen({ name: 'review' })}
             onStartOver={startOver}
@@ -238,9 +242,10 @@ export default function App() {
         )}
         {screen.name === 'error' && (
           <main className="page narrow">
+            <BlankPrint />
             <h1 tabIndex={-1}>{copy.error.title}</h1>
             <p className="lede">{copy.error.body}</p>
-            <div><button type="button" className="btn btn-primary" onClick={chooseFolder}>{copy.error.retry}</button></div>
+            <div><button type="button" className="btn btn-primary btn-icon" onClick={chooseFolder}><FolderOpenIcon />{copy.error.retry}</button></div>
           </main>
         )}
       </div>
@@ -248,10 +253,16 @@ export default function App() {
   );
 }
 
+/** The start screen's entrance plays once per page load, not on every return to it. */
+let startEntered = false;
+const FAQ_ICONS = [EyeOffIcon, UserXIcon, FileCheckIcon];
+
 function Start({ note, noteKey, onChoose, onSamples, onInfo }: { note?: string; noteKey?: number; onChoose: () => void; onSamples?: () => void; onInfo: (page: InfoName) => void }) {
   const fullSupport = typeof window !== 'undefined' && 'showDirectoryPicker' in window;
   // The claude.ai preview: choosing the folder opens the browser's "upload" dialog.
   const framed = inFrame();
+  const [enter] = useState(() => !startEntered);
+  useEffect(() => { startEntered = true; }, []);
   // The live region must exist before its text arrives, or screen readers stay silent. Start
   // can mount with a note already ("Scan stopped"), so the text goes in a moment after mount.
   // A new key empties the region at once (the key isn't ready yet) and refills it after the
@@ -264,57 +275,46 @@ function Start({ note, noteKey, onChoose, onSamples, onInfo }: { note?: string; 
   }, [note, noteKey]);
   const said = shownNote(note, noteKey, ready);
   return (
-    <main className="page narrow start">
-      <Prints />
-      <h1 tabIndex={-1}>{copy.start.title}</h1>
-      <p className="lede">{copy.start.body}</p>
-      {/* Always mounted, and filled after mount, so screen readers announce the note (4.1.3). */}
-      <div role="status">{said && <p className="note-box">{said}</p>}</div>
-      {/* T83: the privacy promise, right above the button. */}
-      <p className="promise"><LockIcon /><span>{copy.start.promise}</span></p>
-      <div className="start-choose">
-        <div className="actions">
-          <button type="button" className="btn btn-primary btn-lg" onClick={onChoose}>{copy.start.choose}</button>
-          {onSamples && <button type="button" className="btn btn-secondary btn-lg" onClick={onSamples}>{copy.start.samples}</button>}
+    <main className={`page start${enter ? ' enter' : ''}`}>
+      <div className="start-main">
+        <Prints settle={enter} date={copy.start.fanDate} />
+        <h1 tabIndex={-1} className="rise rise-1">{copy.start.title}</h1>
+        <p className="lede rise rise-2">{copy.start.body}</p>
+        {/* Always mounted, and filled after mount, so screen readers announce the note (4.1.3). */}
+        <div role="status">{said && <p className="note-box">{said}</p>}</div>
+        {/* T83: the privacy promise, right above the button. */}
+        <p className="promise rise rise-3"><LockIcon /><span>{copy.start.promise}</span></p>
+        <div className="start-choose rise rise-4">
+          <div className="actions">
+            <button type="button" className="btn btn-primary btn-lg btn-icon" onClick={onChoose}><FolderOpenIcon />{copy.start.choose}</button>
+            {onSamples && <button type="button" className="btn btn-secondary btn-lg" onClick={onSamples}>{copy.start.samples}</button>}
+          </div>
+          <p className="sub-sm">{copy.start.hint}</p>
+          {onSamples && <p className="sub-sm">{copy.start.samplesNote}</p>}
+          {!fullSupport && !framed && <p className="sub-sm">{copy.start.browserNote}</p>}
+          {framed && <p className="sub-sm">{copy.start.uploadNote}</p>}
+          <div><button type="button" className="btn btn-link btn-icon no-folder" onClick={() => onInfo('guide')}><BookOpenIcon />{copy.start.noFolder}</button></div>
         </div>
-        <p className="sub-sm">{copy.start.hint}</p>
-        {onSamples && <p className="sub-sm">{copy.start.samplesNote}</p>}
-        {!fullSupport && !framed && <p className="sub-sm">{copy.start.browserNote}</p>}
-        {framed && <p className="sub-sm">{copy.start.uploadNote}</p>}
       </div>
-      <section className="faq" aria-labelledby="faq-h">
+      <section className="card faq" aria-labelledby="faq-h">
         <h2 id="faq-h">{copy.start.faqH}</h2>
         <dl>
-          {copy.start.faq.map(({ q, a }) => <div key={q}><dt>{q}</dt><dd>{a}</dd></div>)}
+          {copy.start.faq.map(({ q, a }, i) => {
+            const Icon = FAQ_ICONS[i % FAQ_ICONS.length];
+            return (
+              <div key={q} className="faq-row">
+                <dt><Icon size={24} className="faq-icon" />{q}</dt>
+                <dd>{a}</dd>
+              </div>
+            );
+          })}
         </dl>
+        <ul className="start-links">
+          <li><button type="button" className="btn btn-link btn-icon" onClick={() => onInfo('privacy')}><LockIcon />{copy.info.privacy.link}</button></li>
+          <li><button type="button" className="btn btn-link btn-icon" onClick={() => onInfo('guide')}><BookOpenIcon />{copy.info.guide.link}</button></li>
+        </ul>
       </section>
-      <ul className="start-links">
-        <li><button type="button" className="btn btn-link" onClick={() => onInfo('privacy')}>{copy.info.privacy.link}</button></li>
-        <li><button type="button" className="btn btn-link" onClick={() => onInfo('guide')}>{copy.info.guide.link}</button></li>
-      </ul>
     </main>
-  );
-}
-
-/** A small padlock beside the privacy promise. Decorative: the words say it. */
-function LockIcon() {
-  return (
-    <svg width="22" height="22" viewBox="0 0 22 22" fill="none" aria-hidden="true" className="icon">
-      <rect x="4" y="9.5" width="14" height="10" rx="2.5" stroke="currentColor" strokeWidth="1.8" />
-      <path d="M7.5 9.5V7a3.5 3.5 0 017 0v2.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
-      <circle cx="11" cy="14.5" r="1.4" fill="currentColor" />
-    </svg>
-  );
-}
-
-/** Three blank prints, fanned out. Purely decorative. */
-function Prints() {
-  return (
-    <div className="fan" aria-hidden="true">
-      <div className="fan-print fan-l"><div className="ph ph-a"><i /><i /><i /></div></div>
-      <div className="fan-print fan-r"><div className="ph ph-b"><i /><i /><i /></div></div>
-      <div className="fan-print fan-c"><div className="ph ph-c"><i /><i /><i /></div></div>
-    </div>
   );
 }
 
@@ -354,15 +354,5 @@ function Scanning({ progress, onStop }: { progress: Progress; onStop: () => void
         </button>
       </div>
     </main>
-  );
-}
-
-function StageIcon({ state }: { state: 'done' | 'current' | 'todo' }) {
-  return (
-    <svg width="18" height="18" viewBox="0 0 18 18" fill="none" aria-hidden="true" className="icon">
-      {state === 'done' && <><circle cx="9" cy="9" r="8" fill="#23596B" /><path d="M5.4 9.2l2.3 2.3 4.8-4.8" stroke="#FFFFFF" strokeWidth="1.7" strokeLinecap="round" strokeLinejoin="round" /></>}
-      {state === 'current' && <><circle cx="9" cy="9" r="7.2" stroke="#23596B" strokeWidth="1.8" /><circle cx="9" cy="9" r="3" fill="#23596B" /></>}
-      {state === 'todo' && <circle cx="9" cy="9" r="7.2" stroke="#767D80" strokeWidth="1.6" />}
-    </svg>
   );
 }

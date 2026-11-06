@@ -143,7 +143,7 @@ try {
   const t0 = Date.now();
   await chooser.setFiles(join(folder, 'recovery'));
   await page.getByText('Files checked').waitFor({ timeout: 120_000 });
-  check(true, `scan of ${fileCount} files finished offline in ${((Date.now() - t0) / 1000).toFixed(1)}s: "${await page.locator('h1').innerText()}"`);
+  check(true, `scan of ${fileCount} files finished offline in ${((Date.now() - t0) / 1000).toFixed(1)}s: "${await page.locator('main h1').evaluate((el) => { const c = el.cloneNode(true); c.querySelectorAll('[aria-hidden=true]').forEach((x) => x.remove()); return c.textContent; })}"`);
 
   await page.getByRole('button', { name: /^Review my/ }).click();
   await page.locator('h1').filter({ hasText: /\S/ }).waitFor();

@@ -38,6 +38,15 @@ let checks = 0;
 const check = (ok, msg) => { checks++; console.log(`${ok ? 'PASS' : 'FAIL'}  ${msg}`); if (!ok) fails.push(msg); };
 const num = (t) => Number(String(t).replace(/[^0-9]/g, ''));
 const flat = (s) => s.replace(/\s+/g, ' ');
+/**
+ * The main heading's words as a screen reader gets them: the parts hidden from screen readers are
+ * left out (the results number counts up on screen, with its final value in an sr-only copy).
+ */
+const h1Text = (page) => page.locator('main h1').evaluate((el) => {
+  const c = el.cloneNode(true);
+  c.querySelectorAll('[aria-hidden=true]').forEach((x) => x.remove());
+  return c.textContent.replace(/\s+/g, ' ').trim();
+});
 
 /** Walk an OPFS folder in the page: [{ p: path, s: size }]. `which` is 'rec' or 'pictures'. */
 const listIn = (page, which) => page.evaluate(async (which) => {
@@ -85,16 +94,25 @@ async function run(browser) {
 
   // T83: the start screen says what it does, keeps the promise in view, and answers three questions.
   const startScreen = async () => ({
-    h1: flat(await page.locator('h1').innerText()),
+    h1: await h1Text(page),
     promise: flat(await page.locator('main .promise').innerText().catch(() => '')),
     faqH: flat(await page.locator('main .faq h2').innerText().catch(() => '')),
     faq: (await page.locator('main .faq dt').allInnerTexts()).map(flat),
     oldNote: await page.getByText(/Keepsake runs in your browser|never leave this computer/).count(),
   });
   const st0 = await startScreen();
-  check(st0.h1 === 'We find the photos in your recovered files and sort them by date.', `T83 start title: "${st0.h1}"`);
+  check(st0.h1 === 'Find your photos and sort them by date.', `Warmth start title: "${st0.h1}"`);
+  const steps = await page.evaluate(() => ({
+    names: [...document.querySelectorAll('ol.steps li')].map((li) => li.textContent),
+    current: document.querySelector('ol.steps [aria-current=step]')?.textContent,
+    line: document.querySelector('.step-line')?.textContent,
+    label: document.querySelector('ol.steps')?.getAttribute('aria-label'),
+    guide: !!document.evaluate("//button[normalize-space()='No recovery folder yet? Here’s how to make one']", document, null, 9, null).singleNodeValue,
+  }));
+  check(steps.names.join('|') === 'Scan|Sort|Choose|Save' && steps.current === 'Scan' && steps.line === 'Step 1 of 4 · Scan' && steps.label === 'Steps' && steps.guide,
+    `Warmth stepper: ${steps.names.join(', ')}; current "${steps.current}"; "${steps.line}"; guide line under the button ${steps.guide}`);
   check(st0.promise === 'Your photos stay on this computer. Nothing is uploaded or deleted.', `T83 start promise: "${st0.promise}"`);
-  check(st0.faqH === 'Before you start' && st0.faq.join(' | ') === 'Do you see my photos? | Do I need an account? | Will it change my files?' && st0.oldNote === 0,
+  check(st0.faqH === 'Good to know' && st0.faq.join(' | ') === 'Do you see my photos? | Do I need an account? | Will it change my files?' && st0.oldNote === 0,
     `T83 start Q&A: "${st0.faqH}": ${st0.faq.join(' | ')}; old privacy lines left: ${st0.oldNote}`);
 
   // Copy the pilot folder into OPFS: Desktop/<pilot folder>, plus an empty Desktop/Pictures to save into.
@@ -145,15 +163,29 @@ async function run(browser) {
   }
   await page.getByText('Files checked').waitFor({ timeout: 120_000 });
   console.log(`scan took ${((Date.now() - t0) / 1000).toFixed(1)}s; progress showed "of ${sawTotal || '(missed)'} files"`);
+  // Warmth: the big number counts up on screen; screen readers get only the final value, and the heading doesn't change size.
+  const countAt = () => page.evaluate(() => ({
+    live: document.querySelector('main h1 .count-live')?.textContent,
+    sr: document.querySelector('main h1 .sr-only')?.textContent,
+    h: Math.round(document.querySelector('main h1').getBoundingClientRect().height),
+    w: Math.round(document.querySelector('main h1 .count-vis').getBoundingClientRect().width),
+  }));
+  const c0 = await countAt();
+  await page.waitForFunction(() => document.querySelector('main h1 .count-live')?.textContent === '214', null, { timeout: 3000 }).catch(() => {});
+  const c1 = await countAt();
+  check(num(c0.live) < 214 && c1.live === '214' && c0.sr === '214' && c1.sr === '214' && c0.h === c1.h && c0.w === c1.w,
+    `Warmth count-up: showed ${c0.live} then ${c1.live}; screen readers "${c0.sr}"; heading ${c0.h}px → ${c1.h}px, number ${c0.w}px → ${c1.w}px`);
   await page.waitForTimeout(800); // let previews decode
   await page.screenshot({ path: `${out}/1-results.png`, fullPage: true });
-  const h1 = flat(await page.locator('h1').innerText());
+  const h1 = await h1Text(page);
   check(h1 === 'We found 214 photos and videos worth keeping.', `G1 title: "${h1}"`);
   const led = (await page.locator('dl.ledger dd').allInnerTexts()).map(flat);
   check(num(led[0]) === 523 && num(led[1]) === 214 && num(led[2]) === 309, `G1 ledger: checked ${led[0]}, kept ${led[1]}, set aside ${led[2]} (key 523/214/309)`);
-  // What's on screen (the screen-reader copies say the same words).
-  const safeRow = (await page.locator('dl.ledger .ledger-safe [aria-hidden=true]').allInnerTexts()).join(' · ');
-  check(safeRow === 'Your files · Not deleted, not sent anywhere' && !/0 · 0|[Uu]pload/.test(flat(await page.locator('main').innerText())), `T6/T76 ledger in words, no "0 · 0" or "upload": "${safeRow}"`);
+  // Warmth: the promise is one note under the ledger (no ledger row, no separate paragraph).
+  const safeNote = flat(await page.locator('main .promise-safe').innerText());
+  const oldSafe = await page.locator('main .ledger-safe, main .untouched').count();
+  check(safeNote === 'None of your files were deleted or sent anywhere. They’re all still in your recovery folder, just as they were.' && oldSafe === 0 && led.length === 3 && !/0 · 0|[Uu]pload/.test(flat(await page.locator('main').innerText())),
+    `T6/T76 promise in words, no "0 · 0" or "upload": "${safeNote}" (old rows left: ${oldSafe}, ledger rows ${led.length})`);
   const chips = (await page.locator('main .chips[role=group] .chip').allInnerTexts()).map(flat);
   check(chips.join(',') === '2024,2023,2022,2021,2020,2019,No date · 20', `G1 year chips: ${chips.join(', ')}`);
 
@@ -249,7 +281,7 @@ async function run(browser) {
   }));
   check(after.focus === 'Set these aside again' && after.note === 'Added 204 to Kept. Kept is now 418.' && !after.hint, `T77 after Keep: focus on "${after.focus}", note "${after.note}"`);
   check(after.tinted.join('|') === 'Kept, sorted by date|Set aside, kept safe below', `T77 changed ledger rows tinted: ${after.tinted.join(', ')}`);
-  const h3 = flat(await page.locator('h1').innerText());
+  const h3 = await h1Text(page);
   const led3 = (await page.locator('dl.ledger dd').allInnerTexts()).map(num);
   check(h3 === 'We found 418 photos and videos worth keeping.' && led3[1] === 418 && led3[2] === 105, `T3 after Keep these files: "${h3}", ledger kept ${led3[1]}, set aside ${led3[2]} (key 418/105)`);
   const status = page.locator('main [role=status]');
@@ -261,13 +293,21 @@ async function run(browser) {
   // The timeline in that state.
   await page.getByRole('button', { name: /^Review my/ }).click();
   await page.getByRole('heading', { level: 1, name: /Choose what to save/ }).waitFor();
+  const st2 = await page.evaluate(() => ({
+    names: [...document.querySelectorAll('ol.steps li')].map((li) => li.textContent),
+    current: document.querySelector('ol.steps [aria-current=step]')?.textContent,
+    title: document.title,
+  }));
+  check(st2.names.join('|') === 'Scan (done)|Sort (done)|Choose|Save' && st2.current === 'Choose' && /^Choose · /.test(st2.title),
+    `Warmth stepper on review: ${st2.names.join(', ')}; title "${st2.title}"`);
   let tl = await timeline(page);
   check(sumYear(tl, '2022') === 44 && monthTotal(tl.none) === 224, `T3→T4 timeline with previews kept: 2022 ${sumYear(tl, '2022')}, No date ${tl.none} (key 44 / 224)`);
-  await page.getByRole('button', { name: 'Back to Clean up' }).click();
+  await page.getByRole('button', { name: 'Back to Sort' }).click();
   if (!(await page.getByRole('button', { name: 'Set these aside again' }).isVisible())) await page.getByRole('button', { name: /preview copies/i }).click();
   await page.getByRole('button', { name: 'Set these aside again' }).click();
-  const hu = flat(await page.locator('h1').innerText());
-  check(hu === 'We found 214 photos and videos worth keeping.', `T3 undo: "${hu}"`);
+  const hu = await h1Text(page);
+  const liveBack = await page.locator('main h1 .count-live').innerText();
+  check(hu === 'We found 214 photos and videos worth keeping.' && liveBack === '214', `T3 undo: "${hu}" (no count-up after coming back: shows ${liveBack})`);
 
   // T4 + G2 in the review timeline.
   await page.getByRole('button', { name: /^Review my/ }).click();
@@ -451,12 +491,12 @@ async function run(browser) {
   check(up.y === 0 && up.focus === 'choose-h', `T79 Back to top: scrollY ${up.y}, focus on #${up.focus}`);
   check((await page.locator('.tl-col > div > .tl-top').count()) === 1, 'T79 a second Back to top at the end of the list');
   const keepsLine = flat(await page.locator('.tl-back').innerText());
-  check(/Your choices here are kept if you go back\./.test(keepsLine), `T79 next to Back to Clean up: "${keepsLine}"`);
-  await page.getByRole('button', { name: 'Back to Clean up' }).click();
+  check(/Your choices here are kept if you go back\./.test(keepsLine), `T79 next to Back to Sort: "${keepsLine}"`);
+  await page.getByRole('button', { name: 'Back to Sort' }).click();
   await page.getByRole('button', { name: /^Review my/ }).click();
   await page.getByRole('heading', { level: 1, name: /Choose what to save/ }).waitFor();
   const selBack = num(await page.locator('dl.ledger dd[data-k=selected]').innerText());
-  check(selBack === 44, `T79 choices kept after Back to Clean up and back: ${selBack} selected (key 44)`);
+  check(selBack === 44, `T79 choices kept after Back to Sort and back: ${selBack} selected (key 44)`);
   await page.locator('.tl-save:visible').click();
   await page.getByRole('heading', { level: 1, name: /Where should we save/ }).waitFor();
 
@@ -504,7 +544,7 @@ async function run(browser) {
   const againNote = flat(await page.locator('#start-over-note').innerText());
   check(await again.isVisible() && againNote === 'Your saved photos stay where they are. This receipt will close, so save or print it first.', `T83 done screen: Sort another folder, "${againNote}"`);
   await again.click();
-  await page.getByRole('heading', { level: 1, name: /We find the photos/ }).waitFor();
+  await page.getByRole('heading', { level: 1, name: /Find your photos/ }).waitFor();
   await page.waitForTimeout(300);
   const st1 = await startScreen();
   const afterOver = await page.evaluate(() => ({
@@ -520,7 +560,7 @@ async function run(browser) {
   await page.evaluate(() => { window.showDirectoryPicker = async () => window.__rec; });
   await page.getByRole('button', { name: 'Choose recovery folder' }).click();
   await page.getByText('Files checked').waitFor({ timeout: 120_000 });
-  const h1b = flat(await page.locator('h1').innerText());
+  const h1b = await h1Text(page);
   check(h1b === 'We found 214 photos and videos worth keeping.', `T83 second scan after start over: "${h1b}"`);
   await ctx.close();
 }

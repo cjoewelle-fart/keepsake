@@ -56,7 +56,7 @@ describe('timeline grouping', () => {
     const back = new Set<SetAsideGroup>(['duplicate', 'system']);
     expect(inPlay([k, dup, sys], none)).toEqual([k]);
     expect(inPlay([k, dup, sys], back)).toEqual([k, dup, sys]);
-    // Same number as the Clean up screen's "Kept".
+    // Same number as the Sort screen's "Kept".
     expect(inPlay([k, dup, sys], back).length).toBe(summarize([k, dup, sys], back).keep);
   });
 

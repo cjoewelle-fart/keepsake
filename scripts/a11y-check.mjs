@@ -127,6 +127,11 @@ function focusInfo() {
 
 const names = new Map(); // screen -> titles seen
 async function axe(page, run, screen) {
+  // Let entrance and fade-in animations end first (none of them loops), so colours are checked at rest.
+  await page.evaluate(() => Promise.race([
+    Promise.all(document.getAnimations().map((a) => a.finished.catch(() => {}))),
+    new Promise((r) => setTimeout(r, 2000)),
+  ]));
   await page.evaluate(axeSource);
   const r = await page.evaluate(async () => {
     // eslint-disable-next-line no-undef
@@ -272,7 +277,7 @@ async function infoPages(page, run, { min = 24, severity = 'minor', criterion = 
     if (/guide/.test(screen)) check((await cta.count()) === 1, 'serious', run, screen, 'guide ends with "Sort my recovered files"');
     const back = /guide/.test(screen) ? cta : page.getByRole('button', { name: 'Back to start' }).last();
     if (keyboard) { await back.focus(); await page.keyboard.press('Enter'); } else await back.click();
-    await h1(page, /find the photos/).waitFor({ timeout: 5000 });
+    await h1(page, /Find your photos/).waitFor({ timeout: 5000 });
     await focusOnHeading(page, run, `start (back from the ${screen})`);
   }
 }
@@ -426,7 +431,7 @@ async function desktop(browser) {
   await targets(page, run, 'done', 24, 'minor', '2.5.8, WCAG 2.2');
   // T83: "Sort another folder" goes back to the start screen.
   await page.getByRole('button', { name: 'Sort another folder' }).click();
-  await h1(page, /find the photos/).waitFor({ timeout: 5000 });
+  await h1(page, /Find your photos/).waitFor({ timeout: 5000 });
   await focusOnHeading(page, run, 'start (after Sort another folder)');
   await axe(page, run, 'start (after Sort another folder)');
   await page.context().close();
@@ -618,6 +623,9 @@ async function forced(browser) {
   const page = await newPage(browser, run, { viewport: { width: 1280, height: 900 }, forcedColors: 'active', reducedMotion: 'reduce' });
   check(await page.evaluate(() => matchMedia('(forced-colors: active)').matches), 'info', run, 'any', 'forced colours emulated');
   const motion = await page.evaluate(() => matchMedia('(prefers-reduced-motion: reduce)').matches);
+  // Warmth: with reduced motion nothing animates, not even the start screen's entrance.
+  const startAnims = await page.evaluate(() => document.getAnimations().length + [...document.querySelectorAll('main, main *')].filter((e) => getComputedStyle(e).animationName !== 'none').length);
+  check(motion && startAnims === 0, 'serious', run, 'start', `reduced motion: no animation on the start screen (2.3.3 AAA / project rule): ${startAnims} running or set`);
   await page.screenshot({ path: `${out}/${run}-start.png`, fullPage: true });
   await scanFolder(page, fixture);
   if (await h1(page, /Checking|Looking/).waitFor({ timeout: 10_000 }).then(() => true, () => false)) {
@@ -626,6 +634,9 @@ async function forced(browser) {
     await page.screenshot({ path: `${out}/${run}-scanning.png` });
   }
   await page.getByText('Files checked').waitFor({ timeout: 120_000 });
+  // Warmth: the big number shows its final value at once (no count-up), and nothing else animates.
+  const count = await page.evaluate(() => ({ live: document.querySelector('main h1 .count-live')?.textContent, sr: document.querySelector('main h1 .sr-only')?.textContent, anims: document.getAnimations().length }));
+  check(!!count.live && count.live === count.sr && count.anims === 0, 'serious', run, 'results', `reduced motion: the number shows ${count.live} at once (final ${count.sr}), ${count.anims} animations running`);
   await page.waitForTimeout(600);
   const tr = await page.evaluate(() => [...document.querySelectorAll('.strip > div')].map((e) => getComputedStyle(e).transitionDuration));
   check(motion && tr.every((d) => d === '0s'), 'serious', run, 'results', `reduced motion turns transitions off (2.3.3 AAA / project rule): ${[...new Set(tr)].join(',')}`);

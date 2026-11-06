@@ -9,11 +9,15 @@ import { buildSheet, spread } from './contactSheet';
 import { copy, dayMonth, monthYear, n } from './copy';
 import { GroupFiles } from './GroupFiles';
 import { Preview } from './Preview';
+import { CountUp } from './CountUp';
+import { ArrowRightIcon, BlankPrint, ChevronDownIcon, CornerUpLeftIcon, ShieldCheckIcon } from './icons';
 
 type Props = {
   records: FileRecord[];
   files: File[];
   movedBack: ReadonlySet<SetAsideGroup>;
+  /** Just arrived from scanning: the big number counts up once (warmth spec §3). */
+  countUp?: boolean;
   onToggleGroup: (g: SetAsideGroup) => void;
   onReview: () => void;
   onStartOver: () => void;
@@ -26,7 +30,7 @@ const SHADES: Record<SetAsideGroup, string> = { small: '#B8C9C5', duplicate: '#9
  * "Contact sheet with a ledger": the numbers that add up on the left, the photos themselves on the
  * right, and everything that was set aside below them, each group with its reason and an undo.
  */
-export function Results({ records, files, movedBack, onToggleGroup, onReview, onStartOver }: Props) {
+export function Results({ records, files, movedBack, countUp = false, onToggleGroup, onReview, onStartOver }: Props) {
   const s = useMemo(() => summarize(records, movedBack), [records, movedBack]);
   const [open, setOpen] = useState<SetAsideGroup | null>(null);
   /** The chosen view of the Kept card: a year, or 'none' for the photos with no date (T77). */
@@ -51,7 +55,7 @@ export function Results({ records, files, movedBack, onToggleGroup, onReview, on
 
   // Tell screen-reader users when the ledger changes (not on first render).
   const [announce, setAnnounce] = useState('');
-  // The ledger rows that changed are tinted until the next change (T77); no motion.
+  // The ledger rows that changed are tinted until the next change (T77); the tint fades in, nothing moves.
   const [changed, setChanged] = useState(false);
   const last = useRef(`${s.keep}/${s.setAside}`);
   useEffect(() => {
@@ -96,11 +100,14 @@ export function Results({ records, files, movedBack, onToggleGroup, onReview, on
         {s.keep > 0 ? (
           <h1 id="found-h" tabIndex={-1}>
             {r.titleBefore}
-            <span className="bignum">{n(s.keep)}</span>
+            <CountUp value={s.keep} animate={countUp} />
             {r.titleAfter(s.keep)}
           </h1>
         ) : (
-          <h1 id="found-h" tabIndex={-1}>{copy.empty.noKeepers}</h1>
+          <>
+            <BlankPrint />
+            <h1 id="found-h" tabIndex={-1}>{copy.empty.noKeepers}</h1>
+          </>
         )}
         <p className="lede">{s.keep > 0 ? (allUndated ? r.noDatesLine : r.sortedLine) : copy.empty.noKeepersBody}</p>
 
@@ -108,18 +115,14 @@ export function Results({ records, files, movedBack, onToggleGroup, onReview, on
           <div><dt>{r.ledgerChecked}</dt><dd>{n(s.total)}</dd></div>
           <div className={changed ? 'changed' : undefined}><dt>{r.ledgerKept}</dt><dd>{n(s.keep)}</dd></div>
           <div className={`ledger-total${changed ? ' changed' : ''}`}><dt>{r.ledgerAside}</dt><dd>{n(s.setAside)}</dd></div>
-          <div className="ledger-safe">
-            <dt><span aria-hidden="true">{r.ledgerSafe}</span><span className="sr-only">{r.ledgerSafeSr}</span></dt>
-            <dd><span aria-hidden="true">{r.ledgerSafeValue}</span><span className="sr-only">{r.ledgerSafeValueSr}</span></dd>
-          </div>
         </dl>
-        <p className="sub-sm untouched">{r.untouched}</p>
+        <SafeNote h={r.safeH} line={r.safeLine} />
         <p className="sr-only" role="status" aria-live="polite">{announce}</p>
 
         <div className="cta">
           {s.keep > 0 && (
             <>
-              <button type="button" className="btn btn-primary" onClick={onReview}>{r.review(s.keep, s.others === 0)}</button>
+              <button type="button" className="btn btn-primary btn-icon btn-go" onClick={onReview}>{r.review(s.keep, s.others === 0)}<ArrowRightIcon className="arrow" /></button>
               <span className="sub-sm">{r.takeYourTime}</span>
             </>
           )}
@@ -231,17 +234,17 @@ export function Results({ records, files, movedBack, onToggleGroup, onReview, on
                         {moved && <span className="kept-note">{r.movedBack}</span>}
                       </span>
                       <span className="group-count">{n(s.groups[g])}</span>
-                      <span className="group-toggle">{isOpen ? r.hide : r.peek}</span>
+                      <span className="group-toggle">{isOpen ? r.hide : r.peek}<ChevronDownIcon className="chev" /></span>
                     </button>
                     <div className="group-body" id={panelId} hidden={!isOpen}>
                       <p>{copy.groups[g].why}</p>
-                      <button type="button" className="btn btn-secondary btn-sm" onClick={() => toggleGroup(g)}>
-                        {moved ? r.undo : r.moveBack}
+                      <button type="button" className="btn btn-secondary btn-sm btn-icon" onClick={() => toggleGroup(g)}>
+                        {!moved && <CornerUpLeftIcon />}{moved ? r.undo : r.moveBack}
                       </button>
                       {!moved && <p className="sub-sm">{r.moveBackNote}</p>}
                       {moved && lastToggled === g && <p className="note-box" ref={addedNote}>{r.keptAdded(s.groups[g], s.keep)}</p>}
-                      <button type="button" className="btn btn-link gf-toggle" aria-expanded={listed.has(g)} aria-controls={`all-${g}`} onClick={() => toggleList(g)}>
-                        {listed.has(g) ? r.hideAll : r.seeAll(byGroup[g].length)}
+                      <button type="button" className="btn btn-link btn-icon gf-toggle" aria-expanded={listed.has(g)} aria-controls={`all-${g}`} onClick={() => toggleList(g)}>
+                        {listed.has(g) ? r.hideAll : r.seeAll(byGroup[g].length)}<ChevronDownIcon className="chev" />
                       </button>
                       <div className="gf" id={`all-${g}`} hidden={!listed.has(g)}>
                         {listed.has(g) && <GroupFiles records={byGroup[g]} files={files} />}
@@ -255,5 +258,18 @@ export function Results({ records, files, movedBack, onToggleGroup, onReview, on
         )}
       </div>
     </main>
+  );
+}
+
+/**
+ * "Nothing deleted, nothing sent" (warmth spec §3): one note under the ledger, with a shield. Used on
+ * the Sort, Choose and Save screens, each with its own words.
+ */
+export function SafeNote({ h, line, id }: { h: string; line: string; id?: string }) {
+  return (
+    <div className="promise promise-safe" id={id}>
+      <ShieldCheckIcon size={24} />
+      <p><strong>{h}</strong> <span>{line}</span></p>
+    </div>
   );
 }

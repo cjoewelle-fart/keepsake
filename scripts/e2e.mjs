@@ -23,6 +23,12 @@ const out = 'e2e-shots';
 mkdirSync(out, { recursive: true });
 
 const num = (t) => Number(t.replace(/[^0-9]/g, ''));
+/** The main heading as screen readers get it (the results number counts up on screen; its final value is in an sr-only copy). */
+const h1Text = (page) => page.locator('main h1').evaluate((el) => {
+  const c = el.cloneNode(true);
+  c.querySelectorAll('[aria-hidden=true]').forEach((x) => x.remove());
+  return c.textContent.replace(/\s+/g, ' ').trim();
+});
 /** The ledger must always add up: kept + set aside = files checked. */
 async function checkLedger(page, label, when) {
   const v = await page.locator('dl.ledger dd').allInnerTexts();
@@ -36,7 +42,7 @@ async function checkNoSideScroll(page, label, where) {
   if (sw > cw) problems.push(`[${label}] horizontal scroll on ${where}: ${sw}px > ${cw}px`);
 }
 
-/** Timeline ledger: selected + not selected = kept, and kept matches the Clean up screen. */
+/** Timeline ledger: selected + not selected = kept, and kept matches the Sort screen. */
 async function timelineLedger(page, label, when, expectTotal) {
   const get = async (k) => num(await page.locator(`dl.ledger dd[data-k=${k}]`).innerText());
   const [total, selected, unselected] = [await get('total'), await get('selected'), await get('unselected')];
@@ -108,12 +114,12 @@ async function checkTimeline(page, label, keptOnResults) {
   s = await timelineLedger(page, label, 'all again', keptOnResults);
   expect(s.selected === s.total, 'Select all did not select everything');
 
-  // Choices survive a trip back to Clean up.
+  // Choices survive a trip back to Sort.
   await page.locator('.tl-grid input[type=checkbox]').nth(0).click();
-  await page.getByRole('button', { name: 'Back to Clean up' }).click();
+  await page.getByRole('button', { name: 'Back to Sort' }).click();
   await page.getByRole('button', { name: /^Review my/ }).click();
-  s = await timelineLedger(page, label, 'after Clean up and back', keptOnResults);
-  expect(s.selected === s.total - 1, 'selection lost after going back to Clean up');
+  s = await timelineLedger(page, label, 'after Sort and back', keptOnResults);
+  expect(s.selected === s.total - 1, 'selection lost after going back to Sort');
 
   await page.locator('.tl-save:visible').click();
   await page.getByRole('heading', { level: 1, name: /Where should we save/ }).waitFor();
@@ -415,7 +421,7 @@ try {
     if (label === 'desktop') await page.evaluate(() => { window.showDirectoryPicker = async () => { throw new DOMException('stub', 'AbortError'); }; });
     console.log(`[${label}] scan + render: ${((Date.now() - t0) / 1000).toFixed(1)}s`);
     await page.waitForTimeout(800); // let previews decode
-    console.log(`[${label}] heading: ${await page.locator('h1').innerText()}`);
+    console.log(`[${label}] heading: ${await h1Text(page)}`);
     await page.screenshot({ path: `${out}/${label}-2-results.png`, fullPage: true });
     await checkLedger(page, label, 'results');
     await checkNoSideScroll(page, label, 'results');
@@ -423,7 +429,7 @@ try {
     await page.getByRole('button', { name: /preview copies/i }).click();
     await page.waitForTimeout(300);
     await page.getByRole('button', { name: 'Keep these files' }).click();
-    console.log(`[${label}] after moving previews back: ${await page.locator('h1').innerText()}`);
+    console.log(`[${label}] after moving previews back: ${await h1Text(page)}`);
     await checkLedger(page, label, 'moved back');
     // The app fills the live region in an effect after the render: wait for it (up to 2 s).
     const status = page.locator('main [role=status]');
@@ -432,7 +438,7 @@ try {
     if (!/^Now keeping/.test(said)) problems.push(`[${label}] ledger change not announced (got "${said}")`);
     await page.screenshot({ path: `${out}/${label}-3-moved-back.png`, fullPage: true });
     await page.getByRole('button', { name: 'Set these aside again' }).click();
-    console.log(`[${label}] after undo: ${await page.locator('h1').innerText()}`);
+    console.log(`[${label}] after undo: ${await h1Text(page)}`);
 
     const keptOnResults = num((await page.locator('dl.ledger dd').allInnerTexts())[1]);
     await page.getByRole('button', { name: /^Review my/ }).click();

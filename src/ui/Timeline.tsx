@@ -5,6 +5,7 @@ import type { FileRecord } from '../engine/types';
 import { bytes, clock, copy, dateTime, monthName, monthYear, n, runTime, weekdayDayMonth } from './copy';
 import { Preview } from './Preview';
 import { Viewer } from './Viewer';
+import { SafeNote } from './Results';
 import { playableHere } from './playable';
 import { NO_DATE, blocksOf, buildTimeline, chunks, columnsFor, inPlay, largestFirst, mediaType, selectedIds, tally } from './timeline';
 import type { Block, Filter, Month, Order, Selection, TriState } from './timeline';
@@ -286,12 +287,9 @@ export function Timeline({ records, files, movedBack, setAside, selection: sel, 
           <div className="ledger-total"><dt>{t.ledgerNotSelected}</dt><dd data-k="unselected">{n(sum.notSelected)}</dd></div>
           <div><dt>{t.ledgerSize}</dt><dd data-k="size">{bytes(sum.selectedBytes)}</dd></div>
           <div className="ledger-plain"><dt>{t.ledgerAside}</dt><dd data-k="aside">{n(setAside)}</dd></div>
-          <div className="ledger-safe">
-            <dt><span aria-hidden="true">{t.ledgerSafe}</span><span className="sr-only">{t.ledgerSafeSr}</span></dt>
-            <dd><span aria-hidden="true">{t.ledgerSafeValue}</span><span className="sr-only">{t.ledgerSafeValueSr}</span></dd>
-          </div>
         </dl>
-        <p id="save-why" className={none ? 'note-box' : 'sub-sm untouched'}>{none ? t.nothingSelected : t.notSelectedMeans}</p>
+        <SafeNote h={t.safeH} line={t.safeLine} />
+        {none && <p id="save-why" className="note-box">{t.nothingSelected}</p>}
         <p className="sr-only" role="status" aria-live="polite">{announce}</p>
         <div className="cta">
           <div className="tl-wide">{saveBtn('save-why')}</div>
@@ -523,11 +521,19 @@ function tileName(r: FileRecord, pos?: number, of?: number) {
 type TileProps = { r: FileRecord; file: File; pos: number; of: number; on: boolean; onChange: (on: boolean) => void; onOpen: () => void };
 function Tile({ r, file, pos, of, on, onChange, onOpen }: TileProps) {
   const type = mediaType(r);
+  // The tick animates only on the tile the person just ticked or unticked (never on mount: tiles
+  // mount as they scroll in, and Select all would animate them all). A new number restarts it.
+  const [just, setJust] = useState(0);
+  useEffect(() => {
+    if (!just) return;
+    const timer = setTimeout(() => setJust(0), 300);
+    return () => clearTimeout(timer);
+  }, [just]);
   // Only a label: a video this browser can't play is selected and saved like any other (T61).
   const cantPlay = type === 'video' && playableHere(r) === false;
   const name = tileName(r, pos, of);
   return (
-    <figure className={`print tl-tile${on ? '' : ' off'}`}>
+    <figure className={`print tl-tile${on ? '' : ' off'}`} data-just={just ? '' : undefined}>
       {/* D24: the whole tile opens the viewer; the checkbox sits on top of it (and comes after it in Tab order). */}
       {/* Named by hidden text, not aria-label: the picture's own words (file type, can't-play note) are hidden from screen readers here (2.5.3). */}
       <button type="button" className="tile-open" data-view={r.index} onClick={onOpen}>
@@ -537,9 +543,9 @@ function Tile({ r, file, pos, of, on, onChange, onOpen }: TileProps) {
         </span>
       </button>
       <label className="chk">
-        <input type="checkbox" checked={on} onChange={(e) => onChange(e.target.checked)} aria-label={name} />
-        <span className="dot" aria-hidden="true">
-          {on && <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7.2l2.6 2.6L11 4.4" stroke="#FFFFFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" /></svg>}
+        <input type="checkbox" checked={on} onChange={(e) => { setJust((k) => k + 1); onChange(e.target.checked); }} aria-label={name} />
+        <span className="dot" aria-hidden="true" key={just}>
+          {on && <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7.2l2.6 2.6L11 4.4" stroke="#FFFFFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" pathLength={1} /></svg>}
         </span>
       </label>
       {type === 'video' ? (

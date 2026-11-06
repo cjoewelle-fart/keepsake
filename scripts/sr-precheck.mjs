@@ -184,7 +184,7 @@ async function pilot(browser) {
   for (let i = 0; i < 700; i++) {
     await page.keyboard.press('Tab'); await wait(page, 25);
     const f = await focused(page);
-    if (stops.at(-1) === f || /Back to Clean up/.test(f)) break;
+    if (stops.at(-1) === f || /Back to Sort/.test(f)) break;
     stops.push(f);
   }
   say(9, `first 32 of ${stops.length} Tab stops`, stops.slice(0, 32).join(' → '));
