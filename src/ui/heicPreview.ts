@@ -37,3 +37,6 @@ const queue = createPreviewQueue({ startDecoder: startHeicDecoder, concurrency: 
 /** A small JPEG preview of a HEIC file, as a URL the caller releases when it stops showing it. */
 export const heicPreview = (file: Blob, isWanted: () => boolean, maxSide = 320): Promise<Lease> =>
   queue.preview(file, isWanted, maxSide);
+
+/** Give back every cached HEIC preview no tile shows now (starting over with another folder, T83). */
+export const dropUnusedHeicPreviews = () => queue.dropUnused();

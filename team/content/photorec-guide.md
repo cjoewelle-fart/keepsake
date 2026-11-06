@@ -216,9 +216,17 @@ Inside them are lots of files with names like `f12345678.jpg`. PhotoRec can't br
 
 You don't need to sort through them yourself.
 
-**Now open [Name] and choose that folder.** Choose `Recovered photos` (the folder that holds the recup_dir folders). [Name] finds the photos and videos worth keeping and sorts them by date. It doesn't change or delete anything in the folder.
+---
 
-[CONFIRM: final wording of the start-screen button this links to. Today it says "Choose recovery folder".]
+## Part 7: Sort your photos with [Name]
+
+PhotoRec's part is done. Now [Name] sorts what it found.
+
+1. Go back to the start of [Name]. You can use the **Sort my recovered files** button at the bottom of this page.
+2. Click **Choose recovery folder**.
+3. Choose your `Recovered photos` folder (the one that holds the recup_dir folders).
+
+[Name] finds the photos and videos, sets the rest aside, and sorts your photos into folders by date. It only reads your `Recovered photos` folder. Nothing in it is changed or deleted.
 
 ---
 

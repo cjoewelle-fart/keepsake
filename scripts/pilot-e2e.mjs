@@ -83,6 +83,20 @@ async function run(browser) {
   check(/Keepsake \(test\)$/.test(title), `test build: title "${title}"`);
   check((await page.getByRole('button', { name: /example files/i }).count()) === 0, 'test build: no "Try with example files" button');
 
+  // T83: the start screen says what it does, keeps the promise in view, and answers three questions.
+  const startScreen = async () => ({
+    h1: flat(await page.locator('h1').innerText()),
+    promise: flat(await page.locator('main .promise').innerText().catch(() => '')),
+    faqH: flat(await page.locator('main .faq h2').innerText().catch(() => '')),
+    faq: (await page.locator('main .faq dt').allInnerTexts()).map(flat),
+    oldNote: await page.getByText(/Keepsake runs in your browser|never leave this computer/).count(),
+  });
+  const st0 = await startScreen();
+  check(st0.h1 === 'We find the photos in your recovered files and sort them by date.', `T83 start title: "${st0.h1}"`);
+  check(st0.promise === 'Your photos stay on this computer. Nothing is uploaded or deleted.', `T83 start promise: "${st0.promise}"`);
+  check(st0.faqH === 'Before you start' && st0.faq.join(' | ') === 'Do you see my photos? | Do I need an account? | Will it change my files?' && st0.oldNote === 0,
+    `T83 start Q&A: "${st0.faqH}": ${st0.faq.join(' | ')}; old privacy lines left: ${st0.oldNote}`);
+
   // Copy the pilot folder into OPFS: Desktop/<pilot folder>, plus an empty Desktop/Pictures to save into.
   await page.evaluate(() => {
     const i = document.createElement('input');
@@ -453,7 +467,9 @@ async function run(browser) {
     await page.waitForTimeout(600);
     const alert = (await page.locator('[role=alert] h2').allInnerTexts()).join(' | ');
     const still = /Where should we save/.test(await page.locator('h1').innerText());
-    check(still && /That’s your recovery folder\./.test(alert), `save into recovery folder${p ? `/${p}` : ''} refused: "${alert}"`);
+    const focus = await page.evaluate(() => document.activeElement?.id);
+    check(still && alert === 'That folder is part of your recovery folder.' && focus === 'problem-h',
+      `save into recovery folder${p ? `/${p}` : ''} refused: "${alert}", focus on #${focus}`);
   }
 
   // G2: save into Pictures.
@@ -482,6 +498,30 @@ async function run(browser) {
   const same = recAfter.join('\n') === recBefore.join('\n');
   check(recAfter.length === 523 && same, `recovery folder after: ${recAfter.length} files, names and sizes ${same ? 'unchanged' : 'CHANGED'}`);
   await page.screenshot({ path: `${out}/4-done.png`, fullPage: true });
+
+  // T83: "Sort another folder" goes back to the start screen with this tab's results cleared.
+  const again = page.getByRole('button', { name: 'Sort another folder' });
+  const againNote = flat(await page.locator('#start-over-note').innerText());
+  check(await again.isVisible() && againNote === 'Your saved photos stay where they are. This receipt will close, so save or print it first.', `T83 done screen: Sort another folder, "${againNote}"`);
+  await again.click();
+  await page.getByRole('heading', { level: 1, name: /We find the photos/ }).waitFor();
+  await page.waitForTimeout(300);
+  const st1 = await startScreen();
+  const afterOver = await page.evaluate(() => ({
+    focus: document.activeElement?.tagName,
+    livePreviews: [...window.__urls.values()].filter((m) => m.live && (m.name || m.type.startsWith('image/'))).length,
+  }));
+  check(st1.h1 === st0.h1 && afterOver.focus === 'H1', `T83 back on the start screen, focus on the heading (${afterOver.focus})`);
+  check(afterOver.livePreviews === 0, `T83 start over gives back every preview URL (${afterOver.livePreviews} still live)`);
+  const recAgain = await listRec(page);
+  const pics2 = await listIn(page, 'pictures');
+  check(recAgain.join('\n') === recBefore.join('\n') && pics2.length === 44, `T83 start over touches nothing on disk: recovery folder ${recAgain.length} files unchanged, Pictures still ${pics2.length}`);
+  // A second scan from here works as the first did.
+  await page.evaluate(() => { window.showDirectoryPicker = async () => window.__rec; });
+  await page.getByRole('button', { name: 'Choose recovery folder' }).click();
+  await page.getByText('Files checked').waitFor({ timeout: 120_000 });
+  const h1b = flat(await page.locator('h1').innerText());
+  check(h1b === 'We found 214 photos and videos worth keeping.', `T83 second scan after start over: "${h1b}"`);
   await ctx.close();
 }
 

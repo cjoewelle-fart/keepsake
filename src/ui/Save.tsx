@@ -27,6 +27,8 @@ type Props = {
   onBack: () => void;
   /** The header says "Done" on the receipt. */
   onDone: (done: boolean) => void;
+  /** "Sort another folder" on the receipt: back to the start screen, this tab's results cleared (T83). */
+  onStartOver: () => void;
 };
 
 type Phase =
@@ -45,7 +47,7 @@ const problemText = (problem: 'denied' | 'recovery' | 'unchecked' | 'unsupported
         : [s.unsupportedH, s.unsupportedBody(mediaOnly)];
 const split = (list: readonly Planned[]) => splitParts(list, (p) => entryCost(zipPath(p), p.size), END_COST);
 
-export function Save({ records, files, scanId, ids, recoveryRoot, onBack, onDone }: Props) {
+export function Save({ records, files, scanId, ids, recoveryRoot, onBack, onDone, onStartOver }: Props) {
   // Zip downloads where the browser can't save into a folder safely (no folder picker, or no
   // move()); also if move() turns out not to work for the chosen folder.
   const [folderMode, setFolderMode] = useState(() => canSaveToFolder());
@@ -105,9 +107,20 @@ export function Save({ records, files, scanId, ids, recoveryRoot, onBack, onDone
   };
 
   useEffect(() => {
-    document.querySelector<HTMLElement>('main h1')?.focus();
     onDone(phase.k === 'done');
   }, [phase.k, onDone]);
+  // Focus goes to the new view's heading; when a problem comes up, to the problem's own heading,
+  // so it's read first and can't be missed (T83).
+  const problem = phase.k === 'choose' ? phase.problem : undefined;
+  const [problemKey, setProblemKey] = useState(0);
+  useEffect(() => {
+    document.querySelector<HTMLElement>(problem ? '#problem-h' : 'main h1')?.focus();
+  }, [phase.k, problem, problemKey]);
+  /** Show a problem; the same one again (picked the recovery folder twice) still moves focus to it. */
+  const showProblem = (p: NonNullable<typeof problem>) => {
+    setPhase({ k: 'choose', problem: p });
+    setProblemKey((x) => x + 1);
+  };
 
   /**
    * Is the chosen folder the recovery folder or inside it (T55)? With the recovery folder's own
@@ -129,7 +142,7 @@ export function Save({ records, files, scanId, ids, recoveryRoot, onBack, onDone
     } else if (end === 'unsupported') {
       // Nothing was written: offer zip downloads instead.
       setFolderMode(false);
-      setPhase({ k: 'choose', problem: 'unsupported' });
+      showProblem('unsupported');
     } else {
       setPhase({ k: 'ended', end });
     }
@@ -162,16 +175,16 @@ export function Save({ records, files, scanId, ids, recoveryRoot, onBack, onDone
       chosen = await pickFolder();
     } catch (e) {
       if ((e as Error).name === 'AbortError') return; // closed the picker: stay here, no message
-      setPhase({ k: 'choose', problem: 'denied' });
+      showProblem('denied');
       return;
     }
     const where = await checkFolder(chosen);
     if (where !== 'outside') {
-      setPhase({ k: 'choose', problem: where === 'inside' ? 'recovery' : 'unchecked' });
+      showProblem(where === 'inside' ? 'recovery' : 'unchecked');
       return;
     }
     if (!(await ensureWritable(chosen))) {
-      setPhase({ k: 'choose', problem: 'denied' });
+      showProblem('denied');
       return;
     }
     sess.setFolder(newFolderSession(chosen), await hasRoot(chosen));
@@ -284,6 +297,7 @@ export function Save({ records, files, scanId, ids, recoveryRoot, onBack, onDone
           ? [...(sess.folder?.placed.values() ?? [])].map((dir) => ({ dir }))
           : planned.filter((p) => sess.saved.has(p.id)))}
         when={phase.when}
+        onStartOver={onStartOver}
       />
     );
   }
@@ -307,9 +321,13 @@ export function Save({ records, files, scanId, ids, recoveryRoot, onBack, onDone
 
       <div className="sheet-col save-col">
         {phase.problem && (
-          <section className="card card-problem" role="alert" aria-labelledby="problem-h">
-            <h2 id="problem-h">{problemText(phase.problem, mediaOnly)[0]}</h2>
-            <p className="sub">{problemText(phase.problem, mediaOnly)[1]}</p>
+          // T83: hard to miss. Warm caution colours, an icon, read out at once, and focus on its heading.
+          <section key={problemKey} className="card card-problem" role="alert" aria-labelledby="problem-h" data-k="problem">
+            <CautionIcon />
+            <div className="problem-text">
+              <h2 id="problem-h" tabIndex={-1}>{problemText(phase.problem, mediaOnly)[0]}</h2>
+              <p>{problemText(phase.problem, mediaOnly)[1]}</p>
+            </div>
           </section>
         )}
         {noSaving ? (
@@ -402,9 +420,10 @@ type DoneProps = {
   earlier?: { names: string[]; covered: boolean };
   sorted: { years: number; months: number; noDate: number };
   when: Date;
+  onStartOver: () => void;
 };
 
-function Done({ total, saved, failedRecords, mediaOnly, folderNames, zips, earlier, sorted, when }: DoneProps) {
+function Done({ total, saved, failedRecords, mediaOnly, folderNames, zips, earlier, sorted, when, onStartOver }: DoneProps) {
   const [showFailed, setShowFailed] = useState(false);
   const failed = failedRecords.length;
   const savedTo = zips ? s.rSavedToZip(zips.length) : folderNames.map(s.rSavedToFolder).join(' and ');
@@ -430,8 +449,12 @@ function Done({ total, saved, failedRecords, mediaOnly, folderNames, zips, earli
           <p className="sub-sm" data-k="earlier">{s.earlierZips(earlier.names, earlier.covered, zips.length, mediaOnly)}</p>
         )}
         {zips && zips.length > 0 && <div className="no-print"><ZipAgain zips={zips} /></div>}
-        <p className="sub-sm">{s.closeNow}</p>
         <p className="sub-sm">{s.secondCopy}</p>
+        <div className="start-over no-print">
+          <p className="sub-sm">{s.closeNow}</p>
+          <div><button type="button" className="btn btn-secondary" onClick={onStartOver} aria-describedby="start-over-note">{s.startOver}</button></div>
+          <p className="sub-sm" id="start-over-note">{s.startOverNote}</p>
+        </div>
       </div>
 
       <section className="receipt" aria-labelledby="receipt-h">
@@ -464,6 +487,15 @@ function Done({ total, saved, failedRecords, mediaOnly, folderNames, zips, earli
     </main>
   );
 }
+
+/** A warning triangle for the problem alert. Decorative: the heading says it. */
+const CautionIcon = () => (
+  <svg width="26" height="26" viewBox="0 0 26 26" fill="none" aria-hidden="true" className="icon problem-icon">
+    <path d="M13 3.5L24 22.5H2z" fill="currentColor" stroke="currentColor" strokeWidth="2" strokeLinejoin="round" />
+    <path d="M13 10v6" stroke="#FFFFFF" strokeWidth="2.2" strokeLinecap="round" />
+    <circle cx="13" cy="19.2" r="1.3" fill="#FFFFFF" />
+  </svg>
+);
 
 const FolderIcon = () => (
   <svg width="20" height="20" viewBox="0 0 20 20" fill="none" aria-hidden="true" className="icon">

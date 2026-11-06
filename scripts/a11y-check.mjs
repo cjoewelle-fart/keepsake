@@ -267,7 +267,10 @@ async function infoPages(page, run, { min = 24, severity = 'minor', criterion = 
       check(at.inView && /^H[23]$/.test(at.tag ?? ''), 'serious', run, screen, `a same-page link scrolls to its heading (${at.tag}, in view ${at.inView})`);
       check(at.focused, 'minor', run, screen, 'a same-page link moves focus to its heading');
     }
-    const back = page.getByRole('button', { name: 'Back to start' }).last();
+    // T83: the guide ends with a primary "Sort my recovered files" button, back to the start screen.
+    const cta = page.getByRole('button', { name: 'Sort my recovered files' });
+    if (/guide/.test(screen)) check((await cta.count()) === 1, 'serious', run, screen, 'guide ends with "Sort my recovered files"');
+    const back = /guide/.test(screen) ? cta : page.getByRole('button', { name: 'Back to start' }).last();
     if (keyboard) { await back.focus(); await page.keyboard.press('Enter'); } else await back.click();
     await h1(page, /find the photos/).waitFor({ timeout: 5000 });
     await focusOnHeading(page, run, `start (back from the ${screen})`);
@@ -335,7 +338,7 @@ async function desktop(browser) {
   await h1(page, /didn’t find any photos/).waitFor({ timeout: 30_000 });
   await focusOnHeading(page, run, 'results: nothing to keep');
   await axe(page, run, 'results: nothing to keep');
-  await page.getByRole('button', { name: 'Scan a different folder' }).click();
+  await page.getByRole('button', { name: 'Sort a different folder' }).click();
 
   // The real fixture.
   await scanFolder(page, fixture);
@@ -393,8 +396,10 @@ async function desktop(browser) {
   await page.getByRole('button', { name: 'Choose a folder' }).click();
   await page.getByRole('alert').waitFor();
   await axe(page, run, 'save: folder refused');
-  const fAfterAlert = await page.evaluate(() => document.activeElement?.textContent);
-  check(/Choose a different folder/.test(fAfterAlert ?? ''), 'minor', run, 'save: folder refused', `focus stays on the button (now "${fAfterAlert}")`);
+  // T83: the problem is hard to miss: focus goes to its heading, at the top of the choose column.
+  await page.waitForTimeout(150);
+  const fAfterAlert = await page.evaluate(() => ({ id: document.activeElement?.id, text: document.activeElement?.textContent }));
+  check(fAfterAlert.id === 'problem-h', 'serious', run, 'save: folder refused', `focus moves to the problem's heading (now #${fAfterAlert.id} "${fAfterAlert.text}")`);
   await page.evaluate(() => { window.__pick = 'ok'; window.__save.delay = 40; });
   await page.getByRole('button', { name: 'Choose a different folder' }).click();
   await h1(page, /Saving your photos/).waitFor();
@@ -419,6 +424,11 @@ async function desktop(browser) {
   await focusOnHeading(page, run, 'done');
   await axe(page, run, 'done');
   await targets(page, run, 'done', 24, 'minor', '2.5.8, WCAG 2.2');
+  // T83: "Sort another folder" goes back to the start screen.
+  await page.getByRole('button', { name: 'Sort another folder' }).click();
+  await h1(page, /find the photos/).waitFor({ timeout: 5000 });
+  await focusOnHeading(page, run, 'start (after Sort another folder)');
+  await axe(page, run, 'start (after Sort another folder)');
   await page.context().close();
 }
 
@@ -558,6 +568,7 @@ async function keyboard(browser) {
   await focusOnHeading(page, run, 'done');
   const dStops = await sweep(page, run, 'done');
   check(dStops.some((s) => /Save receipt/.test(s.name)) && dStops.some((s) => /^Print/.test(s.name)), 'serious', run, 'done', `receipt buttons reachable (${dStops.map((s) => s.name).join(' → ')})`);
+  check(dStops.some((s) => s.name === 'Sort another folder'), 'serious', run, 'done', 'Sort another folder reachable by Tab');
   const back = await sweep(page, run, 'done (Shift+Tab)', { back: true });
   check(back.length >= dStops.length - 1, 'minor', run, 'done', `Shift+Tab goes back through the same stops (${back.length} vs ${dStops.length})`);
   await page.context().close();

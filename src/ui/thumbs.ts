@@ -42,3 +42,6 @@ export async function thumbnail(file: Blob, isWanted: () => boolean, side: numbe
     throw e;
   }
 }
+
+/** Give back every cached small copy no tile shows now (starting over with another folder, T83). */
+export const dropUnusedThumbs = () => queue.dropUnused();

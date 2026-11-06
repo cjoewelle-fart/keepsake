@@ -21,6 +21,10 @@ import { progressFor, type ScanRun } from './ui/scanRun';
 import type { RecoveryRoot } from './ui/recoveryFolder';
 import { canUseFolderPicker, inFrame } from './ui/embedded';
 import { NOTE_DELAY_MS, shownNote } from './ui/liveNote';
+import { dropUnusedThumbs } from './ui/thumbs';
+import { dropUnusedHeicPreviews } from './ui/heicPreview';
+
+const dropUnusedPreviews = () => { dropUnusedThumbs(); dropUnusedHeicPreviews(); };
 
 type Screen =
   /** `noteKey` changes on every note, so the same note twice is announced twice. */
@@ -160,6 +164,25 @@ export default function App() {
     workerRef.current = null;
   };
 
+  /**
+   * Back to the start screen with this tab's results cleared (T83): the results, the selection and
+   * the recovery folder's handle go, the scan worker is stopped, and cached previews nobody shows are
+   * given back. Nothing on disk is touched.
+   */
+  const startOver = () => {
+    runRef.current.stopped = true;
+    retireWorker();
+    setRecords([]);
+    setFiles([]);
+    setMovedBack(new Set());
+    setSelection(new Selection(0));
+    setRecoveryRoot(undefined);
+    setSaveDone(false);
+    setScreen({ name: 'start' });
+    // After the tiles' own cleanups have released their previews.
+    setTimeout(dropUnusedPreviews, 0);
+  };
+
   const toggleGroup = (g: SetAsideGroup) =>
     setMovedBack((prev) => {
       const next = new Set(prev);
@@ -181,7 +204,13 @@ export default function App() {
       <Header current={step} done={done} />
       <div id="main" ref={headingRef}>
         {screen.name === 'start' && <Start note={screen.note} noteKey={screen.noteKey} onChoose={chooseFolder} onSamples={SAMPLES_ENABLED ? trySamples : undefined} onInfo={(page) => setScreen({ name: 'info', page })} />}
-        {screen.name === 'info' && <InfoPage md={copy.info[screen.page].md} onBack={() => setScreen({ name: 'start' })} />}
+        {screen.name === 'info' && (
+          <InfoPage
+            md={copy.info[screen.page].md}
+            onBack={() => setScreen({ name: 'start' })}
+            cta={screen.page === 'guide' ? copy.info.guide.cta : undefined}
+          />
+        )}
         {screen.name === 'scanning' && <Scanning progress={screen.progress} onStop={() => { runRef.current.stopped = true; workerRef.current?.api.cancel(); }} />}
         {screen.name === 'results' && (
           <Results
@@ -190,7 +219,7 @@ export default function App() {
             movedBack={movedBack}
             onToggleGroup={toggleGroup}
             onReview={() => setScreen({ name: 'review' })}
-            onStartOver={() => { setRecords([]); setFiles([]); setScreen({ name: 'start' }); }}
+            onStartOver={startOver}
           />
         )}
         {screen.name === 'review' && (
@@ -205,7 +234,7 @@ export default function App() {
           />
         )}
         {screen.name === 'save' && (
-          <Save records={records} files={files} scanId={scanId} ids={screen.ids} recoveryRoot={recoveryRoot} onBack={() => setScreen({ name: 'review' })} onDone={setSaveDone} />
+          <Save records={records} files={files} scanId={scanId} ids={screen.ids} recoveryRoot={recoveryRoot} onBack={() => setScreen({ name: 'review' })} onDone={setSaveDone} onStartOver={startOver} />
         )}
         {screen.name === 'error' && (
           <main className="page narrow">
@@ -239,23 +268,42 @@ function Start({ note, noteKey, onChoose, onSamples, onInfo }: { note?: string; 
       <Prints />
       <h1 tabIndex={-1}>{copy.start.title}</h1>
       <p className="lede">{copy.start.body}</p>
-      <p className="sub">{copy.start.hint}</p>
       {/* Always mounted, and filled after mount, so screen readers announce the note (4.1.3). */}
       <div role="status">{said && <p className="note-box">{said}</p>}</div>
-      <div className="actions">
-        <button type="button" className="btn btn-primary btn-lg" onClick={onChoose}>{copy.start.choose}</button>
-        {onSamples && <button type="button" className="btn btn-secondary btn-lg" onClick={onSamples}>{copy.start.samples}</button>}
+      {/* T83: the privacy promise, right above the button. */}
+      <p className="promise"><LockIcon /><span>{copy.start.promise}</span></p>
+      <div className="start-choose">
+        <div className="actions">
+          <button type="button" className="btn btn-primary btn-lg" onClick={onChoose}>{copy.start.choose}</button>
+          {onSamples && <button type="button" className="btn btn-secondary btn-lg" onClick={onSamples}>{copy.start.samples}</button>}
+        </div>
+        <p className="sub-sm">{copy.start.hint}</p>
+        {onSamples && <p className="sub-sm">{copy.start.samplesNote}</p>}
+        {!fullSupport && !framed && <p className="sub-sm">{copy.start.browserNote}</p>}
+        {framed && <p className="sub-sm">{copy.start.uploadNote}</p>}
       </div>
-      <p className="sub-sm choose-note">{copy.start.chooseNote}</p>
-      {onSamples && <p className="sub-sm">{copy.start.samplesNote}</p>}
-      {!fullSupport && !framed && <p className="sub-sm">{copy.start.browserNote}</p>}
-      {framed && <p className="sub-sm">{copy.start.uploadNote}</p>}
-      <p className="sub-sm privacy">{copy.privacy}</p>
+      <section className="faq" aria-labelledby="faq-h">
+        <h2 id="faq-h">{copy.start.faqH}</h2>
+        <dl>
+          {copy.start.faq.map(({ q, a }) => <div key={q}><dt>{q}</dt><dd>{a}</dd></div>)}
+        </dl>
+      </section>
       <ul className="start-links">
         <li><button type="button" className="btn btn-link" onClick={() => onInfo('privacy')}>{copy.info.privacy.link}</button></li>
         <li><button type="button" className="btn btn-link" onClick={() => onInfo('guide')}>{copy.info.guide.link}</button></li>
       </ul>
     </main>
+  );
+}
+
+/** A small padlock beside the privacy promise. Decorative: the words say it. */
+function LockIcon() {
+  return (
+    <svg width="22" height="22" viewBox="0 0 22 22" fill="none" aria-hidden="true" className="icon">
+      <rect x="4" y="9.5" width="14" height="10" rx="2.5" stroke="currentColor" strokeWidth="1.8" />
+      <path d="M7.5 9.5V7a3.5 3.5 0 017 0v2.5" stroke="currentColor" strokeWidth="1.8" strokeLinecap="round" />
+      <circle cx="11" cy="14.5" r="1.4" fill="currentColor" />
+    </svg>
   );
 }
 

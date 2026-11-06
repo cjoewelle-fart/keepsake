@@ -54,7 +54,8 @@ function Blocks({ blocks }: { blocks: Block[] }): ReactNode {
   });
 }
 
-export function InfoPage({ md, onBack }: { md: string; onBack: () => void }) {
+/** `cta`: a primary button after the text that also goes to the start screen (the guide's, T83). */
+export function InfoPage({ md, onBack, cta }: { md: string; onBack: () => void; cta?: string }) {
   const doc = useMemo(() => parse(md), [md]);
   return (
     <main className="page narrow info">
@@ -62,7 +63,10 @@ export function InfoPage({ md, onBack }: { md: string; onBack: () => void }) {
       <article className="doc">
         <Blocks blocks={doc} />
       </article>
-      <div><button type="button" className="btn btn-secondary" onClick={onBack}>{copy.info.back}</button></div>
+      <div className="actions">
+        {cta && <button type="button" className="btn btn-primary" onClick={onBack}>{cta}</button>}
+        <button type="button" className="btn btn-secondary" onClick={onBack}>{copy.info.back}</button>
+      </div>
     </main>
   );
 }

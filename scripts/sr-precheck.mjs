@@ -263,7 +263,7 @@ async function big(browser) {
   say(4, 'focus moves', log.filter((e) => e.k === 'focus').map((e) => e.v));
   say(4, `${live.length} live-region changes`, live.map((e) => `${e.t} ${e.v}`));
   // 5. Stop keeps focus.
-  await page.getByRole('button', { name: 'Scan a different folder' }).click();
+  await page.getByRole('button', { name: 'Sort a different folder' }).click();
   await wait(page, 300); await takeLog(page);
   await scanBig();
   const stop = page.getByRole('button', { name: 'Stop scanning' });

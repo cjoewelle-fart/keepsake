@@ -116,7 +116,7 @@ try {
       await page.getByRole('button', { name: 'Back to Clean up' }).first().click();
       await page.getByText('Files checked').waitFor();
     } else if (what === 'startover') {
-      await page.getByRole('button', { name: /Scan a different folder/ }).first().click();
+      await page.getByRole('button', { name: /Sort a different folder/ }).first().click();
       await page.getByRole('button', { name: 'Choose recovery folder' }).waitFor();
     } else if (what === 'done') {
       await h1(/saved\./).waitFor({ timeout: 60 * 60_000 });

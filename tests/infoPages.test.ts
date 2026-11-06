@@ -99,4 +99,13 @@ describe('privacy page and PhotoRec guide (T67)', () => {
     expect(p.lines).toHaveLength(1);
     expect(plain(p.lines[0])).toMatch(/^You should see: /);
   });
+
+  it('guide ends PhotoRec’s part with Part 7, which points at the button under it (T83)', () => {
+    const doc = parse(pages.guide);
+    const heads = doc.filter((b): b is Extract<Block, { t: 'h' }> => b.t === 'h').map((h) => h.id);
+    expect(heads.indexOf('part-7-sort-your-photos-with-keepsake')).toBe(heads.indexOf('part-6-what-youll-see') + 1);
+    expect(pages.guide).not.toContain('Now open');
+    expect(pages.guide).toContain(`**${copy.info.guide.cta}** button at the bottom of this page`);
+    expect(pages.guide).toContain(`Click **${copy.start.choose}**`);
+  });
 });

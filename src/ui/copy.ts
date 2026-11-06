@@ -333,7 +333,17 @@ Inside them are lots of files with names like \`f12345678.jpg\`. PhotoRec can’
 
 You don’t need to sort through them yourself.
 
-**Now open ${APP} and choose that folder.** Choose \`Recovered photos\` (the folder that holds the recup_dir folders). ${APP} finds the photos and videos worth keeping and sorts them by date. It doesn’t change or delete anything in the folder.
+---
+
+## Part 7: Sort your photos with ${APP}
+
+PhotoRec’s part is done. Now ${APP} sorts what it found.
+
+1. Go back to the start of ${APP}. You can use the **Sort my recovered files** button at the bottom of this page.
+2. Click **Choose recovery folder**.
+3. Choose your \`Recovered photos\` folder (the one that holds the recup_dir folders).
+
+${APP} finds the photos and videos, sets the rest aside, and sorts your photos into folders by date. It only reads your \`Recovered photos\` folder. Nothing in it is changed or deleted.
 
 ---
 
@@ -389,16 +399,24 @@ export const copy = {
   /** The browser tab's title on each step: "Clean up · Keepsake". `app` keeps the test build's "(test)". */
   pageTitle: (step: string, app: string) => `${step} · ${app}`,
   skip: 'Skip to content',
-  privacy: 'Your files never leave this computer, and your recovery folder is never changed.',
 
   start: {
     eyebrow: 'Step 2 of 5',
-    title: 'Let’s find the photos in your recovered files.',
-    body: 'Choose the folder your recovery program saved files into. We’ll find the photos and videos worth keeping and set the rest aside.',
-    hint: 'Inside it, you’ll usually see folders named recup_dir.1, recup_dir.2 and so on.',
+    // T83 (owner walkthrough, UX writer copy): fewer words, a headline that says what it does.
+    title: 'We find the photos in your recovered files and sort them by date.',
+    body: 'Choose the folder your recovery program made. We’ll put your photos in a folder for each year and month.',
     choose: 'Choose recovery folder',
-    /** T76: right under the Choose button, where the folder is chosen. */
-    chooseNote: 'Keepsake runs in your browser, on this computer. Choosing a folder lets it read your files here. They aren’t sent to us or to any server, and nothing is deleted.',
+    /** Small text under the button. */
+    hint: 'Look for the one that holds recup_dir.1, recup_dir.2 and so on.',
+    /** T83: the privacy promise, in a highlighted note next to the button. */
+    promise: 'Your photos stay on this computer. Nothing is uploaded or deleted.',
+    /** T83: "Before you start", a short Q&A under the button. */
+    faqH: 'Before you start',
+    faq: [
+      { q: 'Do you see my photos?', a: 'No. We have no way to see them.' },
+      { q: 'Do I need an account?', a: 'No. There’s nothing to sign up for.' },
+      { q: 'Will it change my files?', a: 'No. It only reads them. Your photos are saved as new copies.' },
+    ],
     browserNote: 'Keepsake works best in Chrome or Edge on a computer. You can still scan your folder in this browser.',
     stopped: 'Scan stopped. Nothing was changed, and you can start again any time.',
     /** Inside the claude.ai preview the folder is chosen with the browser's upload dialog. */
@@ -501,7 +519,7 @@ export const copy = {
     fileMeta: (size: string, takenAt?: string) => (takenAt ? `${size} · ${dateTime(takenAt)}` : size),
     review: (x: number, mediaOnly: boolean) =>
       `Review my ${n(x)} ${mediaOnly ? plural(x, 'photo or video', 'photos and videos') : plural(x, 'file', 'files')}`,
-    startOver: 'Scan a different folder',
+    startOver: 'Sort a different folder', // T83
   },
 
   /** D23: what a file in a set-aside group is, from what it holds (and PhotoRec's name for it). */
@@ -732,8 +750,8 @@ export const copy = {
     deniedH: 'Keepsake can’t save to that folder.',
     deniedBody: 'Your browser didn’t allow it, or the folder is protected. Nothing was saved there, and nothing was deleted. Try a folder in Pictures or Documents.',
     chooseDifferent: 'Choose a different folder',
-    recoveryH: 'That’s your recovery folder.',
-    recoveryBody: 'To keep it exactly as it was, Keepsake won’t save there. Please choose a different folder.',
+    recoveryH: 'That folder is part of your recovery folder.', // T83
+    recoveryBody: 'Keepsake doesn’t save there, so your recovered files stay exactly as they are. Nothing was saved or changed. Choose a different folder, for example in Pictures.',
     // New (T25 QA follow-up), needs UX writer review: the safety check itself failed.
     uncheckedH: 'We couldn’t check that folder.',
     uncheckedBody: 'Before saving, we make sure a folder isn’t inside your recovery folder. This time we couldn’t tell, so nothing was saved there. Your files are fine. Please choose a different folder, for example in Pictures or Documents.',
@@ -821,7 +839,10 @@ export const copy = {
           : `${one ? 'It has' : 'They have'} some ${what} that aren’t in this save.`
       }`;
     },
-    closeNow: 'You can close Keepsake now. There’s nothing else to do.',
+    closeNow: 'You can close Keepsake now, or sort another folder.', // T83
+    /** T83: back to the start screen; this tab's results are cleared, nothing on disk is touched. */
+    startOver: 'Sort another folder',
+    startOverNote: 'Your saved photos stay where they are. This receipt will close, so save or print it first.',
     secondCopy: 'If you can, keep a second copy too, on a USB drive or a backup you already use.',
     receiptH: 'Your receipt',
     rSaved: 'Saved',
@@ -876,6 +897,8 @@ export const copy = {
       link: 'New to PhotoRec? Here’s how to recover your files',
       title: 'PhotoRec guide',
       md: GUIDE,
+      /** T83: a primary button after the guide's text, back to the start screen. */
+      cta: 'Sort my recovered files',
     },
   },
 };
