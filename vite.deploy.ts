@@ -9,9 +9,12 @@ import type { Plugin } from 'vite'
 // The privacy lock-down: the built app may only load its own files and may not
 // send data to any other address. Added at build time only, because the dev
 // server needs inline scripts and a live-reload connection.
+// 'wasm-unsafe-eval' (D29) lets the HEIC decoder compile its bundled WebAssembly under the
+// lock-down. It allows WebAssembly only, not JavaScript eval ('unsafe-eval' stays out), and
+// the WebAssembly code is our own file, loaded under script-src 'self' like every other script.
 export const CSP = [
   "default-src 'self'",
-  "script-src 'self'",
+  "script-src 'self' 'wasm-unsafe-eval'",
   "style-src 'self' 'unsafe-inline'",
   "img-src 'self' blob: data:",
   "media-src 'self' blob:",
@@ -40,13 +43,15 @@ export const NO_CACHE_PATHS = ['/', '/index.html', '/sw.js', '/registerSW.js', '
 // started from a blob: URL (the scan and save workers, built `?worker&inline`) inherit the page's
 // policy. Workers loaded from their own URL (thumb, heic) take their policy from their own
 // response instead, and the page's <meta> tag never reaches them. So the header goes on the page,
-// the service worker and every URL-loaded worker file the build emits, EXCEPT workers that
-// compile WebAssembly (the HEIC decoder): `script-src 'self'` without 'wasm-unsafe-eval' blocks
-// WebAssembly, which would break iPhone photo previews. Those keep today's state (no CSP on the
-// worker); covering them needs 'wasm-unsafe-eval' in script-src, an owner/lead call.
+// the service worker and every URL-loaded worker file the build emits, the HEIC decoder included
+// (D29): its WebAssembly runs because script-src has 'wasm-unsafe-eval'.
 export const CSP_PAGE_PATHS = ['/', '/index.html', '/sw.js']
 
-/** Splits the build's worker files into those that can take the CSP header and those that can't. */
+/**
+ * The build's worker bodies, split into plain workers and those that compile WebAssembly. Both
+ * get the CSP header; the split lets the build prove the CSP still allows WebAssembly when a
+ * worker needs it.
+ */
 export function workerPaths(files: Record<string, string>): { locked: string[]; wasm: string[] } {
   const locked: string[] = []
   const wasm: string[] = []
@@ -59,18 +64,42 @@ export function workerPaths(files: Record<string, string>): { locked: string[]; 
   return { locked, wasm }
 }
 
-/** Worker bodies that must never get the CSP header: they compile WebAssembly. */
+/** The HEIC decoder's worker body: it compiles WebAssembly. */
 export const WASM_WORKER = /^\/assets\/heic\.worker-[^/]*\.js$/
 
+/** The values of one CSP directive (e.g. script-src), or null if the policy doesn't set it. */
+export function cspSources(csp: string, directive: string): string[] | null {
+  for (const d of csp.split(';')) {
+    const [name, ...values] = d.trim().split(/\s+/)
+    if (name.toLowerCase() === directive) return values.map((v) => v.toLowerCase()) // CSP keywords are case-insensitive
+  }
+  return null
+}
+
 /**
- * Guard for workerPaths: if a rebuilt decoder calls WebAssembly in a way the pattern misses, it
- * would land in `locked` and the header would silently break HEIC previews. So every HEIC worker
- * body must be in `wasm`, and there must be one. Returns the problems (empty = fine).
+ * Guard for the worker split and the policy. The HEIC worker must be found and recognised as
+ * a WebAssembly worker (if a rebuilt decoder calls WebAssembly in a way the pattern misses, the
+ * check below would stop protecting it). Any WebAssembly worker needs 'wasm-unsafe-eval' in
+ * script-src, or the header would break iPhone photo previews. 'unsafe-eval' is never allowed.
+ * Returns the problems (empty = fine).
  */
-export function workerSplitProblems(workers: { locked: string[]; wasm: string[] }): string[] {
-  const problems = workers.locked.filter((p) => WASM_WORKER.test(p)).map((p) => `${p} would get the CSP header, which blocks its WebAssembly`)
-  if (!workers.wasm.some((p) => WASM_WORKER.test(p))) problems.push('no HEIC decoder worker found in the "no CSP header" list')
+export function workerSplitProblems(workers: { locked: string[]; wasm: string[] }, csp: string = CSP): string[] {
+  const problems = workers.locked.filter((p) => WASM_WORKER.test(p)).map((p) => `${p} was not recognised as a WebAssembly worker`)
+  if (!workers.wasm.some((p) => WASM_WORKER.test(p))) problems.push('no HEIC decoder worker found among the WebAssembly workers')
+  const script = cspSources(csp, 'script-src') ?? cspSources(csp, 'default-src') ?? []
+  if (workers.wasm.length && !script.includes("'wasm-unsafe-eval'")) {
+    problems.push(`script-src lacks 'wasm-unsafe-eval', which blocks WebAssembly in ${workers.wasm.join(', ')}`)
+  }
+  if (script.includes("'unsafe-eval'")) problems.push("script-src must not allow 'unsafe-eval'")
   return problems
+}
+
+/** Worker bodies that a `_headers` file leaves without exactly one copy of the CSP (empty = fine). */
+export function uncoveredWorkers(text: string, workers: { locked: string[]; wasm: string[] }, csp: string = CSP): string[] {
+  return [...workers.locked, ...workers.wasm].filter((p) => {
+    const set = cspFromHeaders(text, p)
+    return set.length !== 1 || set[0] !== csp
+  })
 }
 
 /** The `_headers` file (Cloudflare Pages and Netlify share this format). */
@@ -82,14 +111,13 @@ export function headersFile(workers: { locked: string[]; wasm: string[] }, csp: 
   add('/*', 'Referrer-Policy', 'no-referrer')
   add('/*', 'X-Content-Type-Options', 'nosniff')
   add('/*', 'Permissions-Policy', 'camera=(), microphone=(), geolocation=()')
-  for (const p of [...CSP_PAGE_PATHS, ...workers.locked]) add(p, 'Content-Security-Policy', csp)
+  for (const p of [...CSP_PAGE_PATHS, ...workers.locked, ...workers.wasm]) add(p, 'Content-Security-Policy', csp)
   for (const p of NO_CACHE_PATHS) add(p, 'Cache-Control', 'no-cache')
   add('/assets/*', 'Cache-Control', 'public, max-age=31536000, immutable')
   return [
     '# Generated by `npm run build` from vite.deploy.ts. Do not edit by hand.',
     '# Read by Cloudflare Pages and Netlify. Both hosts apply every rule whose path matches and',
     '# comma-join a header that two rules set, so Cache-Control and the CSP are never on /*.',
-    ...workers.wasm.map((p) => `# ${p}: no CSP header (it compiles WebAssembly; see vite.deploy.ts)`),
     ...[...rules].map(([path, hs]) => [path, ...hs.map(([k, v]) => `  ${k}: ${v}`)].join('\n')),
     '',
   ].join('\n')
@@ -132,7 +160,10 @@ export const deployFiles = (): Plugin => ({
     if (!workers.locked.length && !workers.wasm.length) throw new Error('deploy files: no worker files found in the build')
     const problems = workerSplitProblems(workers)
     if (problems.length) throw new Error(`deploy files: ${problems.join('; ')}`)
-    this.emitFile({ type: 'asset', fileName: '_headers', source: headersFile(workers) })
+    const headers = headersFile(workers)
+    const uncovered = uncoveredWorkers(headers, workers)
+    if (uncovered.length) throw new Error(`deploy files: no CSP header for ${uncovered.join(', ')}`)
+    this.emitFile({ type: 'asset', fileName: '_headers', source: headers })
     if (!existsSync('public/robots.txt')) this.emitFile({ type: 'asset', fileName: 'robots.txt', source: ROBOTS_TXT })
   },
   writeBundle(_, bundle) {

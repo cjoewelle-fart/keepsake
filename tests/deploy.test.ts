@@ -1,8 +1,8 @@
 // T85: the hosting headers (`_headers`, read by Cloudflare Pages and Netlify) send the same
 // privacy lock-down as the <meta> CSP in index.html, and never loosen it.
-import { existsSync, readFileSync } from 'node:fs';
+import { existsSync, readdirSync, readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
-import { CSP, CSP_PAGE_PATHS, cspFromHeaders, cspFromHtml, cspMeta, deployFiles, headersFile, workerPaths, workerSplitProblems } from '../vite.deploy';
+import { CSP, CSP_PAGE_PATHS, cspFromHeaders, cspFromHtml, cspMeta, deployFiles, headersFile, uncoveredWorkers, workerPaths, workerSplitProblems } from '../vite.deploy';
 
 const directives = (csp: string) => new Map(csp.split(';').map((d) => d.trim()).filter(Boolean).map((d) => {
   const [name, ...values] = d.split(/\s+/);
@@ -43,7 +43,7 @@ describe('hosting headers (_headers)', () => {
   it('keep connect-src exactly \'self\' everywhere (nothing can be sent anywhere else)', () => {
     expect(directives(CSP).get('connect-src')).toBe("'self'");
     const all = text.split('\n').filter((l) => /^\s+Content-Security-Policy:/.test(l));
-    expect(all.length).toBe(CSP_PAGE_PATHS.length + workers.locked.length);
+    expect(all.length).toBe(CSP_PAGE_PATHS.length + workers.locked.length + workers.wasm.length);
     for (const line of all) {
       const value = line.replace(/^\s+Content-Security-Policy:\s*/, '');
       expect(value).toBe(CSP); // no second, looser policy anywhere in the file
@@ -51,10 +51,32 @@ describe('hosting headers (_headers)', () => {
     }
   });
 
-  it('lock plain workers, leave the WebAssembly decoder as it is today, skip the page-side wrappers', () => {
+  it('allow WebAssembly with exactly \'wasm-unsafe-eval\' and nothing else new (D29)', () => {
+    expect(directives(CSP).get('script-src')).toBe("'self' 'wasm-unsafe-eval'");
+    expect(CSP).not.toMatch(/'unsafe-eval'/);
+    expect(CSP).not.toMatch(/frame-ancestors/);
+    expect(directives(CSP)).toEqual(new Map([
+      ['default-src', "'self'"],
+      ['script-src', "'self' 'wasm-unsafe-eval'"],
+      ['style-src', "'self' 'unsafe-inline'"],
+      ['img-src', "'self' blob: data:"],
+      ['media-src', "'self' blob:"],
+      ['font-src', "'self' data:"],
+      ['worker-src', "'self' blob:"],
+      ['connect-src', "'self'"],
+      ['object-src', "'none'"],
+      ['base-uri', "'none'"],
+      ['form-action', "'none'"],
+    ]));
+  });
+
+  it('lock every worker body, the WebAssembly decoder included, and skip the page-side wrappers', () => {
     expect(workers).toEqual({ locked: ['/assets/thumb.worker-AAA.js'], wasm: ['/assets/heic.worker-BBB.js'] });
     expect(cspFromHeaders(text, '/assets/thumb.worker-AAA.js')).toEqual([CSP]);
-    expect(cspFromHeaders(text, '/assets/heic.worker-BBB.js')).toEqual([]);
+    expect(cspFromHeaders(text, '/assets/heic.worker-BBB.js')).toEqual([CSP]);
+    expect(cspFromHeaders(text, '/assets/heic.worker-CCC.js')).toEqual([]); // wrapper: runs on the page
+    expect(uncoveredWorkers(text, workers)).toEqual([]);
+    expect(text).not.toMatch(/no CSP header/);
   });
 
   it('set each header once per response: nothing doubled on /*, one block per path', () => {
@@ -74,23 +96,44 @@ describe('hosting headers (_headers)', () => {
     expect(get('/assets/thumb.worker-AAA.js').has('Cache-Control')).toBe(false);
   });
 
-  it('make the build fail if the HEIC decoder would get the CSP header (or goes missing)', () => {
+  it('make the build fail if the decoder is missed, or the CSP would block its WebAssembly', () => {
     expect(workerSplitProblems(workers)).toEqual([]);
     // A rebuilt decoder whose WebAssembly call the pattern misses lands in "locked".
     const missed = workerPaths({ ...files, 'assets/heic.worker-BBB.js': 'const W = self["WebAss" + "embly"]; new W.Module(bytes)' });
     expect(missed.locked).toContain('/assets/heic.worker-BBB.js');
     expect(workerSplitProblems(missed)).toEqual([
-      '/assets/heic.worker-BBB.js would get the CSP header, which blocks its WebAssembly',
-      'no HEIC decoder worker found in the "no CSP header" list',
+      '/assets/heic.worker-BBB.js was not recognised as a WebAssembly worker',
+      'no HEIC decoder worker found among the WebAssembly workers',
     ]);
     const gone = workerPaths({ 'assets/thumb.worker-AAA.js': files['assets/thumb.worker-AAA.js'] });
-    expect(workerSplitProblems(gone)).toEqual(['no HEIC decoder worker found in the "no CSP header" list']);
+    expect(workerSplitProblems(gone)).toEqual(['no HEIC decoder worker found among the WebAssembly workers']);
+    // A CSP without 'wasm-unsafe-eval' and a WebAssembly worker: the header would break HEIC previews.
+    const noWasm = CSP.replace(" 'wasm-unsafe-eval'", '');
+    expect(workerSplitProblems(workers, noWasm)).toEqual([
+      "script-src lacks 'wasm-unsafe-eval', which blocks WebAssembly in /assets/heic.worker-BBB.js",
+    ]);
+    // Falls back to default-src when script-src is absent, like browsers do.
+    expect(workerSplitProblems(workers, "default-src 'self'; connect-src 'self'")).toHaveLength(1);
+    expect(workerSplitProblems(workers, "default-src 'self' 'wasm-unsafe-eval'")).toEqual([]);
+    // 'unsafe-eval' (JavaScript eval) is never the answer.
+    expect(workerSplitProblems(workers, CSP.replace("'wasm-unsafe-eval'", "'unsafe-eval'"))).toEqual([
+      "script-src lacks 'wasm-unsafe-eval', which blocks WebAssembly in /assets/heic.worker-BBB.js",
+      "script-src must not allow 'unsafe-eval'",
+    ]);
+    // A `_headers` that leaves a worker body out (or sends it a different policy) is caught.
+    const heicRule = `/assets/heic.worker-BBB.js\n  Content-Security-Policy: ${CSP}\n`;
+    expect(text).toContain(heicRule);
+    expect(uncoveredWorkers(text.replace(heicRule, ''), workers)).toEqual(['/assets/heic.worker-BBB.js']);
+    expect(uncoveredWorkers(headersFile(workers, noWasm), workers)).toEqual(['/assets/thumb.worker-AAA.js', '/assets/heic.worker-BBB.js']);
     // And the plugin turns that into a failed build.
     const generate = deployFiles().generateBundle as (this: unknown, o: unknown, b: Record<string, unknown>) => void;
-    const ctx = { emitFile: () => '' };
+    let emitted = '';
+    const ctx = { emitFile: (f: { fileName: string; source: string }) => { if (f.fileName === '_headers') emitted = f.source; return ''; } };
     const chunk = (code: string) => ({ type: 'chunk', code });
     expect(() => generate.call(ctx, {}, { 'assets/heic.worker-BBB.js': chunk(files['assets/heic.worker-BBB.js']), 'assets/thumb.worker-AAA.js': chunk('x') })).not.toThrow();
-    expect(() => generate.call(ctx, {}, { 'assets/heic.worker-BBB.js': chunk('new self["WebAss" + "embly"].Module(b)'), 'assets/thumb.worker-AAA.js': chunk('x') })).toThrow(/would get the CSP header/);
+    expect(cspFromHeaders(emitted, '/assets/heic.worker-BBB.js')).toEqual([CSP]);
+    expect(cspFromHeaders(emitted, '/assets/thumb.worker-AAA.js')).toEqual([CSP]);
+    expect(() => generate.call(ctx, {}, { 'assets/heic.worker-BBB.js': chunk('new self["WebAss" + "embly"].Module(b)'), 'assets/thumb.worker-AAA.js': chunk('x') })).toThrow(/not recognised as a WebAssembly worker/);
   });
 
   it('make the build fail if the page and the headers ever disagree', () => {
@@ -109,6 +152,11 @@ describe('hosting headers (_headers)', () => {
     expect(meta).toEqual([CSP]);
     for (const path of CSP_PAGE_PATHS) expect(cspFromHeaders(built, path)).toEqual(meta);
     expect(directives(meta[0]).get('connect-src')).toBe("'self'");
+    // Every worker body in the build has the CSP header, the HEIC decoder included (D29).
+    const assets = Object.fromEntries(readdirSync('dist/assets').filter((f) => f.endsWith('.js')).map((f) => [`assets/${f}`, readFileSync(`dist/assets/${f}`, 'utf8')]));
+    const builtWorkers = workerPaths(assets);
+    expect(builtWorkers.wasm.some((p) => /heic\.worker-/.test(p))).toBe(true);
+    expect(uncoveredWorkers(built, builtWorkers, meta[0])).toEqual([]);
     expect(readFileSync('dist/robots.txt', 'utf8')).toBe('User-agent: *\nDisallow: /\n');
   });
 });

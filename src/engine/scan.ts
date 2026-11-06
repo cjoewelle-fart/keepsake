@@ -201,6 +201,21 @@ async function pool(count: number, width: number, job: (i: number) => Promise<bo
 const richness = (r: FileRecord) => (r.takenAt ? 2 : 0) + (r.camera ? 1 : 0);
 
 /**
+ * Plain UTF-16 code-unit order (not localeCompare), so the same paths sort the same way in
+ * every browser and locale.
+ */
+const byCodeUnit = (a: string, b: string) => (a < b ? -1 : a > b ? 1 : 0);
+
+/**
+ * Order for picking the copy to keep (T101): richest details first, then the path within the
+ * recovery folder, so the choice never depends on the order the browser listed the files in
+ * (for undated copies the saved name is the kept file's own name). Index only breaks a tie
+ * between equal paths, which a real folder can't have.
+ */
+export const keeperOrder = (a: FileRecord, b: FileRecord) =>
+  richness(b) - richness(a) || byCodeUnit(a.path, b.path) || a.index - b.index;
+
+/**
  * Among files still in Keep, mark exact copies. Only files that share a byte size
  * with another file are fingerprinted, which skips most of the expensive reading.
  *
@@ -210,8 +225,8 @@ const richness = (r: FileRecord) => (r.takenAt ? 2 : 0) + (r.camera ? 1 : 0);
  * are only called copies when every byte matches, without ever holding a big file in memory.
  *
  * Up to `concurrency` files are fingerprinted at once (each holds at most 16 MB). Fingerprints
- * are collected first and the copies are decided afterwards in file order, so the result never
- * depends on which read finished first. Cancelling stops new reads at once and marks nothing.
+ * are collected first and the copies are decided afterwards with `keeperOrder` (most details,
+ * then path), so the result never depends on which read finished first or on listing order. Cancelling stops new reads at once and marks nothing.
  */
 export async function markCopies(
   records: FileRecord[],
@@ -301,7 +316,7 @@ export async function markCopies(
     }
     for (const same of byPrint.values()) {
       if (same.length < 2) continue;
-      const [keeper] = [...same].sort((a, b) => richness(b) - richness(a) || a.index - b.index);
+      const [keeper] = [...same].sort(keeperOrder);
       for (const r of same) {
         if (r === keeper) continue;
         r.group = 'duplicate';

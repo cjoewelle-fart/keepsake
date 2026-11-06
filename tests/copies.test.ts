@@ -94,7 +94,8 @@ function serialReference(records: FileRecord[], items: Item[], fail = new Set<nu
     }
     for (const same of byPrint.values()) {
       if (same.length < 2) continue;
-      const [keeper] = [...same].sort((a, b) => richness(b) - richness(a) || a.index - b.index);
+      // T101: ties go to the first path in code-unit order, not the first in the list.
+      const [keeper] = [...same].sort((a, b) => richness(b) - richness(a) || (a.path < b.path ? -1 : a.path > b.path ? 1 : 0) || a.index - b.index);
       for (const r of same) if (r !== keeper) Object.assign(r, { group: 'duplicate', reason: 'copy', copyOf: keeper.index });
     }
   }

@@ -16,10 +16,10 @@ How to put `dist/` on a free static host at a private, unlisted HTTPS address (D
 The headers in `_headers`:
 
 - Every path: `X-Robots-Tag: noindex, nofollow`, `Referrer-Policy: no-referrer`, `X-Content-Type-Options: nosniff`, `Permissions-Policy: camera=(), microphone=(), geolocation=()`.
-- `Content-Security-Policy` uses the same policy as the `<meta>` tag in `index.html`, from one constant, with `connect-src 'self'`. The build fails if the two ever differ. It's set on `/`, `/index.html`, `/sw.js` and the thumbnail worker.
+- `Content-Security-Policy` uses the same policy as the `<meta>` tag in `index.html`, from one constant, with `connect-src 'self'`. The build fails if the two ever differ. It's set on `/`, `/index.html`, `/sw.js` and every worker file loaded from its own URL (the thumbnail worker and the HEIC decoder worker). The build fails if any worker file would be left without it.
 - Paths that don't match a file get the app page from the host's single-page fallback. Those responses have no CSP header, only the `<meta>` CSP inside the page.
 - The scan and save workers start from `blob:` URLs, so they inherit the page's policy. Only workers loaded from their own URL (thumbnail, HEIC) take their CSP from their own response.
-- The HEIC decoder worker (`assets/heic.worker-*.js`, the large one) gets **no** CSP header. As a URL-loaded worker it takes its CSP from its own response, and `script-src 'self'` blocks WebAssembly, so the header would break iPhone photo previews. That's the same as today, because the `<meta>` tag never reaches URL-loaded workers. The build fails if the HEIC worker would ever get the header. Covering this worker too means adding `'wasm-unsafe-eval'` to `script-src`, which only allows WebAssembly, not JavaScript `eval`. Changing the CSP is the owner's call, so it's been raised with the Team Lead for the dashboard.
+- The HEIC decoder worker (`assets/heic.worker-*.js`, the large one) gets the same CSP header as everything else (D29). It runs libheif compiled to WebAssembly, so `script-src` includes `'wasm-unsafe-eval'`. That allows WebAssembly only, not JavaScript `eval` (`'unsafe-eval'` stays out), and `connect-src 'self'` is unchanged, so the decoder still can't send anything. The build fails if a WebAssembly worker is found while the CSP lacks `'wasm-unsafe-eval'`, if the CSP ever allows `'unsafe-eval'`, or if the HEIC worker isn't recognised as a WebAssembly worker.
 
 ## 1. Build (both hosts)
 
@@ -73,6 +73,8 @@ curl -sI "${URL}manifest.webmanifest" | grep -i cache-control
 curl -s  "${URL}robots.txt"
 grep -o 'assets/[^ ]*\.js' dist/_headers | head -1     # a hashed file to check:
 curl -sI "${URL}assets/<that file>" | grep -i cache-control
+grep -o 'assets/heic\.worker-[^ ]*\.js' dist/_headers     # the HEIC decoder worker:
+curl -sI "${URL}assets/<that file>" | grep -i content-security
 ```
 
 You should see:
@@ -82,6 +84,7 @@ You should see:
 - `manifest.webmanifest`: `Cache-Control: no-cache`.
 - `robots.txt`: `User-agent: *` and `Disallow: /`.
 - The hashed asset: `Cache-Control: public, max-age=31536000, immutable`.
+- The HEIC decoder worker: the same CSP as `/`, including `'wasm-unsafe-eval'`.
 - No header should show up twice. If one does, a host-level setting is adding it as well.
 
 ## 4. Run the e2e and offline checks against the hosted address
@@ -108,5 +111,4 @@ BASE_URL=https://<address>/ npm run offline-check
 ## Known gaps
 
 - The CSP-violation watch uses Chromium's DevTools protocol, so these checks only run in Chromium.
-- A scan of a very small folder (1–3 files) sometimes stops at "Checked 1 of 1 files, 100%" and never shows the results. This is a separate app bug and not about hosting. `offline-check` retries its HEIC-only scan up to 3 times and prints a NOTE line when it does.
 - If you set `BASE_URL` to a path below the domain root, the `_headers` paths (`/sw.js`, `/assets/*`) won't match. Deploy at the root of the address.

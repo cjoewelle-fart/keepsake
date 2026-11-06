@@ -47,7 +47,9 @@ describe('real phone files', () => {
   const extras = {
     cutHeic: mem('recup_dir.1/f0100001.heic', cut('iphone-8_IMG_1034.heic', 0.6)),
     cutJpeg: mem('recup_dir.1/f0100002.jpg', cut('samsung-galaxy-s4_GT-I9505.jpg', 0.6)),
-    copy: mem('recup_dir.2/f0200003.jpg', bytesOf('samsung-galaxy-j3_SM-J327T1.jpg')),
+    // Named to sort after the real file: of two identical copies with the same details, the
+    // first path in code-unit order is kept (T101), whatever order the files are listed in.
+    copy: mem('samsung-galaxy-j3_SM-J327T1_copy.jpg', bytesOf('samsung-galaxy-j3_SM-J327T1.jpg')),
   };
 
   beforeAll(async () => {
