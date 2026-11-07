@@ -419,9 +419,8 @@ export const copy = {
     hint: 'Look for the one that holds recup_dir.1, recup_dir.2 and so on.',
     /** Under the button: takes over from the old "Recover" step. Opens the PhotoRec guide. */
     noFolder: 'No recovery folder yet? Here’s how to make one',
-    /** The date tag on the hero fan's middle print (decorative). `date` below 960px; `year` on the
-     *  one-line desktop hero, where the prints are small. */
-    fanDate: { date: 'Mar 2009', year: '2009' },
+    /** The date tag on the hero fan's middle print (decorative). */
+    fanDate: 'Mar 2009',
     /** T83: the privacy promise, in a highlighted note next to the button. */
     promise: 'Your photos stay on this computer. Nothing is uploaded or deleted.',
     /** T83: "Before you start", a short Q&A under the button. */

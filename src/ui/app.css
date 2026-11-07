@@ -559,25 +559,28 @@ progress::-moz-progress-bar { background: var(--accent); border-radius: 999px; }
 @keyframes hero-deal-r { from { transform: translate(calc(-100 * var(--u)), calc(24 * var(--u))) rotate(0deg); } }
 .hero-fan .fan-deal .fan-l { animation-name: hero-deal-l; }
 .hero-fan .fan-deal .fan-r { animation-name: hero-deal-r; }
-.hero-fan .tag-short { display: none; }
 @media (min-width: 960px) {
-  /* One line: "Find your photos [fan] sort them by date." from edge to edge of the hero row. The
-     line is about 17.2em long (gaps included), so the type is sized on the row's own width (cqw:
-     it leaves out the page padding and any scrollbar) to fill it with 1.5–3% to spare from 960px
-     (row 897–912px) to 1180px and up (row 1132px). The rem part keeps it growing with the browser's
-     text size; the min() stops a very large text size from pushing the line past the row.
-     space-between hands the slack to the two gaps around the fan. At 200% zoom the window is under
-     960 CSS px and the three-row layout below takes over. */
-  .hero-row { container-type: inline-size; }
-  .hero-h { display: flex; flex-wrap: nowrap; align-items: center; justify-content: space-between; gap: 0.25em; white-space: nowrap;
-    font-size: min(clamp(2.75rem, 0.25rem + 5.3cqw, 4.5rem), 5.75cqw); }
+  /* Round 5: one line, "Find your photos [fan] sort them by date.", edge to edge of the hero row, with
+     the fan back at round-2 size and hanging below the line over the row beneath (the layering).
+     Sizes are measured on the start screen's own content width (cqw: no page padding, no scrollbar).
+     --u is one px of the 400×190 drawing: 1px from a 1100px row up, easing to 0.8px at the 897px row
+     (960 window), so the middle print never drops under about 150px. It is set on .start so the
+     type can leave room for the fan and row 2 can make room for the part that hangs down.
+     The type fills what is left: the two text parts are about 14.5em in Bricolage, plus two 0.6em
+     gaps around the fan, so the fit term divides what the fan leaves by 16.2 (about 3% to spare).
+     The rem part keeps the type following the browser's text size; the min() stops it ever pushing
+     the line past the row. About 47px at 1280 and 37px at 960. At 200% zoom the three-row layout
+     below takes over. */
+  .start { container-type: inline-size; --u: clamp(0.8px, 0.0985cqw - 0.0837px, 1px); }
+  .hero-h { display: flex; flex-wrap: nowrap; align-items: flex-start; justify-content: space-between; gap: 0.6em; white-space: nowrap;
+    font-size: min(clamp(2.25rem, 0.5rem + 3.6cqw, 3.5rem), calc((100cqw - 364 * var(--u)) / 16.2));
+    line-height: 1; }
   .hero-l1, .hero-l2 { flex: none; }
-  /* About 1.55 × the cap height, in em so it scales with the type; nudged so its middle sits on the caps' middle. */
-  .hero-fan { --u: calc(1.04em / 190); top: -0.03em; }
-  .hero-fan .tag { font-size: max(10px, calc(26 * var(--u))); padding: 0 calc(10 * var(--u)); }
-  /* The prints are small here: the tag shows the year only. */
-  .hero-fan .tag-long { display: none; }
-  .hero-fan .tag-short { display: inline; }
+  /* The fan's box is one line tall and as wide as the prints (the drawing's 18-unit side margins
+     are cut off), so the h1 keeps a one-line height; the prints overflow it downwards. Their top
+     sits about on the cap line. pointer-events: none, so it never blocks a click below. */
+  .hero-fan { --u: inherit; width: calc(364 * var(--u)); height: 1em; pointer-events: none; }
+  .hero-fan .fan { position: absolute; left: calc(-18 * var(--u)); top: 0; }
 }
 @media (max-width: 959px) {
   /* Three rows. The prints tuck under line 1's descenders and line 2's tops. Descenders may cross a
@@ -600,11 +603,18 @@ progress::-moz-progress-bar { background: var(--accent); border-radius: 999px; }
 }
 .start .lede { max-width: 560px; }
 @media (min-width: 960px) {
-  .start { max-width: 1180px; display: grid; grid-template-columns: minmax(0, 1fr) 400px; column-gap: 64px; row-gap: 36px; align-items: start; }
-  .hero-row { grid-column: 1 / -1; }
+  .start { max-width: 1180px; display: grid; grid-template-columns: minmax(0, 1fr) 460px; column-gap: 64px; row-gap: 0; align-items: start; }
+  /* Above row 2, so the hanging prints lie over the card's corner, and stay there while it rises in. */
+  .hero-row { grid-column: 1 / -1; z-index: 1; }
+  /* Row 2 makes room for the prints, which hang about 148 units below the h1. The actions start just
+     past them. The card starts higher, so the right-hand print lies over its top-left corner like a
+     photo dropped on it; the card's extra top padding keeps its text clear of the print (its paper
+     and shadow too). Nothing readable sits under a photo. */
+  .start-main { padding-top: calc(148 * var(--u) + 24px); }
+  .faq { margin-top: calc(82 * var(--u)); padding-top: calc(40 * var(--u) + 24px); }
 }
 @media (min-width: 960px) and (max-width: 1199px) {
-  .start { grid-template-columns: minmax(0, 1fr) 360px; column-gap: 48px; }
+  .start { grid-template-columns: minmax(0, 1fr) 400px; column-gap: 48px; }
 }
 /* The entrance, once per page load: the prints are dealt, then the words rise in turn. All done by 520ms. */
 @keyframes start-rise { from { opacity: 0; transform: translateY(6px); } }

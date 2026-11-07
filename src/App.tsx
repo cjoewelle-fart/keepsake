@@ -277,13 +277,13 @@ function Start({ note, noteKey, onChoose, onSamples, onInfo }: { note?: string; 
   const said = shownNote(note, noteKey, ready);
   return (
     <main className={`page start${enter ? ' enter' : ''}`}>
-      {/* Round 4: one h1, the three-print fan between its two parts: one line from 960px, three rows
-          below. Screen readers hear one sentence. */}
+      {/* One h1, the three-print fan between its two parts: one line from 960px (round 5: the fan
+          hangs below the line over the row beneath), three rows below. Screen readers hear one sentence. */}
       <div className="hero-row">
         <HeroGrain />
         <h1 tabIndex={-1} className="hero-h">
           <span className="hero-l1 rise rise-1">{copy.start.titleA}</span><span className="sr-only">{copy.start.titleJoin}</span>
-          <span className="hero-fan" aria-hidden="true"><Prints as="span" settle={enter} date={<><span className="tag-long">{copy.start.fanDate.date}</span><span className="tag-short">{copy.start.fanDate.year}</span></>} sizes="(max-width: 959px) 160px, 80px" /></span>
+          <span className="hero-fan" aria-hidden="true"><Prints as="span" settle={enter} date={copy.start.fanDate} sizes="(max-width: 640px) 140px, 190px" /></span>
           <span className="hero-l2 rise rise-1">{copy.start.titleB}</span>
         </h1>
       </div>
