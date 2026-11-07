@@ -24,7 +24,7 @@ import { NOTE_DELAY_MS, shownNote } from './ui/liveNote';
 import { dropUnusedThumbs } from './ui/thumbs';
 import { dropUnusedHeicPreviews } from './ui/heicPreview';
 import { HeroGrain } from './ui/HeroGrain';
-import { BlankPrint, EyeOffIcon, FileCheckIcon, FolderOpenIcon, LockIcon, Prints, StageIcon, UserXIcon } from './ui/icons';
+import { BlankPrint, EyeOffIcon, FileCheckIcon, FolderOpenIcon, HeroPrints, LockIcon, Prints, StageIcon, UserXIcon } from './ui/icons';
 
 const dropUnusedPreviews = () => { dropUnusedThumbs(); dropUnusedHeicPreviews(); };
 
@@ -277,12 +277,12 @@ function Start({ note, noteKey, onChoose, onSamples, onInfo }: { note?: string; 
   const said = shownNote(note, noteKey, ready);
   return (
     <main className={`page start${enter ? ' enter' : ''}`}>
-      {/* Round 2: one h1 in two lines, the prints tucked between them. Screen readers hear one sentence. */}
+      {/* One h1 in two lines with the row of prints between them (round 3). Screen readers hear one sentence. */}
       <div className="hero-row">
         <HeroGrain />
         <h1 tabIndex={-1} className="hero-h">
           <span className="hero-l1 rise rise-1">{copy.start.titleA}</span><span className="sr-only">{copy.start.titleJoin}</span>
-          <span className="hero-fan" aria-hidden="true"><Prints as="span" settle={enter} date={copy.start.fanDate} /></span>
+          <HeroPrints dates={copy.start.heroDates} deal={enter} />
           <span className="hero-l2 rise rise-1">{copy.start.titleB}</span>
         </h1>
       </div>

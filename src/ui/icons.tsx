@@ -3,9 +3,18 @@
 // Drawn at 20px in buttons and text and 24px in card rows. Always decorative: the words beside an
 // icon carry its meaning, so every icon is aria-hidden and never takes focus.
 import type { ReactNode, SVGProps } from 'react';
-import printBeach from '../assets/prints/beach.webp';
-import printCake from '../assets/prints/cake.webp';
-import printRoad from '../assets/prints/road.webp';
+import lola480 from '../assets/hero/1-lola-480.webp';
+import lola240 from '../assets/hero/1-lola-240.webp';
+import kids480 from '../assets/hero/2-kids-480.webp';
+import kids240 from '../assets/hero/2-kids-240.webp';
+import candles480 from '../assets/hero/3-candles-480.webp';
+import candles240 from '../assets/hero/3-candles-240.webp';
+import roadtrip480 from '../assets/hero/4-roadtrip-480.webp';
+import roadtrip240 from '../assets/hero/4-roadtrip-240.webp';
+import lunch480 from '../assets/hero/5-lunch-480.webp';
+import lunch240 from '../assets/hero/5-lunch-240.webp';
+import beach480 from '../assets/hero/6-beach-480.webp';
+import beach240 from '../assets/hero/6-beach-240.webp';
 
 type IconProps = { size?: number; className?: string } & Omit<SVGProps<SVGSVGElement>, 'children'>;
 
@@ -156,20 +165,50 @@ export const CautionIcon = () => (
 
 /**
  * Three prints, fanned out, with a date tag on the middle one. Decorative (alt=""). `settle`: deal
- * them out once. Round 2: real photos (bundled with the app, so img-src 'self' covers them).
- * `as="span"` draws it with spans (display:block in CSS), so it can sit inside the start screen's h1.
- * Only for screens where photos are really there or coming: start, scanning, done. Empty and error
+ * them out once. Real photos bundled with the app (img-src 'self' covers them); round 3 uses three
+ * of the hero photos (src/assets/hero, credits in CREDITS.md) in the rounder print frame.
+ * Only for screens where photos are really there or coming: scanning, done. Empty and error
  * states use BlankPrint.
  */
-export function Prints({ settle = false, date, children, as: Box = 'div' }: { settle?: boolean; date?: string; children?: ReactNode; as?: 'div' | 'span' }) {
-  const photo = (src: string) => <img className="ph" src={src} alt="" width={256} height={191} decoding="async" draggable={false} />;
+export function Prints({ settle = false, date, children }: { settle?: boolean; date?: string; children?: ReactNode }) {
+  const photo = (src: string) => <img className="ph" src={src} alt="" width={480} height={384} decoding="async" draggable={false} />;
   return (
-    <Box className={`fan${settle ? ' fan-deal' : ''}`} aria-hidden="true">
-      <Box className="fan-print fan-l">{photo(printBeach)}</Box>
-      <Box className="fan-print fan-r">{photo(printRoad)}</Box>
-      <Box className="fan-print fan-c">{photo(printCake)}{date && <span className="tag">{date}</span>}</Box>
+    <div className={`fan${settle ? ' fan-deal' : ''}`} aria-hidden="true">
+      <div className="fan-print fan-l">{photo(beach480)}</div>
+      <div className="fan-print fan-r">{photo(roadtrip480)}</div>
+      <div className="fan-print fan-c">{photo(candles480)}{date && <span className="tag">{date}</span>}</div>
       {children}
-    </Box>
+    </div>
+  );
+}
+
+/** The start screen's six hero photos, in slot order (1–6). Unsplash License: see src/assets/hero/CREDITS.md. */
+const HERO_PHOTOS = [
+  [lola480, lola240],
+  [kids480, kids240],
+  [candles480, candles240],
+  [roadtrip480, roadtrip240],
+  [lunch480, lunch240],
+  [beach480, beach240],
+] as const;
+
+/**
+ * Round 3: the start screen's row of six prints, in date order, each with a date tag. Built from
+ * spans so it can sit inside the h1; decorative (the caller marks it aria-hidden). CSS shows 6, 5,
+ * 4 or 3 of them by width. `deal`: deal them out left to right, once.
+ */
+export function HeroPrints({ dates, deal = false }: { dates: readonly { date: string; year: string }[]; deal?: boolean }) {
+  return (
+    <span className={`hero-prints${deal ? ' deal' : ''}`} aria-hidden="true">
+      {HERO_PHOTOS.map(([src480, src240], i) => (
+        <span key={src480} className="hero-print">
+          <img className="ph" src={src480} srcSet={`${src240} 240w, ${src480} 480w`}
+            sizes="(max-width: 640px) 31vw, (max-width: 959px) 24vw, (max-width: 1199px) 19vw, 160px"
+            alt="" width={480} height={384} decoding="async" draggable={false} />
+          {dates[i] && <span className="tag"><span className="tag-long">{dates[i].date}</span><span className="tag-short">{dates[i].year}</span></span>}
+        </span>
+      ))}
+    </span>
   );
 }
 

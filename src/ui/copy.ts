@@ -67,6 +67,8 @@ There is no ${APP} server that stores photos. The app is a set of files your bro
 
 The app is also built so the page can’t send data to other websites. It doesn’t use ads or tracking, and it doesn’t load anything from other companies.
 
+Photos on the start screen are from Unsplash, by Tim Mossholder, Sharmaine Monticalbo, Chris Flexen, averie woodard, Eiliv Aceron and Derek Thomson. They come with ${APP}, so nothing is loaded from Unsplash.
+
 iPhone photos (HEIC files) are turned into previews on your computer too. The part that does this comes with ${APP}. Nothing is fetched from anywhere else.
 
 Some browsers show a message like “Upload files to this site?” when you choose a folder. That is the browser’s own wording. The files are only read on this computer. They are not sent anywhere.
@@ -417,8 +419,16 @@ export const copy = {
     hint: 'Look for the one that holds recup_dir.1, recup_dir.2 and so on.',
     /** Under the button: takes over from the old "Recover" step. Opens the PhotoRec guide. */
     noFolder: 'No recovery folder yet? Here’s how to make one',
-    /** On the illustration's middle print (decorative). */
-    fanDate: '12 Jun',
+    /** Round 3: date tags on the hero's six prints, left to right, in date order (decorative).
+     *  `date` shows from 641px up; `year` on phones, where a "Dec 1998" pill doesn't fit. */
+    heroDates: [
+      { date: 'Dec 1998', year: '1998' },
+      { date: 'Jul 2003', year: '2003' },
+      { date: 'Mar 2009', year: '2009' },
+      { date: 'Apr 2014', year: '2014' },
+      { date: 'Jan 2019', year: '2019' },
+      { date: 'Jun 2023', year: '2023' },
+    ],
     /** T83: the privacy promise, in a highlighted note next to the button. */
     promise: 'Your photos stay on this computer. Nothing is uploaded or deleted.',
     /** T83: "Before you start", a short Q&A under the button. */

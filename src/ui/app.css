@@ -19,10 +19,10 @@
   --blank: #DCE3E1;         /* a print with no preview */
   --caution-bg: #FBF0E1;    /* save problems (T83): warm, not an alarm; --date text on it is 6:1 */
   --caution-edge: #E3A86A;
-  /* Round 2 warm accent, for .btn-primary only: amber means "the next step", teal means "where you are".
-     White text on --cta is 6.3:1, on --cta-hover 8.6:1. Part of the date-stamp family (--date). */
-  --cta: #9A4A12;
-  --cta-hover: #7A3A0E;
+  /* Warm accent, for .btn-primary only: vermilion means "the next step", teal means "where you are".
+     Round 3: white text on --cta is 5.2:1, on --cta-hover 7.3:1; 4.5:1 against --bg. */
+  --cta: #C2410C;
+  --cta-hover: #9A3412;
   --shadow: 0 1px 2px rgba(31, 36, 39, 0.12), 0 6px 16px rgba(31, 36, 39, 0.08);
   --shadow-lift: 0 2px 4px rgba(31, 36, 39, 0.14), 0 10px 24px rgba(31, 36, 39, 0.12);
   /* Motion (warmth spec §4). No loops; nothing larger than a card moves; resting state is always visible. */
@@ -127,7 +127,7 @@ a:hover { color: var(--accent-hover); }
 /* Hover and press (warmth spec §4). The primary lifts a little; secondary controls and pills only
    change colour (thousands of pills shouldn't bounce). Focus rings appear at once, never animated. */
 .btn-primary { transition: transform var(--dur-fast) var(--ease-out), box-shadow var(--dur-fast) var(--ease-out), background-color var(--dur-fast) var(--ease-std); }
-.btn-primary:not([aria-disabled='true']):hover { transform: translateY(-1px); box-shadow: 0 2px 4px rgba(122, 58, 14, 0.2), 0 6px 14px rgba(122, 58, 14, 0.2); }
+.btn-primary:not([aria-disabled='true']):hover { transform: translateY(-1px); box-shadow: 0 2px 4px rgba(154, 52, 18, 0.22), 0 6px 14px rgba(154, 52, 18, 0.22); }
 .btn-primary:not([aria-disabled='true']):active { transform: translateY(0) scale(0.98); box-shadow: none; }
 .btn-secondary, .chip, .print-more, .btn-link { transition: background-color var(--dur-fast) var(--ease-std), border-color var(--dur-fast) var(--ease-std), color var(--dur-fast) var(--ease-std); }
 .btn .arrow { transition: transform var(--dur-fast) var(--ease-out); }
@@ -136,15 +136,16 @@ a:hover { color: var(--accent-hover); }
 .chev { transition: transform var(--dur-base) var(--ease-std); }
 [aria-expanded='true'] .chev { transform: rotate(180deg); }
 
-/* Fanned prints (decorative: start, scanning, done). Drawn at 400×190 and scaled down below 960px.
-   Round 2: real photos (src/assets/prints, grain baked in), a 6px white border and near-square corners. */
+/* Fanned prints (decorative: scanning, done). Drawn at 400×190 and scaled down below 960px.
+   Round 3: three of the hero photos (src/assets/hero, grain baked in) in the print frame shared with
+   the start screen's row: warm white paper, rounded corners, a hairline around photo and print. */
 .fan { position: relative; display: block; flex: none; height: 190px; width: 400px; }
-.fan-print { position: absolute; display: block; width: 170px; border-radius: 4px; overflow: hidden; border: 6px solid #FFFFFF; background: #FFFFFF; box-shadow: 0 2px 4px rgba(31, 36, 39, 0.14), 0 16px 36px rgba(31, 36, 39, 0.15); }
-.fan-print .ph { display: block; width: 100%; height: 124px; object-fit: cover; }
-.fan-l { left: 20px; top: 22px; transform: rotate(-5deg); box-shadow: 0 2px 4px rgba(31, 36, 39, 0.14), 0 14px 32px rgba(31, 36, 39, 0.14); }
+.fan-print { position: absolute; display: block; width: 170px; padding: 6px; border-radius: 12px; background: #FFFDF8; forced-color-adjust: none;
+  box-shadow: 0 0 0 1px rgba(31, 36, 39, 0.06), 0 1px 2px rgba(31, 36, 39, 0.10), 0 12px 24px -8px rgba(31, 36, 39, 0.18); }
+.fan-print .ph { display: block; width: 100%; height: auto; aspect-ratio: 5 / 4; object-fit: cover; border-radius: 6px; outline: 1px solid rgba(31, 36, 39, 0.10); outline-offset: -1px; }
+.fan-l { left: 20px; top: 22px; transform: rotate(-5deg); }
 .fan-r { left: 206px; top: 16px; transform: rotate(4deg); }
-.fan-c { left: 106px; top: 36px; width: 186px; box-shadow: 0 2px 4px rgba(31, 36, 39, 0.14), 0 18px 40px rgba(31, 36, 39, 0.16); }
-.fan-c .ph { height: 136px; }
+.fan-c { left: 106px; top: 36px; width: 186px; }
 .fan .tag { left: 10px; bottom: 10px; }
 @media (max-width: 959px) {
   /* The box takes the scaled size; the prints inside are laid out at full size and scaled with it. */
@@ -532,32 +533,66 @@ progress::-moz-progress-bar { background: var(--accent); border-radius: 999px; }
   .done { gap: 32px; }
 }
 
-/* Start screen. Round 2: row 1 is the hero (one h1, two lines, the prints tucked between them);
+/* Start screen. Row 1 is the hero (one h1, two lines, the row of prints between them);
    from 960px row 2 has the actions on the left and the "Good to know" card on the right. */
 .start { max-width: 680px; display: flex; flex-direction: column; gap: 32px; }
 .start-main { display: flex; flex-direction: column; gap: 22px; min-width: 0; }
 .hero-row { position: relative; isolation: isolate; min-width: 0; }
 .hero-h { font-size: clamp(2.125rem, 1rem + 5vw, 5.25rem); font-weight: 800; line-height: 0.95; letter-spacing: -0.035em; font-variation-settings: 'opsz' 96; max-width: none; }
 .hero-l1, .hero-l2 { display: block; position: relative; z-index: 1; }
-/* The prints tuck under line 1's descenders and line 2's tops. Descenders may cross a print's white
-   border or shadow, never the photo (checked at 1280, 1024, 390 and 320). */
-.hero-fan { display: block; position: relative; z-index: 0; margin: -0.14em 0 -0.14em clamp(0px, 10vw, 150px); }
-.hero-fan .fan { width: 400px; height: 190px; transform: none; }
+/* Round 3: a row of prints between the two lines, in date order, across the full content width:
+   6 from 1200px, 5 from 960px, 4 from 641px, 3 on phones (fewer, never cropped or scrolled). Each
+   tilts by at most 1.5°, so it stays inside the page padding. The gap above clears line 1's descenders. */
+.hero-prints { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 16px; margin: max(10px, 0.22em) 0 max(8px, 0.12em); position: relative; z-index: 0; }
+.hero-print { position: relative; display: block; padding: 8px; border-radius: 16px; background: #FFFDF8;
+  box-shadow: 0 0 0 1px rgba(31, 36, 39, 0.06), 0 1px 2px rgba(31, 36, 39, 0.10), 0 12px 24px -8px rgba(31, 36, 39, 0.18);
+  transform: rotate(var(--r, 0deg)); forced-color-adjust: none; }
+.hero-print .ph { display: block; width: 100%; height: auto; aspect-ratio: 5 / 4; object-fit: cover; border-radius: 8px; outline: 1px solid rgba(31, 36, 39, 0.10); outline-offset: -1px; }
+.hero-print:nth-child(1) { --r: -1.5deg; }
+.hero-print:nth-child(2) { --r: 1deg; }
+.hero-print:nth-child(3) { --r: -0.5deg; }
+.hero-print:nth-child(4) { --r: 1.25deg; }
+.hero-print:nth-child(5) { --r: -1deg; }
+.hero-print:nth-child(6) { --r: 0.75deg; }
+.hero-print .tag { left: 16px; bottom: 16px; max-width: calc(100% - 32px); }
+.tag-short { display: none; }
 /* The date tag sits inside the h1: give it back its own type (the heading's tracking would squash it). */
 .hero-h .tag { font-family: var(--body); font-variation-settings: normal; letter-spacing: 0; line-height: 1.5; }
+/* Dealt out left to right, 30ms apart: each rises 14px and fades in, level, then turns to its tilt.
+   The last starts at 150ms and ends at 510ms. Only the start state waits in the delay (backwards). */
+@keyframes deal-row { from { opacity: 0; transform: translateY(14px) rotate(0deg); } }
+.hero-prints.deal .hero-print { animation: deal-row var(--dur-slow) var(--ease-out) backwards; }
+.hero-prints.deal .hero-print:nth-child(2) { animation-delay: 30ms; }
+.hero-prints.deal .hero-print:nth-child(3) { animation-delay: 60ms; }
+.hero-prints.deal .hero-print:nth-child(4) { animation-delay: 90ms; }
+.hero-prints.deal .hero-print:nth-child(5) { animation-delay: 120ms; }
+.hero-prints.deal .hero-print:nth-child(6) { animation-delay: 150ms; }
 @media (max-width: 1199px) {
-  .hero-fan .fan { width: 340px; height: 161.5px; transform: scale(0.85); transform-origin: left top; }
+  .hero-prints { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 14px; }
+  .hero-print:nth-child(5) { display: none; }
+}
+@media (max-width: 959px) {
+  .hero-prints { grid-template-columns: repeat(4, minmax(0, 1fr)); }
+  .hero-print:nth-child(4) { display: none; }
+  /* The row spans the full content width; everything else keeps the 680px measure. */
+  .start { max-width: none; }
+  .start > :not(.hero-row) { max-width: 680px; width: 100%; }
 }
 @media (max-width: 640px) {
-  .hero-fan { margin-left: 0; }
-  .hero-fan .fan { width: 288px; height: 136.8px; transform: scale(0.72); }
+  .hero-prints { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
+  .hero-print:nth-child(2) { display: none; }
+  .hero-print { padding: 6px; border-radius: 12px; }
+  .hero-print .ph { border-radius: 6px; }
+  .hero-print .tag { left: 10px; bottom: 10px; font-size: 12px; padding: 1px 7px; max-width: calc(100% - 20px); }
+  .tag-long { display: none; }
+  .tag-short { display: inline; }
 }
 @media (max-width: 359px) {
-  .hero-fan .fan { width: 248px; height: 117.8px; transform: scale(0.62); }
+  .hero-prints { gap: 8px; }
 }
 /* Paper grain behind the hero row only: a bundled 256px tile at 4%, and over it (when WebGL 2 is
    there and motion isn't reduced) one static GrainGradient drawn once. Both fade out at the edges. */
-.hero-grain { position: absolute; inset: -24px -24px -12px; z-index: -1; overflow: hidden; pointer-events: none; -webkit-mask-image: radial-gradient(closest-side at 42% 50%, #000 35%, transparent 100%); mask-image: radial-gradient(closest-side at 42% 50%, #000 35%, transparent 100%); }
+.hero-grain { position: absolute; inset: -24px -24px -12px; z-index: -1; overflow: hidden; pointer-events: none; -webkit-mask-image: radial-gradient(farthest-side at 50% 50%, #000 35%, transparent 100%); mask-image: radial-gradient(farthest-side at 50% 50%, #000 35%, transparent 100%); }
 .hero-grain::before { content: ''; position: absolute; inset: 0; background: url('../assets/grain.png') repeat; background-size: 256px 256px; opacity: 0.04; }
 .hero-shader { position: absolute; inset: 0; width: 100%; height: 100%; }
 @media (max-width: 640px) {
