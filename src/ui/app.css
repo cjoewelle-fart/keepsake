@@ -533,62 +533,62 @@ progress::-moz-progress-bar { background: var(--accent); border-radius: 999px; }
   .done { gap: 32px; }
 }
 
-/* Start screen. Row 1 is the hero (one h1, two lines, the row of prints between them);
-   from 960px row 2 has the actions on the left and the "Good to know" card on the right. */
+/* Start screen. Row 1 is the hero: one h1 with the fan of three prints between its two parts.
+   From 960px it is one line across the content width and row 2 has the actions on the left and the
+   "Good to know" card on the right; below 960px the hero stacks on three rows. */
 .start { max-width: 680px; display: flex; flex-direction: column; gap: 32px; }
 .start-main { display: flex; flex-direction: column; gap: 22px; min-width: 0; }
 .hero-row { position: relative; isolation: isolate; min-width: 0; }
 .hero-h { font-size: clamp(2.125rem, 1rem + 5vw, 5.25rem); font-weight: 800; line-height: 0.95; letter-spacing: -0.035em; font-variation-settings: 'opsz' 96; max-width: none; }
 .hero-l1, .hero-l2 { display: block; position: relative; z-index: 1; }
-/* Round 3: a row of prints between the two lines, in date order, across the full content width:
-   6 from 1200px, 5 from 960px, 4 from 641px, 3 on phones (fewer, never cropped or scrolled). Each
-   tilts by at most 1.5°, so it stays inside the page padding. The gap above clears line 1's descenders. */
-.hero-prints { display: grid; grid-template-columns: repeat(6, minmax(0, 1fr)); gap: 16px; margin: max(10px, 0.22em) 0 max(8px, 0.12em); position: relative; z-index: 0; }
-.hero-print { position: relative; display: block; padding: 8px; border-radius: 16px; background: #FFFDF8;
-  box-shadow: 0 0 0 1px rgba(31, 36, 39, 0.06), 0 1px 2px rgba(31, 36, 39, 0.10), 0 12px 24px -8px rgba(31, 36, 39, 0.18);
-  transform: rotate(var(--r, 0deg)); forced-color-adjust: none; }
-.hero-print .ph { display: block; width: 100%; height: auto; aspect-ratio: 5 / 4; object-fit: cover; border-radius: 8px; outline: 1px solid rgba(31, 36, 39, 0.10); outline-offset: -1px; }
-.hero-print:nth-child(1) { --r: -1.5deg; }
-.hero-print:nth-child(2) { --r: 1deg; }
-.hero-print:nth-child(3) { --r: -0.5deg; }
-.hero-print:nth-child(4) { --r: 1.25deg; }
-.hero-print:nth-child(5) { --r: -1deg; }
-.hero-print:nth-child(6) { --r: 0.75deg; }
-.hero-print .tag { left: 16px; bottom: 16px; max-width: calc(100% - 32px); }
-.tag-short { display: none; }
+/* The hero fan is the round-2 fan redrawn in units of --u (one px of the 400×190 drawing), so it can
+   follow the type on desktop. Registered, so an em value is fixed here and not re-read in the tag. */
+@property --u { syntax: '<length>'; inherits: true; initial-value: 1px; }
+.hero-fan { --u: 1px; display: block; position: relative; z-index: 0; flex: none; }
+.hero-fan .fan { width: calc(400 * var(--u)); height: calc(190 * var(--u)); transform: none; }
+.hero-fan .fan-print { width: calc(170 * var(--u)); padding: calc(6 * var(--u)); border-radius: calc(12 * var(--u)); }
+.hero-fan .fan-print .ph { border-radius: calc(6 * var(--u)); }
+.hero-fan .fan-l { left: calc(20 * var(--u)); top: calc(22 * var(--u)); }
+.hero-fan .fan-r { left: calc(206 * var(--u)); top: calc(16 * var(--u)); }
+.hero-fan .fan-c { left: calc(106 * var(--u)); top: calc(36 * var(--u)); width: calc(186 * var(--u)); }
+.hero-fan .tag { left: calc(10 * var(--u)); bottom: calc(10 * var(--u)); max-width: calc(100% - 20 * var(--u)); }
 /* The date tag sits inside the h1: give it back its own type (the heading's tracking would squash it). */
 .hero-h .tag { font-family: var(--body); font-variation-settings: normal; letter-spacing: 0; line-height: 1.5; }
-/* Dealt out left to right, 30ms apart: each rises 14px and fades in, level, then turns to its tilt.
-   The last starts at 150ms and ends at 510ms. Only the start state waits in the delay (backwards). */
-@keyframes deal-row { from { opacity: 0; transform: translateY(14px) rotate(0deg); } }
-.hero-prints.deal .hero-print { animation: deal-row var(--dur-slow) var(--ease-out) backwards; }
-.hero-prints.deal .hero-print:nth-child(2) { animation-delay: 30ms; }
-.hero-prints.deal .hero-print:nth-child(3) { animation-delay: 60ms; }
-.hero-prints.deal .hero-print:nth-child(4) { animation-delay: 90ms; }
-.hero-prints.deal .hero-print:nth-child(5) { animation-delay: 120ms; }
-.hero-prints.deal .hero-print:nth-child(6) { animation-delay: 150ms; }
-@media (max-width: 1199px) {
-  .hero-prints { grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 14px; }
-  .hero-print:nth-child(5) { display: none; }
+/* The deal, in drawing units (the shared deal-l/deal-r move in px). */
+@keyframes hero-deal-l { from { transform: translate(calc(86 * var(--u)), calc(18 * var(--u))) rotate(0deg); } }
+@keyframes hero-deal-r { from { transform: translate(calc(-100 * var(--u)), calc(24 * var(--u))) rotate(0deg); } }
+.hero-fan .fan-deal .fan-l { animation-name: hero-deal-l; }
+.hero-fan .fan-deal .fan-r { animation-name: hero-deal-r; }
+.hero-fan .tag-short { display: none; }
+@media (min-width: 960px) {
+  /* One line: "Find your photos [fan] sort them by date." from edge to edge of the hero row. The
+     line is about 17.2em long (gaps included), so the type is sized on the row's own width (cqw:
+     it leaves out the page padding and any scrollbar) to fill it with 1.5–3% to spare from 960px
+     (row 897–912px) to 1180px and up (row 1132px). The rem part keeps it growing with the browser's
+     text size; the min() stops a very large text size from pushing the line past the row.
+     space-between hands the slack to the two gaps around the fan. At 200% zoom the window is under
+     960 CSS px and the three-row layout below takes over. */
+  .hero-row { container-type: inline-size; }
+  .hero-h { display: flex; flex-wrap: nowrap; align-items: center; justify-content: space-between; gap: 0.25em; white-space: nowrap;
+    font-size: min(clamp(2.75rem, 0.25rem + 5.3cqw, 4.5rem), 5.75cqw); }
+  .hero-l1, .hero-l2 { flex: none; }
+  /* About 1.55 × the cap height, in em so it scales with the type; nudged so its middle sits on the caps' middle. */
+  .hero-fan { --u: calc(1.04em / 190); top: -0.03em; }
+  .hero-fan .tag { font-size: max(10px, calc(26 * var(--u))); padding: 0 calc(10 * var(--u)); }
+  /* The prints are small here: the tag shows the year only. */
+  .hero-fan .tag-long { display: none; }
+  .hero-fan .tag-short { display: inline; }
 }
 @media (max-width: 959px) {
-  .hero-prints { grid-template-columns: repeat(4, minmax(0, 1fr)); }
-  .hero-print:nth-child(4) { display: none; }
-  /* The row spans the full content width; everything else keeps the 680px measure. */
-  .start { max-width: none; }
-  .start > :not(.hero-row) { max-width: 680px; width: 100%; }
+  /* Three rows. The prints tuck under line 1's descenders and line 2's tops. Descenders may cross a
+     print's paper border or shadow, never the photo (checked at 390 and 320). */
+  .hero-fan { --u: 0.85px; margin: -0.14em 0 -0.14em clamp(0px, 10vw, 150px); }
 }
 @media (max-width: 640px) {
-  .hero-prints { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
-  .hero-print:nth-child(2) { display: none; }
-  .hero-print { padding: 6px; border-radius: 12px; }
-  .hero-print .ph { border-radius: 6px; }
-  .hero-print .tag { left: 10px; bottom: 10px; font-size: 12px; padding: 1px 7px; max-width: calc(100% - 20px); }
-  .tag-long { display: none; }
-  .tag-short { display: inline; }
+  .hero-fan { --u: 0.72px; margin-left: 0; }
 }
 @media (max-width: 359px) {
-  .hero-prints { gap: 8px; }
+  .hero-fan { --u: 0.62px; }
 }
 /* Paper grain behind the hero row only: a bundled 256px tile at 4%, and over it (when WebGL 2 is
    there and motion isn't reduced) one static GrainGradient drawn once. Both fade out at the edges. */

@@ -128,4 +128,4 @@ Third-party code shipped in the app: libheif-js 1.23.2 (libheif and libde265, LG
 
 ### Photo credits
 
-The photos on the start screen and the scanning and done screens are from [Unsplash](https://unsplash.com) and are used under the [Unsplash License](https://unsplash.com/license). They are not covered by the code licence. Photographers and sources are listed in [`src/assets/hero/CREDITS.md`](src/assets/hero/CREDITS.md).
+The photos on the start screen and the scanning and done screens are by Chris Flexen, averie woodard and Derek Thomson on [Unsplash](https://unsplash.com) and are used under the [Unsplash License](https://unsplash.com/license). They are not covered by the code licence. Photographers and sources are listed in [`src/assets/hero/CREDITS.md`](src/assets/hero/CREDITS.md).
