@@ -15,6 +15,8 @@ import { END_COST, entryCost } from './zip';
 import { canDownload } from './embedded';
 import { mediaType } from './timeline';
 import { SafeNote } from './Results';
+import { spanOf } from './span';
+import type { Span } from './span';
 import { CautionIcon, CheckCircleIcon, DownloadIcon, FolderIcon, FolderOpenIcon, PhotoIcon, Prints } from './icons';
 
 type Props = {
@@ -66,6 +68,8 @@ export function Save({ records, files, scanId, ids, recoveryRoot, onBack, onDone
   // The file's size now (it's what gets copied), falling back to the size at scan time.
   const sizeOf = useCallback((r: FileRecord) => files[r.index]?.size ?? r.size, [files]);
   const totalBytes = useMemo(() => items.reduce((a, r) => a + sizeOf(r), 0), [items, sizeOf]);
+  // Round 2: what's being kept, in days and years (save.span).
+  const span = useMemo(() => spanOf(items), [items]);
 
   // Zip names are decided once for the whole selection, so "Save the rest" can't clash with a part already downloaded.
   const planned = useMemo(() => (folderMode ? [] : planNames(items, sizeOf)), [folderMode, items, sizeOf]);
@@ -96,7 +100,9 @@ export function Save({ records, files, scanId, ids, recoveryRoot, onBack, onDone
   }));
   const stop = useRef(false);
   const [stopping, setStopping] = useState(false);
-  const [progress, setProgress] = useState({ done: 0, part: 0, parts: 0 });
+  // `month`: the month of the file saved last ('YYYY-MM'), for "· now June 2021" (folder saves only:
+  // zip saves report files in batches, not one by one).
+  const [progress, setProgress] = useState<{ done: number; part: number; parts: number; month?: string }>({ done: 0, part: 0, parts: 0 });
 
   const worker = useRef<{ raw: Worker; api: Comlink.Remote<SaveApi> }>(undefined);
   useEffect(() => () => worker.current?.raw.terminate(), []);
@@ -164,7 +170,7 @@ export function Save({ records, files, scanId, ids, recoveryRoot, onBack, onDone
     setPhase({ k: 'saving' });
     const end = await saveToFolder(session, rest.map((r) => ({ r, file: files[r.index] })), {
       ...ev,
-      onSaved: (id) => { ev.onSaved(id); setProgress((p) => ({ ...p, done: sess.saved.size })); },
+      onSaved: (id) => { ev.onSaved(id); setProgress((p) => ({ ...p, done: sess.saved.size, month: byIndex[id]?.takenAt?.slice(0, 7) })); },
       onFailed: (id) => { ev.onFailed(id); rerender(); },
     });
     if (end !== 'unsupported' && !sess.savedTo.includes(session.chosen.name)) sess.savedTo.push(session.chosen.name);
@@ -243,7 +249,7 @@ export function Save({ records, files, scanId, ids, recoveryRoot, onBack, onDone
         <div className="progress-wrap">
           <progress max={total || 1} value={Math.min(progress.done, total)} aria-label={label} />
           <p className="progress-text" aria-hidden="true">
-            <span>{!folderMode && progress.parts > 1 ? `${s.zipProgress(progress.part, progress.parts)} · ` : ''}{label}</span>
+            <span>{!folderMode && progress.parts > 1 ? `${s.zipProgress(progress.part, progress.parts)} · ` : ''}{label}{folderMode && progress.month ? s.progressMonth(progress.month) : ''}</span>
             <span>{pct}%</span>
           </p>
           <p className="sr-only" role="status">{s.announce(Math.floor((total * Math.floor(pct / 10)) / 10), total)}</p>
@@ -295,6 +301,7 @@ export function Save({ records, files, scanId, ids, recoveryRoot, onBack, onDone
         folderNames={sess.savedTo}
         zips={folderMode ? undefined : sess.zips}
         earlier={folderMode ? undefined : zipLog.leftovers(sess.visit, sess.saved)}
+        span={spanOf(items.filter((r) => sess.saved.has(r.index)))}
         sorted={sortedInto(folderMode
           ? [...(sess.folder?.placed.values() ?? [])].map((dir) => ({ dir }))
           : planned.filter((p) => sess.saved.has(p.id)))}
@@ -315,6 +322,8 @@ export function Save({ records, files, scanId, ids, recoveryRoot, onBack, onDone
           <div><dt>{s.ledgerSelected}</dt><dd data-k="selected">{n(total)}</dd></div>
           <div className="ledger-total"><dt>{s.ledgerSize}</dt><dd data-k="size">{bytes(totalBytes)}</dd></div>
         </dl>
+        <SpanLine span={span} mediaOnly={mediaOnly} />
+        <p className="sub-sm">{s.benefit}</p>
         <p className="sub-sm">{s.needSpace(bytes(totalBytes))}</p>
         <SafeNote h={s.safeH} line={s.safeLine} />
         <div><button type="button" className="btn btn-link" onClick={onBack}>{s.back}</button></div>
@@ -373,6 +382,19 @@ export function Save({ records, files, scanId, ids, recoveryRoot, onBack, onDone
   );
 }
 
+/**
+ * Round 2: "Photos and videos from 214 days, 2019 to 2024. Plus 40 with no date, kept together in
+ * their own folder." Nothing when none of them has a date (the "Plus" line needs the first).
+ */
+function SpanLine({ span, mediaOnly }: { span: Span; mediaOnly: boolean }) {
+  if (!span.first || !span.last) return null;
+  return (
+    <p className="span-line" data-k="span">
+      {s.span(span.days, span.first, span.last, mediaOnly)}{span.noDate > 0 && ` ${s.spanNoDate(span.noDate)}`}
+    </p>
+  );
+}
+
 /** The receipt's "Your files: None deleted, none sent anywhere" row (T76). A printed record, so it stays a ledger row. */
 function SafeRow() {
   return (
@@ -418,11 +440,13 @@ type DoneProps = {
   /** Zips from an earlier save on this page that didn't finish. */
   earlier?: { names: string[]; covered: boolean };
   sorted: { years: number; months: number; noDate: number };
+  /** Round 2: the days and years the saved copies cover. */
+  span: Span;
   when: Date;
   onStartOver: () => void;
 };
 
-function Done({ total, saved, failedRecords, mediaOnly, folderNames, zips, earlier, sorted, when, onStartOver }: DoneProps) {
+function Done({ total, saved, failedRecords, mediaOnly, folderNames, zips, earlier, sorted, span, when, onStartOver }: DoneProps) {
   const [showFailed, setShowFailed] = useState(false);
   const failed = failedRecords.length;
   const savedTo = zips ? s.rSavedToZip(zips.length) : folderNames.map(s.rSavedToFolder).join(' and ');
@@ -441,6 +465,9 @@ function Done({ total, saved, failedRecords, mediaOnly, folderNames, zips, earli
             ? <>{s.doneBefore}<span className="accent-num">{n(saved)}</span>{s.doneAfter(saved, mediaOnly)}</>
             : <>{s.partBefore}<span className="accent-num">{n(saved)}</span>{s.partAfter(total, mediaOnly)}</>}
         </h1>
+        {span.first && span.last && (
+          <p className="span-line" data-k="done-span">{s.doneSpan(span.days, span.first, span.last)}{span.noDate > 0 && ` ${s.spanNoDate(span.noDate)}`}</p>
+        )}
         {failed > 0 && <p className="note-box">{s.failedLine(failed)}</p>}
         <p className="lede">{zips ? s.doneZipLine(zips.length) : s.doneLine}</p>
         {zips ? <FindZips names={zips.map((z) => z.name)} /> : <p className="find" data-k="find">{folderNames.map(s.findThem).join(' ')}</p>}

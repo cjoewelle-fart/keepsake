@@ -490,7 +490,7 @@ async function keyboard(browser) {
   const days = tStops.filter((s) => s.type === 'checkbox' && !/^Save /.test(s.name)).length;
   check(tiles === total, 'serious', run, 'review', `Tab reaches every photo (${tiles} of ${total} tile checkboxes, ${days} day checkboxes; lazy drawing must not skip any)`);
   const order = tStops.map((s) => s.name);
-  const iSave = order.findIndex((x) => /^Save \d+ selected/.test(x));
+  const iSave = order.findIndex((x) => /^Save my \d/.test(x));
   const iTile = order.findIndex((x) => /^Save (photo|video|file) /.test(x));
   check(iSave >= 0 && iSave < iTile, 'minor', run, 'review', `Save button comes before the photos in Tab order (at ${iSave}, first photo at ${iTile})`);
   ok(run, 'review', `Tab order start: ${order.slice(0, 22).join(' → ')}`);

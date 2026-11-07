@@ -7,7 +7,7 @@ import { Preview } from './Preview';
 import { Viewer } from './Viewer';
 import { SafeNote } from './Results';
 import { playableHere } from './playable';
-import { NO_DATE, blocksOf, buildTimeline, chunks, columnsFor, inPlay, largestFirst, mediaType, selectedIds, tally } from './timeline';
+import { NO_DATE, blocksOf, buildTimeline, chunks, columnsFor, inPlay, largestFirst, leftOutKind, mediaType, selectedIds, tally } from './timeline';
 import type { Block, Filter, Month, Order, Selection, TriState } from './timeline';
 import type { SetAsideGroup } from '../engine/summary';
 
@@ -253,7 +253,7 @@ export function Timeline({ records, files, movedBack, setAside, selection: sel, 
       aria-describedby={none ? reasonId : undefined}
       onClick={() => { if (!none) onSave(selectedIds(kept, sel)); }}
     >
-      {t.save(sum.selected)}
+      {t.save(sum.selected, mediaOnly)}
     </button>
   );
   const everyId = () => kept.map((r) => r.index);
@@ -288,6 +288,8 @@ export function Timeline({ records, files, movedBack, setAside, selection: sel, 
           <div><dt>{t.ledgerSize}</dt><dd data-k="size">{bytes(sum.selectedBytes)}</dd></div>
           <div className="ledger-plain"><dt>{t.ledgerAside}</dt><dd data-k="aside">{n(setAside)}</dd></div>
         </dl>
+        {/* Round 2: the true version of "smaller": only leaving files out shrinks the save. */}
+        {sum.notSelected > 0 && <p className="sub-sm" data-k="left-out">{t.leftOutSize(sum.notSelected, bytes(sum.notSelectedBytes), leftOutKind(sum))}</p>}
         <SafeNote h={t.safeH} line={t.safeLine} />
         {none && <p id="save-why" className="note-box">{t.nothingSelected}</p>}
         <p className="sr-only" role="status" aria-live="polite">{announce}</p>
@@ -545,7 +547,7 @@ function Tile({ r, file, pos, of, on, onChange, onOpen }: TileProps) {
       <label className="chk">
         <input type="checkbox" checked={on} onChange={(e) => { setJust((k) => k + 1); onChange(e.target.checked); }} aria-label={name} />
         <span className="dot" aria-hidden="true" key={just}>
-          {on && <svg width="14" height="14" viewBox="0 0 14 14" fill="none"><path d="M3 7.2l2.6 2.6L11 4.4" stroke="#FFFFFF" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" pathLength={1} /></svg>}
+          {on && <svg width="16" height="16" viewBox="0 0 16 16" fill="none"><path d="M3.5 8.4l2.9 2.9 6.1-6.3" stroke="#FFFFFF" strokeWidth="2.25" strokeLinecap="round" strokeLinejoin="round" pathLength={1} /></svg>}
         </span>
       </label>
       {type === 'video' ? (

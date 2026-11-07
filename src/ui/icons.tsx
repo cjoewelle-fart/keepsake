@@ -3,6 +3,9 @@
 // Drawn at 20px in buttons and text and 24px in card rows. Always decorative: the words beside an
 // icon carry its meaning, so every icon is aria-hidden and never takes focus.
 import type { ReactNode, SVGProps } from 'react';
+import printBeach from '../assets/prints/beach.webp';
+import printCake from '../assets/prints/cake.webp';
+import printRoad from '../assets/prints/road.webp';
 
 type IconProps = { size?: number; className?: string } & Omit<SVGProps<SVGSVGElement>, 'children'>;
 
@@ -151,15 +154,22 @@ export const CautionIcon = () => (
   </svg>
 );
 
-/** Three prints, fanned out, with a date tag on the middle one. Decorative. `settle`: deal them out once. */
-export function Prints({ settle = false, date, children }: { settle?: boolean; date?: string; children?: ReactNode }) {
+/**
+ * Three prints, fanned out, with a date tag on the middle one. Decorative (alt=""). `settle`: deal
+ * them out once. Round 2: real photos (bundled with the app, so img-src 'self' covers them).
+ * `as="span"` draws it with spans (display:block in CSS), so it can sit inside the start screen's h1.
+ * Only for screens where photos are really there or coming: start, scanning, done. Empty and error
+ * states use BlankPrint.
+ */
+export function Prints({ settle = false, date, children, as: Box = 'div' }: { settle?: boolean; date?: string; children?: ReactNode; as?: 'div' | 'span' }) {
+  const photo = (src: string) => <img className="ph" src={src} alt="" width={256} height={191} decoding="async" draggable={false} />;
   return (
-    <div className={`fan${settle ? ' fan-deal' : ''}`} aria-hidden="true">
-      <div className="fan-print fan-l"><div className="ph ph-a"><i /><i /><i /></div></div>
-      <div className="fan-print fan-r"><div className="ph ph-b"><i /><i /><i /></div></div>
-      <div className="fan-print fan-c"><div className="ph ph-c"><i /><i /><i /></div>{date && <span className="tag">{date}</span>}</div>
+    <Box className={`fan${settle ? ' fan-deal' : ''}`} aria-hidden="true">
+      <Box className="fan-print fan-l">{photo(printBeach)}</Box>
+      <Box className="fan-print fan-r">{photo(printRoad)}</Box>
+      <Box className="fan-print fan-c">{photo(printCake)}{date && <span className="tag">{date}</span>}</Box>
       {children}
-    </div>
+    </Box>
   );
 }
 

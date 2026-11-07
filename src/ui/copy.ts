@@ -406,7 +406,11 @@ export const copy = {
 
   start: {
     // Warmth (Nov 6, UX writer option A): one plain sentence that doesn't promise a result.
-    title: 'Find your photos and sort them by date.',
+    // Round 2 (Nov 7): one h1 in two visible lines with the prints between them. Screen readers
+    // hear titleA + titleJoin + titleB ("Find your photos and sort them by date."); the "and" isn't shown.
+    titleA: 'Find your photos',
+    titleJoin: ' and ',
+    titleB: 'sort them by date.',
     body: 'Choose the folder your recovery program made. We’ll put your photos in a folder for each year and month.',
     choose: 'Choose recovery folder',
     /** Small text under the button. */
@@ -420,7 +424,7 @@ export const copy = {
     /** T83: "Before you start", a short Q&A under the button. */
     faqH: 'Good to know',
     faq: [
-      { q: 'Do you see my photos?', a: 'No. We have no way to see them.' },
+      { q: 'Do you see my photos?', a: 'No. They’re read on this computer and never sent to us.' },
       { q: 'Do I need an account?', a: 'No. There’s nothing to sign up for.' },
       { q: 'Will it change my files?', a: 'No. It only reads them. Your photos are saved as new copies.' },
     ],
@@ -434,10 +438,12 @@ export const copy = {
 
   scanning: {
     title: 'Checking your files…',
-    copiesTitle: 'Looking for exact copies…',
+    copiesTitle: 'Checking for photos saved twice…',
     progress: (done: number, total: number) => `Checked ${n(done)} of ${n(total)} files`,
     copiesProgress: (done: number, total: number) => `Compared ${n(done)} of ${n(total)} possible copies`,
     reassure: 'This happens on your computer. Nothing is sent anywhere, and you can stop any time.',
+    /** Round 2: shown after about a minute of scanning. */
+    slow: 'Big folders can take a while. You can leave this tab open and come back.',
     // “Your files”: Save may remove an empty file it made itself (D17), never one of yours (T58).
     // T76: said in words instead of a zero counter.
     deleted: 'Your files are not deleted or changed',
@@ -450,7 +456,11 @@ export const copy = {
 
   results: {
     // Quiet Prints results screen (T38).
-    sortedLine: 'They’re sorted by the date each one was taken.',
+    /** Round 2: with the first and last year among the kept files ('YYYY'). */
+    sortedLine: (first?: string, last?: string) =>
+      !first || !last ? 'They’re sorted by the date each one was taken.'
+        : first === last ? `They’re sorted by the date each one was taken, in ${first}.`
+          : `They’re sorted by the date each one was taken, from ${first} to ${last}.`,
     noDatesLine: 'We couldn’t find a date on any of them, so they’re kept together.',
     ledgerLabel: 'Your files, added up',
     ledgerChecked: 'Files checked',
@@ -560,10 +570,10 @@ export const copy = {
   } satisfies Record<SetAsideGroup, { title: string; why: string }>,
 
   empty: {
-    noFiles: 'This folder is empty.',
-    noFilesBody: 'Choose the folder your recovery program saved files into.',
+    noFiles: 'This folder looks empty.',
+    noFilesBody: 'Nothing was changed. Your recovery program may have saved its files somewhere else. Look for the folder that holds recup_dir.1.',
     noKeepers: 'We didn’t find any photos or videos here.',
-    noKeepersBody: 'Nothing was deleted. You can open the groups below to check, or choose a different folder.',
+    noKeepersBody: 'Nothing was deleted. Some damaged files may still show part of a picture. Open the groups below to check, or choose a different folder.',
   },
 
   error: {
@@ -586,9 +596,15 @@ export const copy = {
     ledgerSize: 'Size to save',
     ledgerAside: 'Still set aside, kept safe',
     safeH: 'None of your files are deleted or sent anywhere.',
-    safeLine: 'Anything you don’t select stays where it is now.',
+    safeLine: 'Anything you leave out stays safe in your recovery folder.',
     nothingSelected: 'Nothing is selected, so there’s nothing to save yet. Your photos are all still here.',
-    save: (x: number) => (x === 0 ? 'Save selected' : `Save ${n(x)} selected`),
+    /** Round 2: says what happens. The number is the footer's selected count. */
+    save: (x: number, mediaOnly = true) =>
+      x === 0 ? (mediaOnly ? 'Save my photos and videos' : 'Save my files')
+        : `Save my ${n(x)} ${mediaOnly ? plural(x, 'photo or video', 'photos and videos') : plural(x, 'file', 'files')}`,
+    /** Round 2: under the ledger when anything is left out. `kind`: what the unselected files all are. */
+    leftOutSize: (x: number, size: string, kind: 'photo' | 'video' | 'file') =>
+      `Leaving out ${n(x)} ${kind === 'photo' ? plural(x, 'photo', 'photos') : kind === 'video' ? plural(x, 'video', 'videos') : plural(x, 'file', 'files')} makes your save ${size} smaller.`,
     selectAll: 'Select all',
     selectNone: 'Unselect all',
     footerCount: (sel: number, total: number) => `${n(sel)} of ${n(total)} selected`,
@@ -716,7 +732,22 @@ export const copy = {
     ledgerLabel: 'What will be saved',
     ledgerSelected: 'Selected to save',
     ledgerSize: 'Total size',
-    needSpace: (size: string) => `You’ll need at least ${size} of free space.`,
+    needSpace: (size: string) => `This makes new copies, so you’ll need at least ${size} of free space.`,
+    /**
+     * Round 2: what's being kept, in real numbers. `days`: separate calendar dates among the dated
+     * files; `first` and `last`: their first and last month ('YYYY-MM'). See ui/span.ts.
+     */
+    span: (days: number, first: string, last: string, mediaOnly: boolean) =>
+      `${mediaOnly ? 'Photos and videos' : 'Files'} from ${n(days)} ${plural(days, 'day', 'days')}${
+        first.slice(0, 4) !== last.slice(0, 4) ? `, ${first.slice(0, 4)} to ${last.slice(0, 4)}` : first === last ? ` in ${monthYear(first)}` : ` in ${first.slice(0, 4)}`
+      }.`,
+    spanNoDate: (x: number) => (x === 1 ? 'Plus 1 with no date, kept in its own folder.' : `Plus ${n(x)} with no date, kept together in their own folder.`),
+    benefit: 'Once saved, they’re all in one place, sorted by date, ready to look through or back up.',
+    /** Round 2: under the done heading, counting only the copies that saved. */
+    doneSpan: (days: number, first: string, last: string) =>
+      `That’s ${n(days)} ${plural(days, 'day', 'days')}${
+        first.slice(0, 4) !== last.slice(0, 4) ? `, from ${first.slice(0, 4)} to ${last.slice(0, 4)},` : first === last ? ` in ${monthYear(first)},` : ` in ${first.slice(0, 4)},`
+      } now in one place.`,
     safeH: 'None of your files are deleted or sent anywhere.',
     safeLine: 'We save new copies. Your recovery folder stays as it was.',
     // The claude.ai preview (a sandboxed frame), where neither folder saving nor downloads work.
@@ -771,6 +802,8 @@ export const copy = {
     // Saving
     savingH: 'Saving your photos and videos…',
     progress: (done: number, total: number) => `Saved ${n(done)} of ${n(total)}`,
+    /** Round 2: the month being saved now ('YYYY-MM'), after the count. */
+    progressMonth: (month: string) => ` · now ${monthYear(month)}`,
     zipProgress: (i: number, parts: number) => `Making zip file ${n(i)} of ${n(parts)}…`,
     reassure: 'This happens on your computer. Nothing is sent anywhere, and your recovery folder isn’t changed.',
     keepOpen: 'Keep this tab open until it’s done. If you can, keep the computer plugged in so it doesn’t go to sleep.',
@@ -845,7 +878,7 @@ export const copy = {
     /** T83: back to the start screen; this tab's results are cleared, nothing on disk is touched. */
     startOver: 'Sort another folder',
     startOverNote: 'Your saved photos stay where they are. This receipt will close, so save or print it first.',
-    secondCopy: 'If you can, keep a second copy too, on a USB drive or a backup you already use.',
+    secondCopy: 'For some photos, this may be your only copy. If you can, keep a second copy on a USB drive or a backup you already use.',
     receiptH: 'Your receipt',
     rSaved: 'Saved',
     rSavedValue: (x: number, mediaOnly: boolean) => `${n(x)} ${mediaOnly ? plural(x, 'photo or video', 'photos and videos') : plural(x, 'file', 'files')}`,

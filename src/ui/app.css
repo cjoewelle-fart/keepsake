@@ -19,6 +19,10 @@
   --blank: #DCE3E1;         /* a print with no preview */
   --caution-bg: #FBF0E1;    /* save problems (T83): warm, not an alarm; --date text on it is 6:1 */
   --caution-edge: #E3A86A;
+  /* Round 2 warm accent, for .btn-primary only: amber means "the next step", teal means "where you are".
+     White text on --cta is 6.3:1, on --cta-hover 8.6:1. Part of the date-stamp family (--date). */
+  --cta: #9A4A12;
+  --cta-hover: #7A3A0E;
   --shadow: 0 1px 2px rgba(31, 36, 39, 0.12), 0 6px 16px rgba(31, 36, 39, 0.08);
   --shadow-lift: 0 2px 4px rgba(31, 36, 39, 0.14), 0 10px 24px rgba(31, 36, 39, 0.12);
   /* Motion (warmth spec §4). No loops; nothing larger than a card moves; resting state is always visible. */
@@ -110,8 +114,8 @@ a:hover { color: var(--accent-hover); }
 .btn-lg { min-height: 54px; padding: 0 28px; font-size: 17px; font-weight: 700; }
 .btn-sm { min-height: var(--control-h); padding: 0 18px; font-size: var(--control-text); align-self: flex-start; }
 .btn-block { width: 100%; }
-.btn-primary { min-height: var(--primary-h); padding: 0 24px; font-size: var(--primary-text); font-weight: 700; background: var(--accent); color: #FFFFFF; border: 0; }
-.btn-primary:hover { background: var(--accent-hover); }
+.btn-primary { min-height: var(--primary-h); padding: 0 24px; font-size: var(--primary-text); font-weight: 700; background: var(--cta); color: #FFFFFF; border: 0; }
+.btn-primary:hover { background: var(--cta-hover); }
 .btn-secondary { background: var(--surface); color: var(--ink); border-color: var(--control-edge); }
 .btn-secondary:hover { background: var(--surface-2); border-color: var(--ink); }
 .btn-secondary:disabled, .btn-secondary[aria-disabled='true'] { cursor: default; color: var(--muted); }
@@ -123,7 +127,7 @@ a:hover { color: var(--accent-hover); }
 /* Hover and press (warmth spec §4). The primary lifts a little; secondary controls and pills only
    change colour (thousands of pills shouldn't bounce). Focus rings appear at once, never animated. */
 .btn-primary { transition: transform var(--dur-fast) var(--ease-out), box-shadow var(--dur-fast) var(--ease-out), background-color var(--dur-fast) var(--ease-std); }
-.btn-primary:not([aria-disabled='true']):hover { transform: translateY(-1px); box-shadow: 0 2px 4px rgba(23, 62, 75, 0.18), 0 6px 14px rgba(23, 62, 75, 0.16); }
+.btn-primary:not([aria-disabled='true']):hover { transform: translateY(-1px); box-shadow: 0 2px 4px rgba(122, 58, 14, 0.2), 0 6px 14px rgba(122, 58, 14, 0.2); }
 .btn-primary:not([aria-disabled='true']):active { transform: translateY(0) scale(0.98); box-shadow: none; }
 .btn-secondary, .chip, .print-more, .btn-link { transition: background-color var(--dur-fast) var(--ease-std), border-color var(--dur-fast) var(--ease-std), color var(--dur-fast) var(--ease-std); }
 .btn .arrow { transition: transform var(--dur-fast) var(--ease-out); }
@@ -132,13 +136,14 @@ a:hover { color: var(--accent-hover); }
 .chev { transition: transform var(--dur-base) var(--ease-std); }
 [aria-expanded='true'] .chev { transform: rotate(180deg); }
 
-/* Fanned prints (decorative: start, scanning, done). Drawn at 400×190 and scaled down below 960px. */
-.fan { position: relative; flex: none; height: 190px; width: 400px; }
-.fan-print { position: absolute; width: 170px; border-radius: 16px; overflow: hidden; border: 4px solid #FFFFFF; box-shadow: var(--shadow); }
-.fan-print .ph { height: 124px; }
-.fan-l { left: 20px; top: 22px; transform: rotate(-5deg); }
+/* Fanned prints (decorative: start, scanning, done). Drawn at 400×190 and scaled down below 960px.
+   Round 2: real photos (src/assets/prints, grain baked in), a 6px white border and near-square corners. */
+.fan { position: relative; display: block; flex: none; height: 190px; width: 400px; }
+.fan-print { position: absolute; display: block; width: 170px; border-radius: 4px; overflow: hidden; border: 6px solid #FFFFFF; background: #FFFFFF; box-shadow: 0 2px 4px rgba(31, 36, 39, 0.14), 0 16px 36px rgba(31, 36, 39, 0.15); }
+.fan-print .ph { display: block; width: 100%; height: 124px; object-fit: cover; }
+.fan-l { left: 20px; top: 22px; transform: rotate(-5deg); box-shadow: 0 2px 4px rgba(31, 36, 39, 0.14), 0 14px 32px rgba(31, 36, 39, 0.14); }
 .fan-r { left: 206px; top: 16px; transform: rotate(4deg); }
-.fan-c { left: 106px; top: 40px; width: 186px; }
+.fan-c { left: 106px; top: 36px; width: 186px; box-shadow: 0 2px 4px rgba(31, 36, 39, 0.14), 0 18px 40px rgba(31, 36, 39, 0.16); }
 .fan-c .ph { height: 136px; }
 .fan .tag { left: 10px; bottom: 10px; }
 @media (max-width: 959px) {
@@ -152,11 +157,6 @@ a:hover { color: var(--accent-hover); }
 .fan-deal .fan-c { animation: deal-c var(--dur-slow) var(--ease-out) backwards; }
 .fan-deal .fan-l { animation: deal-l var(--dur-slow) var(--ease-out) 60ms backwards; }
 .fan-deal .fan-r { animation: deal-r var(--dur-slow) var(--ease-out) 120ms backwards; }
-.ph { display: flex; flex-direction: column; overflow: hidden; }
-.ph i { display: block; }
-.ph-a i:nth-child(1) { flex: 40; background: #E9D6C4; } .ph-a i:nth-child(2) { flex: 30; background: #B98A6E; } .ph-a i:nth-child(3) { flex: 30; background: #6E4F45; }
-.ph-b i:nth-child(1) { flex: 55; background: #C9D9E4; } .ph-b i:nth-child(2) { flex: 15; background: #8EA9B8; } .ph-b i:nth-child(3) { flex: 30; background: #3F5C6B; }
-.ph-c i:nth-child(1) { flex: 50; background: #2E3550; } .ph-c i:nth-child(2) { flex: 6; background: #E3A86A; } .ph-c i:nth-child(3) { flex: 44; background: #1D2236; }
 
 /* Scanning */
 .progress-wrap { display: flex; flex-direction: column; gap: 8px; }
@@ -279,7 +279,7 @@ progress::-moz-progress-bar { background: var(--accent); border-radius: 999px; }
 .strip > div { min-width: 4px; transition: flex-grow 300ms ease; }
 .groups { list-style: none; margin: 0; padding: 0; }
 .group { border-top: 1px solid var(--rule-row); }
-.group-head { width: 100%; min-height: 64px; display: flex; align-items: center; gap: 14px; padding: 10px 0; background: transparent; border: 0; color: var(--ink); text-align: left; cursor: pointer; border-radius: 8px; }
+.group-head { width: calc(100% + 24px); min-height: 64px; display: flex; align-items: center; gap: 14px; margin: 0 -12px; padding: 10px 12px; background: transparent; border: 0; color: var(--ink); text-align: left; cursor: pointer; border-radius: 12px; }
 .group-head:hover .group-toggle { text-decoration: underline; text-underline-offset: 3px; }
 .swatch { width: 12px; height: 12px; border-radius: 3px; flex: none; }
 .samples { display: flex; gap: 4px; flex: none; }
@@ -326,7 +326,7 @@ progress::-moz-progress-bar { background: var(--accent); border-radius: 999px; }
 .tl-days { display: flex; flex-direction: column; gap: 18px; }
 .tl-day { display: flex; flex-direction: column; gap: 10px; }
 .tl-day-h { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; min-height: 44px; font-weight: 700; cursor: pointer; }
-.tl-day-h input { width: 22px; height: 22px; margin: 0 4px 0 0; accent-color: var(--accent); cursor: pointer; }
+.tl-day-h input { margin: 0 4px 0 0; }
 .tl-day-count { font-weight: 400; color: var(--muted); font-size: var(--text-small); }
 .tl-grid { display: grid; grid-template-columns: repeat(var(--cols, 6), minmax(0, 1fr)); gap: var(--gap, 12px); }
 .tl-tile.off { box-shadow: none; outline: 2px dashed var(--control-edge); outline-offset: -2px; }
@@ -340,8 +340,10 @@ progress::-moz-progress-bar { background: var(--accent); border-radius: 999px; }
 .tl-tile .tag { pointer-events: none; }
 .chk { position: absolute; top: 0; right: 0; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
 .chk input { position: absolute; inset: 0; opacity: 0; width: 44px; height: 44px; margin: 0; cursor: pointer; }
-.dot { pointer-events: none; width: 26px; height: 26px; border-radius: 50%; display: flex; align-items: center; justify-content: center; background: var(--accent); box-shadow: 0 0 0 2px #FFFFFF; }
-.tl-tile.off .dot { background: #FFFFFF; box-shadow: inset 0 0 0 2px var(--muted), 0 0 0 2px #FFFFFF; }
+/* Round 2: the tile's tick is the same rounded square as the checkboxes, with a white ring and a
+   small shadow so it reads on any photo. Unticked: white at 92% with a --muted edge. */
+.dot { pointer-events: none; width: 22px; height: 22px; border-radius: 6px; display: flex; align-items: center; justify-content: center; background: var(--accent); box-shadow: 0 0 0 2px #FFFFFF, 0 1px 3px 2px rgba(0, 0, 0, 0.25); }
+.tl-tile.off .dot { background: rgba(255, 255, 255, 0.92); box-shadow: inset 0 0 0 1.5px var(--muted), 0 0 0 2px #FFFFFF, 0 1px 3px 2px rgba(0, 0, 0, 0.25); }
 .chk input:focus-visible + .dot { outline: 3px solid var(--accent); outline-offset: 3px; }
 .dot path { stroke-dasharray: 1; stroke-dashoffset: 0; }
 /* Only on the tile just ticked or unticked (data-just, set for 300ms): never on mount or Select all. */
@@ -370,7 +372,7 @@ progress::-moz-progress-bar { background: var(--accent); border-radius: 999px; }
 .tl-rows, .tl-rows-block { display: flex; flex-direction: column; gap: 8px; }
 .tl-row { display: flex; align-items: center; gap: 8px; min-height: 56px; min-width: 0; }
 .tl-row-chk { flex: none; width: 44px; height: 44px; display: flex; align-items: center; justify-content: center; cursor: pointer; }
-.tl-row-chk input { width: 22px; height: 22px; margin: 0; accent-color: var(--accent); cursor: pointer; }
+
 .tl-row .gf-text { padding-left: 4px; }
 .tl-row-size { font-weight: 700; color: var(--ink); font-variant-numeric: tabular-nums; }
 .tl-row.off .tile img, .tl-row.off .tile canvas { opacity: 0.55; }
@@ -439,6 +441,45 @@ progress::-moz-progress-bar { background: var(--accent); border-radius: 999px; }
   .chip { min-width: var(--control-h); } /* "All" was 42px wide (T30) */
 }
 
+/* Round 2 checkboxes: one design everywhere, drawn on the native input (appearance: none), so its
+   state, indeterminate included, still comes from the browser. The label around it is the hit area
+   (44px rows). Tick and bar are white masks, so forced colours can recolour them. */
+.tl-day-h input, .tl-row-chk input, .viewer-chk input {
+  appearance: none; -webkit-appearance: none; flex: none; display: inline-grid; place-content: center;
+  width: 20px; height: 20px; margin: 0; border-radius: 6px; background: #FFFFFF; border: 1.5px solid var(--control-edge); cursor: pointer;
+  transition: background-color var(--dur-fast) var(--ease-std), border-color var(--dur-fast) var(--ease-std);
+}
+.tl-day-h input { margin-right: 4px; }
+.tl-day-h input:hover, .tl-row-chk input:hover, .viewer-chk input:hover,
+.tl-day-h:hover input, .tl-row-chk:hover input, .viewer-chk:hover input { border-color: var(--ink); background-color: #F4F7F6; }
+.tl-day-h input:is(:checked, :indeterminate), .tl-row-chk input:checked, .viewer-chk input:checked { background-color: var(--accent); border-color: var(--accent); }
+.tl-day-h input::before, .tl-row-chk input::before, .viewer-chk input::before { content: ''; display: block; width: 16px; height: 16px; background: #FFFFFF; visibility: hidden; -webkit-mask: var(--tick) center / 16px 16px no-repeat; mask: var(--tick) center / 16px 16px no-repeat; }
+.tl-day-h input:checked::before, .tl-row-chk input:checked::before, .viewer-chk input:checked::before { visibility: visible; }
+.tl-day-h input:indeterminate::before { visibility: visible; width: 10px; height: 2.25px; border-radius: 2px; -webkit-mask: none; mask: none; }
+:root { --tick: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 16 16'%3E%3Cpath d='M3.5 8.4l2.9 2.9 6.1-6.3' fill='none' stroke='%23000' stroke-width='2.25' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E"); }
+@media (pointer: coarse) {
+  .tl-day-h input, .tl-row-chk input, .viewer-chk input { width: 22px; height: 22px; }
+}
+@media (max-width: 640px), (pointer: coarse) {
+  .dot { width: 24px; height: 24px; }
+}
+
+/* Round 2 hover, only where the whole thing is the target, and only with a mouse. Review tiles open
+   the viewer: the picture scales inside the tile, the tile doesn't lift (it would knock the grid and
+   the checkbox out of line). "+N" lifts and tints. Set-aside rows tint only. Nothing moves under
+   reduced motion; the shadow still changes. */
+@media (hover: hover) and (pointer: fine) {
+  .tl-tile .tile-open-pic .tile img, .tl-tile .tile-open-pic .tile canvas, .gf-open .tile img, .gf-open .tile canvas { transition: transform var(--dur-slow) var(--ease-out); }
+  .tl-tile .tile-open:hover .tile img, .tl-tile .tile-open:hover .tile canvas, .gf-open:hover .tile img, .gf-open:hover .tile canvas { transform: scale(1.04); }
+  .print-more { transition: transform var(--dur-slow) var(--ease-out), box-shadow var(--dur-slow) var(--ease-out), background-color var(--dur-fast) var(--ease-std); }
+  .print-more:hover { transform: translateY(-3px); box-shadow: var(--shadow-lift); }
+  .group-head { transition: background-color var(--dur-fast) var(--ease-std); }
+  .group-head:hover { background: var(--surface); }
+}
+@media (hover: hover) and (pointer: fine) and (prefers-reduced-motion: reduce) {
+  .tl-tile .tile-open:hover .tile img, .tl-tile .tile-open:hover .tile canvas, .gf-open:hover .tile img, .gf-open:hover .tile canvas, .print-more:hover { transform: none; }
+}
+
 /* Save (T25). Source: team/brand/quiet-prints/EX-choose.dc.html and EX-done.dc.html. */
 .accent-num { color: var(--accent); }
 .save .envelope h1 { font-weight: 800; font-size: clamp(30px, 4.6vw, 36px); line-height: 1.1; }
@@ -460,6 +501,8 @@ progress::-moz-progress-bar { background: var(--accent); border-radius: 999px; }
 .tree-folder { color: var(--accent); }
 .tree-photo { color: var(--date); }
 .save-progress .note-box { margin-top: -6px; }
+/* Round 2: what's being kept, in days and years (Save and Done). */
+.span-line { font-size: 17px; color: var(--ink); }
 .zip-again { display: flex; flex-direction: column; gap: 10px; }
 
 .done { display: flex; flex-wrap: wrap; gap: 56px; align-items: flex-start; }
@@ -489,12 +532,44 @@ progress::-moz-progress-bar { background: var(--accent); border-radius: 999px; }
   .done { gap: 32px; }
 }
 
-/* Start screen (warmth spec §2): one column, two from 960px (the "Good to know" card on the right). */
+/* Start screen. Round 2: row 1 is the hero (one h1, two lines, the prints tucked between them);
+   from 960px row 2 has the actions on the left and the "Good to know" card on the right. */
 .start { max-width: 680px; display: flex; flex-direction: column; gap: 32px; }
 .start-main { display: flex; flex-direction: column; gap: 22px; min-width: 0; }
+.hero-row { position: relative; isolation: isolate; min-width: 0; }
+.hero-h { font-size: clamp(2.125rem, 1rem + 5vw, 5.25rem); font-weight: 800; line-height: 0.95; letter-spacing: -0.035em; font-variation-settings: 'opsz' 96; max-width: none; }
+.hero-l1, .hero-l2 { display: block; position: relative; z-index: 1; }
+/* The prints tuck under line 1's descenders and line 2's tops. Descenders may cross a print's white
+   border or shadow, never the photo (checked at 1280, 1024, 390 and 320). */
+.hero-fan { display: block; position: relative; z-index: 0; margin: -0.14em 0 -0.14em clamp(0px, 10vw, 150px); }
+.hero-fan .fan { width: 400px; height: 190px; transform: none; }
+/* The date tag sits inside the h1: give it back its own type (the heading's tracking would squash it). */
+.hero-h .tag { font-family: var(--body); font-variation-settings: normal; letter-spacing: 0; line-height: 1.5; }
+@media (max-width: 1199px) {
+  .hero-fan .fan { width: 340px; height: 161.5px; transform: scale(0.85); transform-origin: left top; }
+}
+@media (max-width: 640px) {
+  .hero-fan { margin-left: 0; }
+  .hero-fan .fan { width: 288px; height: 136.8px; transform: scale(0.72); }
+}
+@media (max-width: 359px) {
+  .hero-fan .fan { width: 248px; height: 117.8px; transform: scale(0.62); }
+}
+/* Paper grain behind the hero row only: a bundled 256px tile at 4%, and over it (when WebGL 2 is
+   there and motion isn't reduced) one static GrainGradient drawn once. Both fade out at the edges. */
+.hero-grain { position: absolute; inset: -24px -24px -12px; z-index: -1; overflow: hidden; pointer-events: none; -webkit-mask-image: radial-gradient(closest-side at 42% 50%, #000 35%, transparent 100%); mask-image: radial-gradient(closest-side at 42% 50%, #000 35%, transparent 100%); }
+.hero-grain::before { content: ''; position: absolute; inset: 0; background: url('../assets/grain.png') repeat; background-size: 256px 256px; opacity: 0.04; }
+.hero-shader { position: absolute; inset: 0; width: 100%; height: 100%; }
+@media (max-width: 640px) {
+  .hero-grain { left: -16px; right: -16px; } /* the page's own padding: never wider than the window */
+}
+.start .lede { max-width: 560px; }
 @media (min-width: 960px) {
-  .start { max-width: 1180px; display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 400px); gap: 64px; align-items: start; }
-  .start .faq { margin-top: 24px; }
+  .start { max-width: 1180px; display: grid; grid-template-columns: minmax(0, 1fr) 400px; column-gap: 64px; row-gap: 36px; align-items: start; }
+  .hero-row { grid-column: 1 / -1; }
+}
+@media (min-width: 960px) and (max-width: 1199px) {
+  .start { grid-template-columns: minmax(0, 1fr) 360px; column-gap: 48px; }
 }
 /* The entrance, once per page load: the prints are dealt, then the words rise in turn. All done by 520ms. */
 @keyframes start-rise { from { opacity: 0; transform: translateY(6px); } }
@@ -563,7 +638,7 @@ video.viewer-media { background: #000000; }
 .viewer-step { display: inline-flex; align-items: center; gap: 8px; }
 .viewer-step[aria-disabled='true'] { color: var(--muted); border-color: var(--rule); cursor: default; }
 .viewer-chk { display: flex; align-items: center; gap: 10px; min-height: 44px; padding: 0 8px; font-weight: 700; cursor: pointer; }
-.viewer-chk input { width: 22px; height: 22px; margin: 0; accent-color: var(--accent); cursor: pointer; }
+
 @media (max-width: 640px) {
   .viewer { width: 100vw; height: 100dvh; margin: 0; border-radius: 0; }
   .viewer-top { padding: 8px 8px 8px 16px; }
@@ -595,6 +670,9 @@ video.viewer-media { background: #000000; }
   .tl-save[aria-disabled='true'] { color: GrayText; border-color: GrayText; }
   .chip[aria-pressed='true'], .chip[aria-current='true'] { forced-color-adjust: none; background: Highlight; color: HighlightText; border-color: Highlight; }
   .dot { forced-color-adjust: none; background: Highlight; box-shadow: 0 0 0 2px Canvas; }
+  .tl-day-h input, .tl-row-chk input, .viewer-chk input { forced-color-adjust: none; background: Canvas; border-color: CanvasText; }
+  .tl-day-h input:is(:checked, :indeterminate), .tl-row-chk input:checked, .viewer-chk input:checked { background: Highlight; border-color: Highlight; }
+  .tl-day-h input::before, .tl-row-chk input::before, .viewer-chk input::before { background: HighlightText; }
   .dot path { stroke: HighlightText; }
   .tl-tile.off .dot { background: Canvas; box-shadow: inset 0 0 0 2px CanvasText, 0 0 0 2px Canvas; }
   progress { forced-color-adjust: none; border: 1px solid CanvasText; background: Canvas; }

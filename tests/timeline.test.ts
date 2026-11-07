@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { SetAsideGroup } from '../src/engine/summary';
 import { summarize } from '../src/engine/summary';
 import type { FileRecord, Group } from '../src/engine/types';
-import { NO_DATE, Selection, blocksOf, buildTimeline, chunks, columnsFor, inPlay, largestFirst, selectedIds, tally } from '../src/ui/timeline';
+import { NO_DATE, Selection, blocksOf, buildTimeline, chunks, columnsFor, inPlay, largestFirst, leftOutKind, selectedIds, tally } from '../src/ui/timeline';
 import { bytes, copy, runTime, runTimeWords, weekdayDayMonth } from '../src/ui/copy';
 
 let i = 0;
@@ -75,7 +75,10 @@ describe('selection', () => {
 
   it('starts with everything selected, and the ledger adds up', () => {
     const sel = new Selection(size);
-    expect(tally(files, sel)).toEqual({ total: 4, selected: 4, notSelected: 0, selectedBytes: 2135, selectedPhotos: 3, selectedVideos: 1 });
+    expect(tally(files, sel)).toEqual({
+      total: 4, selected: 4, notSelected: 0, selectedBytes: 2135, selectedPhotos: 3, selectedVideos: 1,
+      notSelectedBytes: 0, notSelectedPhotos: 0, notSelectedVideos: 0,
+    });
   });
 
   it('unticks and ticks a single file', () => {
@@ -101,6 +104,27 @@ describe('selection', () => {
     const s = tally(files, sel);
     expect(s.selected + s.notSelected).toBe(s.total);
     expect(s.selected).toBe(2);
+  });
+
+  it('round 2: says how much smaller leaving files out makes the save, and what they are', () => {
+    const sel = new Selection(size);
+    // files: photo 100, video 2000, photo 30, photo (no date) 5
+    sel.set([files[0].index, files[2].index], false);
+    let s = tally(files, sel);
+    expect([s.notSelected, s.notSelectedBytes, s.notSelectedPhotos, s.notSelectedVideos]).toEqual([2, 130, 2, 0]);
+    expect(s.selectedBytes + s.notSelectedBytes).toBe(2135);
+    expect(leftOutKind(s)).toBe('photo');
+    expect(copy.timeline.leftOutSize(s.notSelected, bytes(s.notSelectedBytes), leftOutKind(s))).toBe('Leaving out 2 photos makes your save 130 bytes smaller.');
+    sel.set([files[0].index, files[2].index], true);
+    sel.set([files[1].index], false);
+    s = tally(files, sel);
+    expect(leftOutKind(s)).toBe('video');
+    expect(copy.timeline.leftOutSize(1, bytes(s.notSelectedBytes), leftOutKind(s))).toBe('Leaving out 1 video makes your save 2 KB smaller.');
+    sel.set([files[0].index], false);
+    s = tally(files, sel);
+    expect(leftOutKind(s)).toBe('file'); // a photo and a video: "files"
+    expect(copy.timeline.leftOutSize(18, '12 MB', 'file')).toBe('Leaving out 18 files makes your save 12 MB smaller.');
+    expect(copy.timeline.leftOutSize(1, '3 MB', 'photo')).toBe('Leaving out 1 photo makes your save 3 MB smaller.');
   });
 
   it('select none / select all, and the ids handed to saving are in timeline order', () => {
@@ -228,8 +252,12 @@ describe('timeline words', () => {
     expect(copy.timeline.tileLabel('photo', '2024-06-28T09:12:00', 1, 6, 9)).toBe('Save photo from 28 June 2024, 09:12');
     expect([0.2, 42, 59.6, 600, 725, 3723, 7200].map(runTime)).toEqual(['0:01', '0:42', '1:00', '10:00', '12:05', '1:02:03', '2:00:00']);
     expect([1, 60, 61, 3600, 3723].map(runTimeWords)).toEqual(['1 second', '1 minute', '1 minute 1 second', '1 hour', '1 hour 2 minutes']);
-    expect(copy.timeline.save(0)).toBe('Save selected');
-    expect(copy.timeline.save(2224)).toBe('Save 2,224 selected');
+    // Round 2: the button says what happens; the number is the footer's selected count.
+    expect(copy.timeline.save(0)).toBe('Save my photos and videos');
+    expect(copy.timeline.save(1)).toBe('Save my 1 photo or video');
+    expect(copy.timeline.save(2224)).toBe('Save my 2,224 photos and videos');
+    expect(copy.timeline.save(2224, false)).toBe('Save my 2,224 files');
+    expect(copy.timeline.save(0, false)).toBe('Save my files');
   });
 
   it('chooses columns by width', () => {

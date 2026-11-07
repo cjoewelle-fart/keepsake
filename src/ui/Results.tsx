@@ -10,6 +10,7 @@ import { copy, dayMonth, monthYear, n } from './copy';
 import { GroupFiles } from './GroupFiles';
 import { Preview } from './Preview';
 import { CountUp } from './CountUp';
+import { spanOf } from './span';
 import { ArrowRightIcon, BlankPrint, ChevronDownIcon, CornerUpLeftIcon, ShieldCheckIcon } from './icons';
 
 type Props = {
@@ -92,6 +93,10 @@ export function Results({ records, files, movedBack, countUp = false, onToggleGr
   };
 
   const allUndated = s.photos > 0 && s.undated === s.photos;
+  // Round 2: "…taken, from 2019 to 2024." over every kept file (photos and videos).
+  const span = useMemo(() => spanOf(records.filter((x) => effectiveGroup(x, movedBack) === 'keep')), [records, movedBack]);
+  const firstYear = span.first?.slice(0, 4);
+  const lastYear = span.last?.slice(0, 4);
   const r = copy.results;
 
   return (
@@ -109,7 +114,7 @@ export function Results({ records, files, movedBack, countUp = false, onToggleGr
             <h1 id="found-h" tabIndex={-1}>{copy.empty.noKeepers}</h1>
           </>
         )}
-        <p className="lede">{s.keep > 0 ? (allUndated ? r.noDatesLine : r.sortedLine) : copy.empty.noKeepersBody}</p>
+        <p className="lede">{s.keep > 0 ? (allUndated ? r.noDatesLine : r.sortedLine(firstYear, lastYear)) : copy.empty.noKeepersBody}</p>
 
         <dl className="ledger" aria-label={r.ledgerLabel}>
           <div><dt>{r.ledgerChecked}</dt><dd>{n(s.total)}</dd></div>

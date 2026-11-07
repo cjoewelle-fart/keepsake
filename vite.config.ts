@@ -79,7 +79,7 @@ const offline = () =>
       ],
     },
     workbox: {
-      globPatterns: ['**/*.{html,js,css,woff,woff2,wasm,svg,png}'], // public/ files included; the manifest is added by the plugin,
+      globPatterns: ['**/*.{html,js,css,woff,woff2,wasm,svg,png,webp}'], // public/ files included; the manifest is added by the plugin,
       maximumFileSizeToCacheInBytes: 8 * 1024 * 1024, // the HEIC decoder worker is ~2 MB
       navigateFallback: 'index.html',
       cleanupOutdatedCaches: true,

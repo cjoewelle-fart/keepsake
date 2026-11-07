@@ -23,7 +23,8 @@ import { canUseFolderPicker, inFrame } from './ui/embedded';
 import { NOTE_DELAY_MS, shownNote } from './ui/liveNote';
 import { dropUnusedThumbs } from './ui/thumbs';
 import { dropUnusedHeicPreviews } from './ui/heicPreview';
-import { BlankPrint, BookOpenIcon, EyeOffIcon, FileCheckIcon, FolderOpenIcon, LockIcon, Prints, StageIcon, UserXIcon } from './ui/icons';
+import { HeroGrain } from './ui/HeroGrain';
+import { BlankPrint, EyeOffIcon, FileCheckIcon, FolderOpenIcon, LockIcon, Prints, StageIcon, UserXIcon } from './ui/icons';
 
 const dropUnusedPreviews = () => { dropUnusedThumbs(); dropUnusedHeicPreviews(); };
 
@@ -276,9 +277,16 @@ function Start({ note, noteKey, onChoose, onSamples, onInfo }: { note?: string; 
   const said = shownNote(note, noteKey, ready);
   return (
     <main className={`page start${enter ? ' enter' : ''}`}>
+      {/* Round 2: one h1 in two lines, the prints tucked between them. Screen readers hear one sentence. */}
+      <div className="hero-row">
+        <HeroGrain />
+        <h1 tabIndex={-1} className="hero-h">
+          <span className="hero-l1 rise rise-1">{copy.start.titleA}</span><span className="sr-only">{copy.start.titleJoin}</span>
+          <span className="hero-fan" aria-hidden="true"><Prints as="span" settle={enter} date={copy.start.fanDate} /></span>
+          <span className="hero-l2 rise rise-1">{copy.start.titleB}</span>
+        </h1>
+      </div>
       <div className="start-main">
-        <Prints settle={enter} date={copy.start.fanDate} />
-        <h1 tabIndex={-1} className="rise rise-1">{copy.start.title}</h1>
         <p className="lede rise rise-2">{copy.start.body}</p>
         {/* Always mounted, and filled after mount, so screen readers announce the note (4.1.3). */}
         <div role="status">{said && <p className="note-box">{said}</p>}</div>
@@ -293,10 +301,10 @@ function Start({ note, noteKey, onChoose, onSamples, onInfo }: { note?: string; 
           {onSamples && <p className="sub-sm">{copy.start.samplesNote}</p>}
           {!fullSupport && !framed && <p className="sub-sm">{copy.start.browserNote}</p>}
           {framed && <p className="sub-sm">{copy.start.uploadNote}</p>}
-          <div><button type="button" className="btn btn-link btn-icon no-folder" onClick={() => onInfo('guide')}><BookOpenIcon />{copy.start.noFolder}</button></div>
+          <div><button type="button" className="btn btn-link no-folder" onClick={() => onInfo('guide')}>{copy.start.noFolder}</button></div>
         </div>
       </div>
-      <section className="card faq" aria-labelledby="faq-h">
+      <section className="card faq rise rise-4" aria-labelledby="faq-h">
         <h2 id="faq-h">{copy.start.faqH}</h2>
         <dl>
           {copy.start.faq.map(({ q, a }, i) => {
@@ -310,13 +318,16 @@ function Start({ note, noteKey, onChoose, onSamples, onInfo }: { note?: string; 
           })}
         </dl>
         <ul className="start-links">
-          <li><button type="button" className="btn btn-link btn-icon" onClick={() => onInfo('privacy')}><LockIcon />{copy.info.privacy.link}</button></li>
-          <li><button type="button" className="btn btn-link btn-icon" onClick={() => onInfo('guide')}><BookOpenIcon />{copy.info.guide.link}</button></li>
+          <li><button type="button" className="btn btn-link" onClick={() => onInfo('privacy')}>{copy.info.privacy.link}</button></li>
+          <li><button type="button" className="btn btn-link" onClick={() => onInfo('guide')}>{copy.info.guide.link}</button></li>
         </ul>
       </section>
     </main>
   );
 }
+
+/** When "Big folders can take a while" appears on the scanning screen. */
+const SLOW_SCAN_MS = 60_000;
 
 function Scanning({ progress, onStop }: { progress: Progress; onStop: () => void }) {
   const { stage, done, total } = progress;
@@ -326,6 +337,12 @@ function Scanning({ progress, onStop }: { progress: Progress; onStop: () => void
   // Announce progress to screen readers only every 10%, not on every update.
   const announced = useMemo(() => `${stage === 'checking' ? copy.scanning.title : copy.scanning.copiesTitle} ${Math.floor(pct / 10) * 10}%`, [stage, pct]);
   const current = stage === 'checking' ? 0 : 1;
+  // Round 2: after about a minute, a calm word about long waits.
+  const [slow, setSlow] = useState(false);
+  useEffect(() => {
+    const t = setTimeout(() => setSlow(true), SLOW_SCAN_MS);
+    return () => clearTimeout(t);
+  }, []);
   return (
     <main className="page narrow scanning">
       <Prints />
@@ -346,6 +363,7 @@ function Scanning({ progress, onStop }: { progress: Progress; onStop: () => void
           ),
         )}
       </ol>
+      {slow && <p className="sub-sm" data-k="slow">{copy.scanning.slow}</p>}
       <div className="scan-foot">
         <p className="safe-box"><span>{copy.scanning.reassure}</span><b>{copy.scanning.deleted}</b></p>
         {/* Stays focusable while stopping (aria-disabled, not disabled), so keyboard focus doesn't fall to the page. */}

@@ -202,20 +202,38 @@ export type Tally = {
   selectedBytes: number;
   selectedPhotos: number;
   selectedVideos: number;
+  /** Round 2: how much smaller leaving files out makes the save, and what they are. */
+  notSelectedBytes: number;
+  notSelectedPhotos: number;
+  notSelectedVideos: number;
 };
 
 /** The numbers in the ledger. Always: selected + notSelected = total. */
 export function tally(files: readonly FileRecord[], sel: Selection): Tally {
   let selected = 0, selectedBytes = 0, selectedPhotos = 0, selectedVideos = 0;
+  let notSelectedBytes = 0, notSelectedPhotos = 0, notSelectedVideos = 0;
   for (const r of files) {
-    if (!sel.has(r.index)) continue;
+    const t = mediaType(r);
+    if (!sel.has(r.index)) {
+      notSelectedBytes += r.size;
+      if (t === 'photo') notSelectedPhotos++;
+      else if (t === 'video') notSelectedVideos++;
+      continue;
+    }
     selected++;
     selectedBytes += r.size;
-    const t = mediaType(r);
     if (t === 'photo') selectedPhotos++;
     else if (t === 'video') selectedVideos++;
   }
-  return { total: files.length, selected, notSelected: files.length - selected, selectedBytes, selectedPhotos, selectedVideos };
+  return {
+    total: files.length, selected, notSelected: files.length - selected, selectedBytes, selectedPhotos, selectedVideos,
+    notSelectedBytes, notSelectedPhotos, notSelectedVideos,
+  };
+}
+
+/** What the files left out all are, for "Leaving out 18 photos…": "file" when they're mixed. */
+export function leftOutKind(t: Tally): 'photo' | 'video' | 'file' {
+  return t.notSelectedPhotos === t.notSelected ? 'photo' : t.notSelectedVideos === t.notSelected ? 'video' : 'file';
 }
 
 /** The ids to hand to the save step, in timeline order (newest first, "No date" last). */
