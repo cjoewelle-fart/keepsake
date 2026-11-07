@@ -23,8 +23,10 @@ import { canUseFolderPicker, inFrame } from './ui/embedded';
 import { NOTE_DELAY_MS, shownNote } from './ui/liveNote';
 import { dropUnusedThumbs } from './ui/thumbs';
 import { dropUnusedHeicPreviews } from './ui/heicPreview';
-import { HeroGrain } from './ui/HeroGrain';
-import { BlankPrint, EyeOffIcon, FileCheckIcon, FolderOpenIcon, LockIcon, Prints, StageIcon, UserXIcon } from './ui/icons';
+import { BlankPrint, CheckCircleIcon, EyeOffIcon, FileCheckIcon, FolderIcon, FolderOpenIcon, LockIcon, Prints, StageIcon, UserXIcon } from './ui/icons';
+import tileBeach from './assets/hero/6-beach-240.webp';
+import tileRoadtrip from './assets/hero/4-roadtrip-240.webp';
+import tileCandles from './assets/hero/3-candles-240.webp';
 
 const dropUnusedPreviews = () => { dropUnusedThumbs(); dropUnusedHeicPreviews(); };
 
@@ -277,53 +279,105 @@ function Start({ note, noteKey, onChoose, onSamples, onInfo }: { note?: string; 
   const said = shownNote(note, noteKey, ready);
   return (
     <main className={`page start${enter ? ' enter' : ''}`}>
-      {/* One h1, the three-print fan between its two parts: one line from 960px (round 5: the fan
-          hangs below the line over the row beneath), three rows below. Screen readers hear one sentence. */}
-      <div className="hero-row">
-        <HeroGrain />
-        <h1 tabIndex={-1} className="hero-h">
-          <span className="hero-l1 rise rise-1">{copy.start.titleA}</span><span className="sr-only">{copy.start.titleJoin}</span>
-          <span className="hero-fan" aria-hidden="true"><Prints as="span" settle={enter} date={copy.start.fanDate} sizes="(max-width: 640px) 140px, 190px" /></span>
-          <span className="hero-l2 rise rise-1">{copy.start.titleB}</span>
-        </h1>
-      </div>
-      <div className="start-main">
+      {/* Round 6: one centred band for the main task, then How it works and Good to know below. */}
+      <div className="start-hero">
+        {/* One h1, the three-print fan between its two parts: one line from 960px, with the words
+            centred on the prints; three rows below. Screen readers hear one sentence. */}
+        <div className="hero-row">
+          <h1 tabIndex={-1} className="hero-h">
+            <span className="hero-l1 rise rise-1">{copy.start.titleA}</span><span className="sr-only">{copy.start.titleJoin}</span>
+            <span className="hero-fan" aria-hidden="true">
+              {/* Paper grain behind the prints only: a static tile, faded out at the edges. */}
+              <span className="hero-grain" />
+              <Prints as="span" settle={enter} date={copy.start.fanDate} sizes="(max-width: 640px) 140px, 190px" />
+            </span>
+            <span className="hero-l2 rise rise-1">{copy.start.titleB}</span>
+          </h1>
+        </div>
         <p className="lede rise rise-2">{copy.start.body}</p>
         {/* Always mounted, and filled after mount, so screen readers announce the note (4.1.3). */}
         <div role="status">{said && <p className="note-box">{said}</p>}</div>
-        {/* T83: the privacy promise, right above the button. */}
-        <p className="promise rise rise-3"><LockIcon /><span>{copy.start.promise}</span></p>
-        <div className="start-choose rise rise-4">
-          <div className="actions">
-            <button type="button" className="btn btn-primary btn-lg btn-icon" onClick={onChoose}><FolderOpenIcon />{copy.start.choose}</button>
-            {onSamples && <button type="button" className="btn btn-secondary btn-lg" onClick={onSamples}>{copy.start.samples}</button>}
-          </div>
+        <div className="start-cta rise rise-3">
+          <button type="button" className="btn btn-primary btn-lg btn-icon" onClick={onChoose}><FolderOpenIcon />{copy.start.choose}</button>
+          {onSamples && <button type="button" className="btn btn-secondary btn-lg" onClick={onSamples}>{copy.start.samples}</button>}
+        </div>
+        {/* T83: the privacy promise. Round 6: a plain line right below the button, part of its group. */}
+        <p className="privacy-line rise rise-3"><LockIcon size={16} /><span>{copy.start.promise}</span></p>
+        <div className="start-help rise rise-4">
           <p className="sub-sm">{copy.start.hint}</p>
           {onSamples && <p className="sub-sm">{copy.start.samplesNote}</p>}
           {!fullSupport && !framed && <p className="sub-sm">{copy.start.browserNote}</p>}
           {framed && <p className="sub-sm">{copy.start.uploadNote}</p>}
-          <div><button type="button" className="btn btn-link no-folder" onClick={() => onInfo('guide')}>{copy.start.noFolder}</button></div>
+          <button type="button" className="btn btn-link no-folder" onClick={() => onInfo('guide')}>{copy.start.noFolder}</button>
         </div>
       </div>
-      <section className="card faq rise rise-4" aria-labelledby="faq-h">
+      <section className="how" aria-labelledby="how-h">
+        <h2 id="how-h">{copy.start.how.h}</h2>
+        <ol className="how-steps">
+          {copy.start.how.steps.map(({ title, body, panel }, i) => (
+            <li key={title} className="how-step">
+              <HowPanel lines={panel} />
+              <div className="how-text">
+                <h3><span className="how-num" aria-hidden="true">{i + 1}</span>{title}</h3>
+                <p>{body}</p>
+              </div>
+            </li>
+          ))}
+        </ol>
+      </section>
+      <section className="know" aria-labelledby="faq-h">
         <h2 id="faq-h">{copy.start.faqH}</h2>
         <dl>
           {copy.start.faq.map(({ q, a }, i) => {
             const Icon = FAQ_ICONS[i % FAQ_ICONS.length];
             return (
               <div key={q} className="faq-row">
-                <dt><Icon size={24} className="faq-icon" />{q}</dt>
+                <dt><Icon size={20} className="faq-icon" />{q}</dt>
                 <dd>{a}</dd>
               </div>
             );
           })}
         </dl>
-        <ul className="start-links">
+        <ul className="know-links">
           <li><button type="button" className="btn btn-link" onClick={() => onInfo('privacy')}>{copy.info.privacy.link}</button></li>
           <li><button type="button" className="btn btn-link" onClick={() => onInfo('guide')}>{copy.info.guide.link}</button></li>
         </ul>
       </section>
     </main>
+  );
+}
+
+/**
+ * A How it works step's small picture (decorative). Lines are a folder listing: a line ending in "/"
+ * is a folder, and every folder indents the lines after it. No lines: three photo tiles, two ticked.
+ */
+function HowPanel({ lines }: { lines: readonly string[] }) {
+  if (!lines.length) {
+    return (
+      <div className="how-panel how-tiles" aria-hidden="true">
+        {[tileBeach, tileCandles, tileRoadtrip].map((src, i) => (
+          <span key={src} className={`how-tile${i === 2 ? ' off' : ''}`}>
+            <img src={src} alt="" width={240} height={192} decoding="async" loading="lazy" draggable={false} />
+            {i < 2 && <CheckCircleIcon size={20} className="how-tick" />}
+          </span>
+        ))}
+      </div>
+    );
+  }
+  let depth = 0;
+  return (
+    <div className="how-panel how-list" aria-hidden="true">
+      {lines.map((line) => {
+        const folder = line.endsWith('/');
+        const d = depth;
+        if (folder) depth += 1;
+        return (
+          <span key={line} className={`how-line d${Math.min(d, 3)}${folder ? ' dir' : ''}`}>
+            {folder ? <FolderIcon size={16} /> : null}{line}
+          </span>
+        );
+      })}
+    </div>
   );
 }
 

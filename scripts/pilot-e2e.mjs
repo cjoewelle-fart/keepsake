@@ -95,13 +95,19 @@ async function run(browser) {
   // T83: the start screen says what it does, keeps the promise in view, and answers three questions.
   const startScreen = async () => ({
     h1: await h1Text(page),
-    promise: flat(await page.locator('main .promise').innerText().catch(() => '')),
-    faqH: flat(await page.locator('main .faq h2').innerText().catch(() => '')),
-    faq: (await page.locator('main .faq dt').allInnerTexts()).map(flat),
+    promise: flat(await page.locator('main .privacy-line').innerText().catch(() => '')),
+    faqH: flat(await page.locator('main .know h2').innerText().catch(() => '')),
+    faq: (await page.locator('main .know dt').allInnerTexts()).map(flat),
+    howH: flat(await page.locator('main .how h2').innerText().catch(() => '')),
+    how: await page.locator('main .how h3').evaluateAll((els) => els.map((el) => {
+      const c = el.cloneNode(true);
+      c.querySelectorAll('[aria-hidden=true]').forEach((x) => x.remove());
+      return c.textContent.replace(/\s+/g, ' ').trim();
+    })),
     oldNote: await page.getByText(/Keepsake runs in your browser|never leave this computer/).count(),
   });
   const st0 = await startScreen();
-  check(st0.h1 === 'Find your photos and sort them by date.', `Warmth start title: "${st0.h1}"`);
+  check(st0.h1 === 'Find your photos, sort them by date.', `Warmth start title: "${st0.h1}"`);
   const steps = await page.evaluate(() => ({
     names: [...document.querySelectorAll('ol.steps li')].map((li) => li.textContent),
     current: document.querySelector('ol.steps [aria-current=step]')?.textContent,
@@ -111,9 +117,12 @@ async function run(browser) {
   }));
   check(steps.names.join('|') === 'Scan|Sort|Choose|Save' && steps.current === 'Scan' && steps.line === 'Step 1 of 4 · Scan' && steps.label === 'Steps' && steps.guide,
     `Warmth stepper: ${steps.names.join(', ')}; current "${steps.current}"; "${steps.line}"; guide line under the button ${steps.guide}`);
-  check(st0.promise === 'Your photos stay on this computer. Nothing is uploaded or deleted.', `T83 start promise: "${st0.promise}"`);
+  check(st0.promise === 'Your photos stay on your computer. Nothing is uploaded or deleted.', `T83 start promise: "${st0.promise}"`);
   check(st0.faqH === 'Good to know' && st0.faq.join(' | ') === 'Do you see my photos? | Do I need an account? | Will it change my files?' && st0.oldNote === 0,
     `T83 start Q&A: "${st0.faqH}": ${st0.faq.join(' | ')}; old privacy lines left: ${st0.oldNote}`);
+  // Round 6: How it works, three numbered steps (the number is decorative; the list gives the order).
+  check(st0.howH === 'How it works' && st0.how.join(' | ') === 'Your files come back jumbled | We sort them by date | You choose what to keep',
+    `Round 6 How it works: "${st0.howH}": ${st0.how.join(' | ')}`);
 
   // Copy the pilot folder into OPFS: Desktop/<pilot folder>, plus an empty Desktop/Pictures to save into.
   await page.evaluate(() => {

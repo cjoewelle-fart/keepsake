@@ -44,6 +44,9 @@
   --pill-h: 36px;           /* filters and month pills on desktop; 44px on phones and touch */
   --pill-on-bg: var(--accent); /* selected pills filled teal, as in the approved TL mockups */
   --pill-on-ink: #FFFFFF;
+  /* Spacing scale (round 6, start screen): only these gaps. --measure is 6 of 12 columns at 1132px. */
+  --s-1: 4px; --s-2: 8px; --s-3: 12px; --s-4: 16px; --s-5: 24px; --s-6: 32px; --s-7: 48px; --s-8: 64px; --s-9: 96px;
+  --measure: 552px;
   color-scheme: light;
 }
 
@@ -197,6 +200,8 @@ progress::-moz-progress-bar { background: var(--accent); border-radius: 999px; }
 .count-vis { display: inline-grid; font-variant-numeric: tabular-nums; }
 .count-ghost, .count-live { grid-area: 1 / 1; }
 .count-ghost { visibility: hidden; }
+/* A tinted ledger-style note with an icon (T83). The start screen's own promise is a plain line since round 6. */
+.promise { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 12px; background: var(--tint); color: var(--accent-deep); font-weight: 700; font-size: 17px; max-width: 560px; }
 /* Nothing deleted, nothing sent: one note under the ledger on Sort, Choose and Save. */
 .promise.promise-safe { align-items: flex-start; font-weight: 400; font-size: 16px; line-height: 1.5; }
 .promise.promise-safe .icon { margin-top: 0; }
@@ -533,19 +538,22 @@ progress::-moz-progress-bar { background: var(--accent); border-radius: 999px; }
   .done { gap: 32px; }
 }
 
-/* Start screen. Row 1 is the hero: one h1 with the fan of three prints between its two parts.
-   From 960px it is one line across the content width and row 2 has the actions on the left and the
-   "Good to know" card on the right; below 960px the hero stacks on three rows. */
-.start { max-width: 680px; display: flex; flex-direction: column; gap: 32px; }
-.start-main { display: flex; flex-direction: column; gap: 22px; min-width: 0; }
-.hero-row { position: relative; isolation: isolate; min-width: 0; }
+/* Start screen (round 6). One centred column: a centred band at the top for the main task (hero,
+   lede, button, privacy line, help), then How it works and Good to know, left-aligned on one grid
+   (12 columns across the 1132px content width, 32px gutters). Gaps use the --s-* scale only. */
+.page.start { max-width: 1180px; padding-bottom: var(--s-9); display: flex; flex-direction: column; }
+.start-hero { display: flex; flex-direction: column; align-items: center; text-align: center; padding-top: var(--s-4); }
+.start-hero .hero-row { align-self: stretch; }
+.hero-row { position: relative; min-width: 0; }
 .hero-h { font-size: clamp(2.125rem, 1rem + 5vw, 5.25rem); font-weight: 800; line-height: 0.95; letter-spacing: -0.035em; font-variation-settings: 'opsz' 96; max-width: none; }
 .hero-l1, .hero-l2 { display: block; position: relative; z-index: 1; }
 /* The hero fan is the round-2 fan redrawn in units of --u (one px of the 400×190 drawing), so it can
-   follow the type on desktop. Registered, so an em value is fixed here and not re-read in the tag. */
+   follow the type on desktop. Registered, so an em value is fixed here and not re-read in the tag.
+   Its box is the visible prints only: 364 × 176 units, from x 18 and y 12 of the drawing (rotation
+   included), so centring on the box centres on the prints. */
 @property --u { syntax: '<length>'; inherits: true; initial-value: 1px; }
-.hero-fan { --u: 1px; display: block; position: relative; z-index: 0; flex: none; }
-.hero-fan .fan { width: calc(400 * var(--u)); height: calc(190 * var(--u)); transform: none; }
+.hero-fan { --u: 1px; display: block; position: relative; z-index: 0; isolation: isolate; flex: none; width: calc(364 * var(--u)); height: calc(176 * var(--u)); pointer-events: none; }
+.hero-fan .fan { position: absolute; left: calc(-18 * var(--u)); top: calc(-12 * var(--u)); width: calc(400 * var(--u)); height: calc(190 * var(--u)); transform: none; }
 .hero-fan .fan-print { width: calc(170 * var(--u)); padding: calc(6 * var(--u)); border-radius: calc(12 * var(--u)); }
 .hero-fan .fan-print .ph { border-radius: calc(6 * var(--u)); }
 .hero-fan .fan-l { left: calc(20 * var(--u)); top: calc(22 * var(--u)); }
@@ -553,92 +561,121 @@ progress::-moz-progress-bar { background: var(--accent); border-radius: 999px; }
 .hero-fan .fan-c { left: calc(106 * var(--u)); top: calc(36 * var(--u)); width: calc(186 * var(--u)); }
 .hero-fan .tag { left: calc(10 * var(--u)); bottom: calc(10 * var(--u)); max-width: calc(100% - 20 * var(--u)); }
 /* The date tag sits inside the h1: give it back its own type (the heading's tracking would squash it). */
-.hero-h .tag { font-family: var(--body); font-variation-settings: normal; letter-spacing: 0; line-height: 1.5; }
+.hero-h .tag { font-family: var(--body); font-variation-settings: normal; letter-spacing: 0; line-height: 1.5; text-align: left; }
 /* The deal, in drawing units (the shared deal-l/deal-r move in px). */
 @keyframes hero-deal-l { from { transform: translate(calc(86 * var(--u)), calc(18 * var(--u))) rotate(0deg); } }
 @keyframes hero-deal-r { from { transform: translate(calc(-100 * var(--u)), calc(24 * var(--u))) rotate(0deg); } }
 .hero-fan .fan-deal .fan-l { animation-name: hero-deal-l; }
 .hero-fan .fan-deal .fan-r { animation-name: hero-deal-r; }
+/* Paper grain behind the prints only (round 6: no shader): a bundled 256px tile at 4%, faded out at
+   its edges, so the texture belongs to the prints and never runs across the page. */
+.hero-grain { position: absolute; inset: calc(-24 * var(--u)); z-index: -1; pointer-events: none; -webkit-mask-image: radial-gradient(farthest-side at 50% 50%, #000 35%, transparent 100%); mask-image: radial-gradient(farthest-side at 50% 50%, #000 35%, transparent 100%); }
+.hero-grain::before { content: ''; position: absolute; inset: 0; background: url('../assets/grain.png') repeat; background-size: 256px 256px; opacity: 0.04; }
 @media (min-width: 960px) {
-  /* Round 5: one line, "Find your photos [fan] sort them by date.", edge to edge of the hero row, with
-     the fan back at round-2 size and hanging below the line over the row beneath (the layering).
+  /* One line, "Find your photos, [fan] sort them by date.", centred, the words centred on the prints.
      Sizes are measured on the start screen's own content width (cqw: no page padding, no scrollbar).
-     --u is one px of the 400×190 drawing: 1px from a 1100px row up, easing to 0.8px at the 897px row
-     (960 window), so the middle print never drops under about 150px. It is set on .start so the
-     type can leave room for the fan and row 2 can make room for the part that hangs down.
-     The type fills what is left: the two text parts are about 14.5em in Bricolage, plus two 0.6em
-     gaps around the fan, so the fit term divides what the fan leaves by 16.2 (about 3% to spare).
-     The rem part keeps the type following the browser's text size; the min() stops it ever pushing
-     the line past the row. About 47px at 1280 and 37px at 960. At 200% zoom the three-row layout
-     below takes over. */
+     --u is one px of the drawing: 1px from an 1100px row up, easing to 0.8px at the 897px row (960
+     window). The type fills what the fan leaves: the two parts are about 14.6em in Bricolage plus two
+     0.5em gaps, so dividing by 16 leaves a little to spare. About 48px at 1280 and 37px at 960. At
+     200% zoom the three-row layout below takes over. The words are centred on the prints with no
+     optical nudge: in Bricolage at line-height 1 the middle of the line box already is the middle of
+     the capitals (measured on the glyphs in the production build; the spec's 0.05em put them 2.4px low). */
   .start { container-type: inline-size; --u: clamp(0.8px, 0.0985cqw - 0.0837px, 1px); }
-  .hero-h { display: flex; flex-wrap: nowrap; align-items: flex-start; justify-content: space-between; gap: 0.6em; white-space: nowrap;
-    font-size: min(clamp(2.25rem, 0.5rem + 3.6cqw, 3.5rem), calc((100cqw - 364 * var(--u)) / 16.2));
-    line-height: 1; }
+  .hero-h { display: flex; flex-wrap: nowrap; align-items: center; justify-content: center; gap: 0.5em; white-space: nowrap; line-height: 1;
+    font-size: min(clamp(2.25rem, 0.5rem + 3.6cqw, 3.5rem), calc((100cqw - 364 * var(--u)) / 16)); }
   .hero-l1, .hero-l2 { flex: none; }
-  /* The fan's box is one line tall and as wide as the prints (the drawing's 18-unit side margins
-     are cut off), so the h1 keeps a one-line height; the prints overflow it downwards. Their top
-     sits about on the cap line. pointer-events: none, so it never blocks a click below. */
-  .hero-fan { --u: inherit; width: calc(364 * var(--u)); height: 1em; pointer-events: none; }
-  .hero-fan .fan { position: absolute; left: calc(-18 * var(--u)); top: 0; }
+  .hero-fan { --u: inherit; }
 }
 @media (max-width: 959px) {
-  /* Three rows. The prints tuck under line 1's descenders and line 2's tops. Descenders may cross a
-     print's paper border or shadow, never the photo (checked at 390 and 320). */
-  .hero-fan { --u: 0.85px; margin: -0.14em 0 -0.14em clamp(0px, 10vw, 150px); }
+  /* Three rows, centred. The prints tuck under line 1's descenders and line 2's tops (the same tuck
+     as round 5, measured from the visible prints). Descenders may cross a print's paper border or
+     shadow, never the photo (checked at 390 and 320). */
+  .hero-h { text-align: center; font-size: clamp(2.125rem, 1.25rem + 3.5vw, 2.75rem); }
+  .hero-fan { --u: 0.85px; margin: calc(12 * var(--u) - 0.14em) auto calc(2 * var(--u) - 0.14em); }
 }
 @media (max-width: 640px) {
-  .hero-fan { --u: 0.72px; margin-left: 0; }
+  .hero-fan { --u: 0.72px; }
 }
 @media (max-width: 359px) {
   .hero-fan { --u: 0.62px; }
 }
-/* Paper grain behind the hero row only: a bundled 256px tile at 4%, and over it (when WebGL 2 is
-   there and motion isn't reduced) one static GrainGradient drawn once. Both fade out at the edges. */
-.hero-grain { position: absolute; inset: -24px -24px -12px; z-index: -1; overflow: hidden; pointer-events: none; -webkit-mask-image: radial-gradient(farthest-side at 50% 50%, #000 35%, transparent 100%); mask-image: radial-gradient(farthest-side at 50% 50%, #000 35%, transparent 100%); }
-.hero-grain::before { content: ''; position: absolute; inset: 0; background: url('../assets/grain.png') repeat; background-size: 256px 256px; opacity: 0.04; }
-.hero-shader { position: absolute; inset: 0; width: 100%; height: 100%; }
+.start-hero .lede { max-width: var(--measure); margin-top: var(--s-6); }
+.start-hero [role='status'] { width: 100%; max-width: var(--measure); }
+.start-hero [role='status']:not(:empty) { margin-top: var(--s-5); }
+.start-cta { margin-top: var(--s-5); display: flex; flex-wrap: wrap; justify-content: center; gap: var(--s-3); }
+/* T83: the privacy promise. Round 6: a plain line, 12px under the button so it reads as part of it. Not a link. */
+/* The lock sits inline with the first word, so it stays with the text when the line wraps on a phone. */
+.privacy-line { margin-top: var(--s-3); font-size: var(--text-small); line-height: 1.5; color: var(--accent-deep); }
+.privacy-line .icon { display: inline; vertical-align: -3px; margin-right: var(--s-2); color: var(--accent); }
+.start-help { margin-top: var(--s-5); max-width: var(--measure); display: flex; flex-direction: column; align-items: center; }
+.start-help .btn-link { text-align: center; }
+/* Centred lines wrap evenly (no one-word last line); body text below avoids short last lines. */
+.start-hero p { text-wrap: balance; }
+.how-step p, .know dd { text-wrap: pretty; }
 @media (max-width: 640px) {
-  .hero-grain { left: -16px; right: -16px; } /* the page's own padding: never wider than the window */
+  .start-cta { flex-direction: column; align-self: stretch; }
+  .start-cta .btn { width: 100%; }
 }
-.start .lede { max-width: 560px; }
-@media (min-width: 960px) {
-  .start { max-width: 1180px; display: grid; grid-template-columns: minmax(0, 1fr) 460px; column-gap: 64px; row-gap: 0; align-items: start; }
-  /* Above row 2, so the hanging prints lie over the card's corner, and stay there while it rises in. */
-  .hero-row { grid-column: 1 / -1; z-index: 1; }
-  /* Row 2 makes room for the prints, which hang about 148 units below the h1. The actions start just
-     past them. The card starts higher, so the right-hand print lies over its top-left corner like a
-     photo dropped on it; the card's extra top padding keeps its text clear of the print (its paper
-     and shadow too). Nothing readable sits under a photo. */
-  .start-main { padding-top: calc(148 * var(--u) + 24px); }
-  .faq { margin-top: calc(82 * var(--u)); padding-top: calc(40 * var(--u) + 24px); }
-}
-@media (min-width: 960px) and (max-width: 1199px) {
-  .start { grid-template-columns: minmax(0, 1fr) 400px; column-gap: 48px; }
-}
-/* The entrance, once per page load: the prints are dealt, then the words rise in turn. All done by 520ms. */
+/* The entrance, once per page load, on the top band only: the prints are dealt, then the words rise in turn. */
 @keyframes start-rise { from { opacity: 0; transform: translateY(6px); } }
 .start.enter .rise { animation: start-rise 300ms var(--ease-out) backwards; }
 .start.enter .rise-1 { animation-delay: 100ms; }
 .start.enter .rise-2 { animation-delay: 140ms; }
 .start.enter .rise-3 { animation-delay: 180ms; }
 .start.enter .rise-4 { animation-delay: 220ms; }
-.no-folder { margin-top: 2px; }
-/* The quiet links to the privacy page and the PhotoRec guide (T67), at the bottom of the card. */
-.start-links { list-style: none; margin: 0; padding: 12px 0 0; border-top: 1px solid var(--rule); display: flex; flex-direction: column; align-items: flex-start; }
-.start-links .btn-link { text-align: left; }
-/* T83: the privacy promise, a tinted ledger-style note right above the button. */
-.promise { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 12px; background: var(--tint); color: var(--accent-deep); font-weight: 700; font-size: 17px; max-width: 560px; }
-.start-choose { display: flex; flex-direction: column; gap: 10px; margin-top: -8px; }
-.start-choose .sub-sm { max-width: 560px; }
-/* "Good to know", a short Q&A on a white card, each answer with an icon. */
-.faq { gap: 18px; }
-.faq h2 { font-size: 22px; }
-.faq dl { margin: 0; display: flex; flex-direction: column; gap: 16px; }
-.faq-row { position: relative; padding-left: 38px; }
-.faq dt { font-weight: 700; }
-.faq dd { margin: 0; color: var(--muted); }
-.faq-icon { position: absolute; left: 0; top: 1px; color: var(--accent); }
+
+/* How it works: three steps, each a small picture, a number and title, then a line or two. */
+.how { margin-top: var(--s-9); }
+.how h2 { font-size: 28px; }
+.how-steps { list-style: none; margin: var(--s-5) 0 0; padding: 0; display: grid; gap: var(--s-6); grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.how-panel { height: 128px; overflow: hidden; background: var(--surface); border: 1px solid var(--rule-soft); border-radius: 12px; padding: var(--s-3) var(--s-4); color: var(--ink-soft);
+  font: 13px/1.6 ui-monospace, 'SF Mono', Menlo, Consolas, monospace; }
+/* The listing is one block, centred in the panel; its lines stay left-aligned to each other. */
+.how-list { display: grid; justify-content: center; align-content: center; }
+.how-line { display: flex; align-items: center; gap: var(--s-2); white-space: nowrap; min-width: 0; }
+.how-line.dir { color: var(--ink); }
+.how-line .icon { color: var(--accent); }
+.how-line.d1 { padding-left: 24px; }
+.how-line.d2 { padding-left: 48px; }
+.how-line.d3 { padding-left: 72px; }
+.how-tiles { display: flex; align-items: center; justify-content: center; gap: var(--s-3); }
+/* The fan's paper frame, small. The one left unticked is a little faded. */
+.how-tile { position: relative; flex: none; width: 56px; padding: 4px; border-radius: 8px; background: #FFFDF8; forced-color-adjust: none;
+  box-shadow: 0 0 0 1px rgba(31, 36, 39, 0.08), 0 1px 2px rgba(31, 36, 39, 0.10), 0 6px 12px -6px rgba(31, 36, 39, 0.20); }
+.how-tile img { display: block; width: 100%; height: auto; aspect-ratio: 5 / 4; object-fit: cover; border-radius: 4px; }
+.how-tile.off img { opacity: 0.5; }
+.how-tick { position: absolute; right: -6px; top: -6px; color: var(--accent); background: var(--surface); border-radius: 999px; }
+.how-step h3 { margin: var(--s-4) 0 var(--s-1); display: flex; align-items: center; gap: var(--s-2); font: 700 18px/1.35 var(--body); }
+.how-num { flex: none; display: inline-grid; place-items: center; width: 28px; height: 28px; border-radius: 999px; background: var(--tint); color: var(--accent-deep); font: 700 15px/1 var(--body); }
+.how-step p { margin: 0; font-size: 16px; color: var(--muted); }
+@media (max-width: 959px) {
+  .how { margin-top: var(--s-8); }
+  .how-steps { grid-template-columns: 1fr; gap: var(--s-5); }
+  .how-step { display: grid; grid-template-columns: 240px minmax(0, 1fr); column-gap: var(--s-5); align-items: start; }
+  .how-step h3 { margin-top: 0; }
+}
+@media (max-width: 640px) {
+  .how-step { grid-template-columns: 1fr; row-gap: var(--s-3); }
+  .how-panel { height: auto; }
+}
+
+/* Good to know: a quiet section at the bottom, a short Q&A, each answer with an icon. */
+.know { margin-top: var(--s-8); padding-top: var(--s-6); border-top: 1px solid var(--rule); }
+.know h2 { font-size: 20px; }
+.know dl { margin: var(--s-5) 0 0; display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); gap: var(--s-6); }
+.faq-row { position: relative; padding-left: 32px; }
+.know dt, .know dd { font-size: 16px; }
+.know dt { font-weight: 700; }
+.know dd { margin: 0; color: var(--muted); }
+.faq-icon { position: absolute; left: 0; top: 3px; color: var(--accent); }
+/* The quiet links to the privacy page and the PhotoRec guide (T67), in one row. */
+.know-links { list-style: none; margin: var(--s-6) 0 0; padding: 0; display: flex; flex-wrap: wrap; gap: 0 var(--s-6); }
+.know-links .btn-link { text-align: left; }
+@media (max-width: 959px) { .know dl { grid-template-columns: 1fr; gap: var(--s-5); } }
+@media (max-width: 640px) {
+  .know { margin-top: var(--s-7); }
+  .know-links { flex-direction: column; }
+}
 /* T83: "Sort another folder" on the receipt screen. */
 .start-over { display: flex; flex-direction: column; gap: 10px; padding-top: 18px; border-top: 1px solid var(--rule); }
 

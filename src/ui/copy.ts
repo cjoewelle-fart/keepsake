@@ -408,27 +408,56 @@ export const copy = {
 
   start: {
     // Warmth (Nov 6, UX writer option A): one plain sentence that doesn't promise a result.
-    // Round 4 (Nov 7): one h1, the prints between its two parts (one line on desktop). Screen readers
-    // hear titleA + titleJoin + titleB ("Find your photos and sort them by date."); the "and" isn't shown.
-    titleA: 'Find your photos',
-    titleJoin: ' and ',
+    // Round 4 (Nov 7): one h1, the prints between its two parts (one line on desktop). Round 6: the
+    // comma is shown, so screen readers hear titleA + titleJoin + titleB exactly as the line reads
+    // ("Find your photos, sort them by date.").
+    titleA: 'Find your photos,',
+    titleJoin: ' ',
     titleB: 'sort them by date.',
-    body: 'Choose the folder your recovery program made. We’ll put your photos in a folder for each year and month.',
+    /** Round 6: How it works now covers the year and month folders, so the lede is short. */
+    body: 'Start with the folder your recovery program made.',
     choose: 'Choose recovery folder',
-    /** Small text under the button. */
+    /** Small text under the button, first in the help group. */
     hint: 'Look for the one that holds recup_dir.1, recup_dir.2 and so on.',
     /** Under the button: takes over from the old "Recover" step. Opens the PhotoRec guide. */
     noFolder: 'No recovery folder yet? Here’s how to make one',
-    /** The date tag on the hero fan's middle print (decorative). */
+    /** The date tag on the hero fan's middle print (decorative). Step 2's panel uses the same month. */
     fanDate: 'Mar 2009',
-    /** T83: the privacy promise, in a highlighted note next to the button. */
-    promise: 'Your photos stay on this computer. Nothing is uploaded or deleted.',
-    /** T83: "Before you start", a short Q&A under the button. */
+    /** T83: the privacy promise. Round 6: a plain line right below the button (70 characters at most). */
+    promise: 'Your photos stay on your computer. Nothing is uploaded or deleted.',
+    /**
+     * Round 6: "How it works", three steps below the help text. Titles 28 characters at most.
+     * `panel` is the step's small picture, one line each (lines ending in "/" are folders, and each
+     * folder line indents the lines after it). Step 2's panel is the app's real save path for a photo
+     * taken on 14 March 2009 at 19:05 (tests/save.test.ts checks it against savePlan). Step 3 shows
+     * three photo tiles instead.
+     */
+    how: {
+      h: 'How it works',
+      steps: [
+        {
+          title: 'Your files come back jumbled',
+          body: 'Your recovery program puts them in numbered folders with names like f0123456.jpg, mixed in with app images and copies.',
+          panel: ['recup_dir.1/', 'f0123456.jpg', 'f0123457.jpg', 'f0124410.jpg'],
+        },
+        {
+          title: 'We sort them by date',
+          body: 'Keepsake sorts each photo by the year and month it was taken. Copies and app images are set aside, never deleted.',
+          panel: ['Keepsake photos/', '2009/', '03 March/', '2009-03-14 19.05.jpg'],
+        },
+        {
+          title: 'You choose what to keep',
+          body: 'Look through, unselect anything you don’t want, and save a sorted copy. Your recovery folder stays as it was.',
+          panel: [] as string[],
+        },
+      ],
+    },
+    /** T83: "Good to know", a short Q&A. Round 6: a quiet section at the bottom of the page. */
     faqH: 'Good to know',
     faq: [
-      { q: 'Do you see my photos?', a: 'No. They’re read on this computer and never sent to us.' },
+      { q: 'Do you see my photos?', a: 'No. Keepsake works inside your browser. Your photos are never sent to us.' },
       { q: 'Do I need an account?', a: 'No. There’s nothing to sign up for.' },
-      { q: 'Will it change my files?', a: 'No. It only reads them. Your photos are saved as new copies.' },
+      { q: 'Will it change my files?', a: 'No. It only reads them. Saving makes new copies, so you’ll need some free space.' },
     ],
     browserNote: 'Keepsake works best in Chrome or Edge on a computer. You can still scan your folder in this browser.',
     stopped: 'Scan stopped. Nothing was changed, and you can start again any time.',

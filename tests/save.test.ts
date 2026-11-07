@@ -55,6 +55,34 @@ describe('where each copy goes', () => {
   });
 });
 
+describe('the start screen shows the real save naming (round 6)', () => {
+  it('How it works step 2 is the path a photo from 14 March 2009, 19:05 is saved to', () => {
+    const p = placeFor({ takenAt: '2009-03-14T19:05:00', kind: 'jpeg', path: 'recup_dir.1/f0123456.jpg' });
+    expect(copy.start.how.steps[1].panel).toEqual([`${copy.save.rootFolder}/`, ...p.dir.map((d) => `${d}/`), `${p.base}.${p.ext}`]);
+    // The same month as the date tag on the hero fan's middle print.
+    expect(copy.start.fanDate).toBe('Mar 2009');
+  });
+
+  it('step 1 is a PhotoRec folder of f…jpg names, step 3 has no listing (photo tiles)', () => {
+    const [dir, ...names] = copy.start.how.steps[0].panel;
+    expect(dir).toBe('recup_dir.1/');
+    expect(names).toHaveLength(3);
+    for (const n of names) expect(n).toMatch(/^f\d{7}\.jpg$/);
+    expect(copy.start.how.steps[2].panel).toEqual([]);
+  });
+
+  it('keeps to the designer\'s limits where they are hard ones', () => {
+    expect(copy.start.promise.length).toBeLessThanOrEqual(70);
+    for (const { title, panel } of copy.start.how.steps) {
+      expect(title.length).toBeLessThanOrEqual(28);
+      expect(panel.length).toBeLessThanOrEqual(4);
+      for (const line of panel) expect(line.length).toBeLessThanOrEqual(20);
+    }
+    // Screen readers hear the line as it is shown.
+    expect(copy.start.titleA + copy.start.titleJoin + copy.start.titleB).toBe('Find your photos, sort them by date.');
+  });
+});
+
 describe('long names (T89): capped by UTF-8 bytes, cut between characters, extension kept', () => {
   const ok = (name: string) => {
     expect(utf8Bytes(name)).toBeLessThanOrEqual(NAME_LIMITS.bytes);
