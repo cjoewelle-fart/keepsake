@@ -434,6 +434,9 @@ export const copy = {
      */
     how: {
       h: 'How it works',
+      /** Round 7: small captions above step 1's and step 2's pictures, either side of the arrow (8 characters at most). */
+      before: 'Before',
+      after: 'After',
       steps: [
         {
           title: 'Your files come back jumbled',
