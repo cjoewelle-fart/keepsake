@@ -23,7 +23,7 @@ import { canUseFolderPicker, inFrame } from './ui/embedded';
 import { NOTE_DELAY_MS, shownNote } from './ui/liveNote';
 import { dropUnusedThumbs } from './ui/thumbs';
 import { dropUnusedHeicPreviews } from './ui/heicPreview';
-import { BlankPrint, CheckCircleIcon, EyeOffIcon, FileCheckIcon, FolderIcon, FolderOpenIcon, LockIcon, Prints, StageIcon, UserXIcon } from './ui/icons';
+import { ArrowRightIcon, BlankPrint, CheckCircleIcon, FolderIcon, FolderOpenIcon, LockIcon, Prints, StageIcon } from './ui/icons';
 import tileBeach from './assets/hero/6-beach-240.webp';
 import tileRoadtrip from './assets/hero/4-roadtrip-240.webp';
 import tileCandles from './assets/hero/3-candles-240.webp';
@@ -258,7 +258,6 @@ export default function App() {
 
 /** The start screen's entrance plays once per page load, not on every return to it. */
 let startEntered = false;
-const FAQ_ICONS = [EyeOffIcon, UserXIcon, FileCheckIcon];
 
 function Start({ note, noteKey, onChoose, onSamples, onInfo }: { note?: string; noteKey?: number; onChoose: () => void; onSamples?: () => void; onInfo: (page: InfoName) => void }) {
   const fullSupport = typeof window !== 'undefined' && 'showDirectoryPicker' in window;
@@ -311,16 +310,24 @@ function Start({ note, noteKey, onChoose, onSamples, onInfo }: { note?: string; 
           <button type="button" className="btn btn-link no-folder" onClick={() => onInfo('guide')}>{copy.start.noFolder}</button>
         </div>
       </div>
+      {/* Round 7: the one raised card below the hero. Panels 1 and 2 are a before and after, joined
+          by an arrow (Keepsake's own work); step 3 is the person's turn, so it has no arrow. */}
       <section className="how" aria-labelledby="how-h">
         <h2 id="how-h">{copy.start.how.h}</h2>
         <ol className="how-steps">
           {copy.start.how.steps.map(({ title, body, panel }, i) => (
             <li key={title} className="how-step">
-              <HowPanel lines={panel} />
+              {/* The caption and picture are decorative, like the panel itself. Step 3's empty caption
+                  keeps the three panels level in the row. */}
+              <div className="how-fig" aria-hidden="true">
+                <span className="how-cap">{i === 0 ? copy.start.how.before : i === 1 ? copy.start.how.after : ''}</span>
+                <HowPanel lines={panel} n={i + 1} />
+              </div>
               <div className="how-text">
                 <h3><span className="how-num" aria-hidden="true">{i + 1}</span>{title}</h3>
                 <p>{body}</p>
               </div>
+              {i === 0 && <span className="how-arrow" aria-hidden="true"><ArrowRightIcon size={20} /></span>}
             </li>
           ))}
         </ol>
@@ -328,15 +335,12 @@ function Start({ note, noteKey, onChoose, onSamples, onInfo }: { note?: string; 
       <section className="know" aria-labelledby="faq-h">
         <h2 id="faq-h">{copy.start.faqH}</h2>
         <dl>
-          {copy.start.faq.map(({ q, a }, i) => {
-            const Icon = FAQ_ICONS[i % FAQ_ICONS.length];
-            return (
-              <div key={q} className="faq-row">
-                <dt><Icon size={20} className="faq-icon" />{q}</dt>
-                <dd>{a}</dd>
-              </div>
-            );
-          })}
+          {copy.start.faq.map(({ q, a }) => (
+            <div key={q} className="faq-row">
+              <dt>{q}</dt>
+              <dd>{a}</dd>
+            </div>
+          ))}
         </dl>
         <ul className="know-links">
           <li><button type="button" className="btn btn-link" onClick={() => onInfo('privacy')}>{copy.info.privacy.link}</button></li>
@@ -351,10 +355,10 @@ function Start({ note, noteKey, onChoose, onSamples, onInfo }: { note?: string; 
  * A How it works step's small picture (decorative). Lines are a folder listing: a line ending in "/"
  * is a folder, and every folder indents the lines after it. No lines: three photo tiles, two ticked.
  */
-function HowPanel({ lines }: { lines: readonly string[] }) {
+function HowPanel({ lines, n }: { lines: readonly string[]; n: number }) {
   if (!lines.length) {
     return (
-      <div className="how-panel how-tiles" aria-hidden="true">
+      <div className={`how-panel p${n} how-tiles`}>
         {[tileBeach, tileCandles, tileRoadtrip].map((src, i) => (
           <span key={src} className={`how-tile${i === 2 ? ' off' : ''}`}>
             <img src={src} alt="" width={240} height={192} decoding="async" loading="lazy" draggable={false} />
@@ -366,7 +370,7 @@ function HowPanel({ lines }: { lines: readonly string[] }) {
   }
   let depth = 0;
   return (
-    <div className="how-panel how-list" aria-hidden="true">
+    <div className={`how-panel p${n} how-list`}>
       {lines.map((line) => {
         const folder = line.endsWith('/');
         const d = depth;

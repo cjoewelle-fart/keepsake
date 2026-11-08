@@ -69,31 +69,6 @@ export const ShieldCheckIcon = (p: IconProps) => (
   </Icon>
 );
 
-export const EyeOffIcon = (p: IconProps) => (
-  <Icon {...p}>
-    <path d="M10.6 5.6A10 10 0 0 1 12 5.5c5.2 0 8.6 4.6 9.4 6.5-.4.9-1.3 2.3-2.6 3.6" />
-    <path d="M6.6 7.1C4.5 8.5 3.1 10.6 2.6 12c.8 1.9 4.2 6.5 9.4 6.5a9.6 9.6 0 0 0 4.6-1.2" />
-    <path d="M9.9 9.9a3 3 0 0 0 4.2 4.2" />
-    <path d="M3.5 3.5l17 17" />
-  </Icon>
-);
-
-export const UserXIcon = (p: IconProps) => (
-  <Icon {...p}>
-    <circle cx="9.5" cy="8" r="3.8" />
-    <path d="M2.8 20c.6-3.6 3.3-5.8 6.7-5.8s6.1 2.2 6.7 5.8" />
-    <path d="M17 8.5l4 4M21 8.5l-4 4" />
-  </Icon>
-);
-
-export const FileCheckIcon = (p: IconProps) => (
-  <Icon {...p}>
-    <path d="M14 3H7a1.8 1.8 0 0 0-1.8 1.8v14.4A1.8 1.8 0 0 0 7 21h10a1.8 1.8 0 0 0 1.8-1.8V7.8z" />
-    <path d="M14 3v4.8h4.8" />
-    <path d="M9 14.2l2.1 2.1 4-4.1" />
-  </Icon>
-);
-
 export const BookOpenIcon = (p: IconProps) => (
   <Icon {...p}>
     <path d="M12 6.8C10.4 5.4 8 4.8 3 4.8v13.4c5 0 7.4.6 9 2 1.6-1.4 4-2 9-2V4.8c-5 0-7.4.6-9 2z" />
