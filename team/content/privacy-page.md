@@ -10,7 +10,7 @@
 
 There is no [Name] server that stores photos. The app is a set of files your browser loads once, like a page in a book. After that, all the sorting happens on your computer.
 
-The app is also built so the page can't send data to other websites. It doesn't use ads or tracking, and it doesn't load anything from other companies.
+The app is also built so the page can't send data to other websites. It doesn't use ads or tracking. One small part is from another company: our host, Netlify, adds a small piece of code for its "Powered by Netlify" badge. It comes from the same address as the app, and it can't send anything to other websites.
 
 iPhone photos (HEIC files) are turned into previews on your computer too. The part that does this comes with [Name]. Nothing is fetched from anywhere else.
 
@@ -53,7 +53,7 @@ Browsers have a tool that lists everything a page sends and receives. On a compu
 2. Click the **Network** tab.
 3. Use [Name] as normal.
 
-You'll see [Name] loading its own files when the page opens. You won't see your photos being sent anywhere.
+You'll see [Name] loading its own files when the page opens, plus one small file from Netlify for its badge. You won't see your photos being sent anywhere.
 <!-- [CONFIRM: what the Network tab actually shows during a scan in the production build. Preview images use blob: URLs, which can appear in the list as "blob:" lines with the app's own address. If they do, add: "You may see lines starting with 'blob:'. Those are your photos being shown on this computer, not sent anywhere."] -->
 
 ## What we can't control
@@ -64,8 +64,8 @@ We're honest about the limits.
 - **Browser extensions.** Add-ons you've installed in your browser (like ad blockers, shopping or translation tools) may be able to see pages you open. If you're worried, turn them off while you use [Name], or use a private window.
 <!-- [CONFIRM: that the folder picker works in a private/incognito window in Chrome and Edge before recommending it.] -->
 - **Your computer's own backups.** Photos you save may be copied by backup or sync tools you already use, like OneDrive, iCloud, Google Drive or Dropbox. That's set up on your computer, not by [Name].
-- **The website that sends you the app.** Like any website, the place [Name] is hosted may keep basic visit records, such as when the page was opened. Those records never include your photos.
-<!-- [CONFIRM: hosting provider and what visit logs it keeps (IP address, time). If the host keeps none, change this line to say so.] -->
+- **The website that sends you the app.** [Name] is hosted by Netlify. Like most hosts, Netlify may keep basic visit records, such as your internet address (IP address) and the time you opened the page. Those records never include your photos.
+<!-- Nov 9: host is Netlify (beta). Revisit these three lines (host, “another company”, Network tab) if the launch host changes. -->
 
 ## What [Name] stores
 
