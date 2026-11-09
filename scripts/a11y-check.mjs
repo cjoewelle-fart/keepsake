@@ -387,9 +387,22 @@ async function desktop(browser) {
   await axe(page, run, 'review: nothing selected');
   check(/Nothing selected/.test(await statusText(page)), 'serious', run, 'review: nothing selected', '"Nothing selected" announced');
   await page.getByRole('button', { name: 'Select all', exact: true }).click();
-  await page.getByRole('button', { name: 'Not selected', exact: true }).click();
+  // Filter chips carry their count: "Not selected 0" (T50/T59).
+  await page.getByRole('button', { name: /^Not selected \d/ }).click();
   await axe(page, run, 'review: filter with nothing to show');
   await page.getByRole('button', { name: 'Show all' }).click();
+  // T50/T59: the Screenshots and From chat apps filters, when this folder has any: pressed state,
+  // "Showing N of M" said by the status line, and the page still passes axe.
+  for (const name of ['Screenshots', 'From chat apps']) {
+    const chip = page.getByRole('button', { name: new RegExp(`^${name} \\d`) });
+    if (!(await chip.count())) continue;
+    await chip.click();
+    check((await chip.getAttribute('aria-pressed')) === 'true', 'serious', run, `review: ${name}`, 'filter chip says it is pressed');
+    await page.waitForTimeout(300);
+    check(/Showing \d[\d,]* of \d/.test(await statusText(page)), 'serious', run, `review: ${name}`, `"Showing N of M" announced (${await statusText(page)})`);
+    await axe(page, run, `review: ${name} filter`);
+  }
+  await page.getByRole('button', { name: /^All \d/ }).click();
 
   // Save: the picker fails, then a slow folder, Stop, a full drive, a broken drive, lost permission, done.
   await page.evaluate(fakeFolder);

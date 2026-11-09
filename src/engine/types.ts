@@ -1,4 +1,5 @@
 import type { Kind } from './sniff';
+import type { Look, LookSign } from './looks';
 
 /** Where a file ended up after cleanup. Order here = display order of set-aside groups. */
 export type Group = 'keep' | 'small' | 'duplicate' | 'damaged' | 'system';
@@ -36,6 +37,13 @@ export type FileRecord = {
    * to the browser's canPlayType, e.g. 'avc1.64001F' or 'hvc1.2.4.L123.B0' (T61).
    */
   codec?: string;
+  /**
+   * T50/T59: what the photo looks like it is (a screenshot, or a photo sent through a chat app),
+   * for the review screen's "Show only" filters. A hint, never a cleanup rule: it never changes
+   * the group or the selection. `lookSign` says which sign gave it (see engine/looks.ts).
+   */
+  look?: Look;
+  lookSign?: LookSign;
   group: Group;
   reason: Reason;
   /** For copies: the index of the file that was kept. */

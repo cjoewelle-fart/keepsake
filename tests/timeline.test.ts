@@ -2,7 +2,7 @@ import { describe, expect, it } from 'vitest';
 import type { SetAsideGroup } from '../src/engine/summary';
 import { summarize } from '../src/engine/summary';
 import type { FileRecord, Group } from '../src/engine/types';
-import { NO_DATE, Selection, blocksOf, buildTimeline, chunks, columnsFor, inPlay, largestFirst, leftOutKind, selectedIds, tally } from '../src/ui/timeline';
+import { NO_DATE, Selection, blocksOf, buildTimeline, chunks, columnsFor, filterCounts, inPlay, largestFirst, leftOutKind, selectedIds, tally } from '../src/ui/timeline';
 import { bytes, copy, runTime, runTimeWords, weekdayDayMonth } from '../src/ui/copy';
 
 let i = 0;
@@ -66,6 +66,48 @@ describe('timeline grouping', () => {
     const blocks = blocksOf(m, 60);
     expect(blocks.map((b) => [b.ids.length, b.start, b.first])).toEqual([[60, 0, true], [60, 60, false], [10, 120, false]]);
     expect(blocks.flatMap((b) => b.ids)).toEqual(m.ids);
+  });
+});
+
+describe('screenshot and chat-app filters (T50, T59)', () => {
+  const shot = { ...rec('2023-02-01T10:00:00', 'png'), look: 'screenshot' as const, lookSign: 'screen-size' as const };
+  const chat = { ...rec(undefined), look: 'chat' as const, lookSign: 'jfif-no-exif' as const };
+  const plain = rec('2023-02-02T10:00:00');
+  const vid = rec('2023-02-03T10:00:00', 'mp4');
+  const files = [shot, chat, plain, vid];
+
+  it('show only the files with that hint, in both orders', () => {
+    expect(buildTimeline(files, 'screenshots').months.flatMap((m) => m.ids)).toEqual([shot.index]);
+    expect(buildTimeline(files, 'chat').months.flatMap((m) => m.ids)).toEqual([chat.index]);
+    expect(buildTimeline(files, 'chat').shown).toBe(1);
+    expect(largestFirst(files, 'screenshots')).toEqual([shot.index]);
+  });
+
+  it('never touch the selection: everything is still selected and saved', () => {
+    const sel = new Selection(i);
+    buildTimeline(files, 'screenshots');
+    buildTimeline(files, 'chat');
+    expect(tally(files, sel).selected).toBe(4);
+    expect(selectedIds(files, sel)).toHaveLength(4);
+  });
+
+  it('count every filter for the chips; Not selected follows ticks as they happen', () => {
+    const sel = new Selection(i);
+    expect(filterCounts(files, sel)).toEqual({ all: 4, photos: 3, videos: 1, unselected: 0, screenshots: 1, chat: 1 });
+    sel.set([shot.index], false);
+    expect(filterCounts(files, sel).unselected).toBe(1);
+    expect(filterCounts(files, sel).screenshots).toBe(1); // unticking doesn't take it out of its filter
+  });
+
+  it('copy: neutral names, a count, and plain words that nothing is removed', () => {
+    const t = copy.timeline;
+    expect(t.filters.chat).toBe('From chat apps');
+    expect(t.filters.screenshots).toBe('Screenshots');
+    expect(t.showing(4, 1234)).toBe('Showing 4 of 1,234.');
+    expect(t.filterOnlyShows).toMatch(/only changes what you see/);
+    expect(t.filterOnlyShows).toMatch(/Nothing is unselected or deleted/);
+    for (const words of [t.filters.chat, t.lookNote.chat]) expect(words).not.toMatch(/junk|spam|clutter|low.quality|remove/i);
+    expect(t.lookNote.chat).toMatch(/family photos worth keeping/);
   });
 });
 
