@@ -324,6 +324,13 @@ progress::-moz-progress-bar { background: var(--accent); border-radius: 999px; }
 .tl-tools { display: flex; flex-direction: column; gap: 10px; padding: 12px 0; background: var(--bg); z-index: 2; }
 .tl-tools-row { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px; }
 .tl-filter { display: flex; flex-wrap: wrap; gap: 4px; padding: 4px; border-radius: 999px; background: var(--surface); }
+/* T50/T59: each filter chip carries its count, a little quieter than its name. */
+.chip-n { font-variant-numeric: tabular-nums; opacity: 0.8; }
+.tl-show { display: flex; flex-direction: column; gap: 12px; margin: -28px 0 -12px; }
+.tl-showing { display: flex; flex-direction: column; gap: 12px; }
+/* Six chips can take two lines: its own row, with corners that suit a box, not one long pill. */
+.tl-filter-show { align-self: flex-start; max-width: 100%; border-radius: 26px; }
+.tl-showing p { margin: 0; }
 .tl-month-select { display: none; flex-direction: column; gap: 4px; font-size: 15px; color: var(--muted); width: 100%; }
 .tl-month-select select { min-height: 44px; padding: 0 12px; border-radius: 12px; border: 1px solid var(--control-edge); background: var(--surface); color: var(--ink); font: inherit; font-size: var(--control-text); }
 .tl-month { gap: 18px; }

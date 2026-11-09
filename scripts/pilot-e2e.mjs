@@ -331,6 +331,40 @@ async function run(browser) {
   console.log(`timeline year chips: ${(await page.locator('nav.chips').first().locator('.chip').allInnerTexts()).join(', ')}`);
   await page.screenshot({ path: `${out}/3-review.png` });
 
+  // T50 and T59: the Screenshots and From chat apps filters (key: 4 screenshots, 16 photos saved
+  // from Messenger). They only show files: nothing is unticked or set aside by choosing one.
+  const chipTexts = (await page.locator('.tl-filter[aria-label="Show only"] .chip').allInnerTexts()).map(flat);
+  check(chipTexts.join('|') === 'All 214|Photos 208|Videos 6|Not selected 0|Screenshots 4|From chat apps 16', `T50/T59 filter chips with counts: ${chipTexts.join(', ')}`);
+  const filterState = () => page.evaluate(() => ({
+    pressed: [...document.querySelectorAll('.tl-filter-show .chip[aria-pressed=true]')].map((c) => c.textContent.replace(/\s+/g, ' ')),
+    tiles: document.querySelectorAll('.tl-tile').length,
+    ticked: document.querySelectorAll('.tl-tile input:checked').length,
+    showing: document.querySelector('.tl-showing')?.textContent ?? '',
+    note: document.querySelector('.tl-showing .note-box')?.textContent ?? '',
+    selected: document.querySelector('dd[data-k=selected]')?.textContent,
+    status: document.querySelector('main [role=status]')?.textContent,
+    focus: document.activeElement?.textContent?.replace(/\s+/g, ' '),
+  }));
+  for (const [name, count, word] of [['Screenshots', 4, /look like screenshots/], ['From chat apps', 16, /chat apps.*family photos worth keeping/]]) {
+    await page.locator('.tl-filter .chip', { hasText: name }).click();
+    await page.waitForFunction((c) => document.querySelector('main [role=status]')?.textContent?.startsWith(`Showing ${c} of`), count, { timeout: 2000 }).catch(() => {});
+    const f = await filterState();
+    check(f.pressed.join() === `${name} ${count}` && f.focus === `${name} ${count}` && f.tiles === count && f.ticked === count,
+      `T50/T59 ${name}: pressed "${f.pressed.join()}", focus stays on it, ${f.tiles} tiles shown, ${f.ticked} still ticked (key ${count})`);
+    check(f.status === `Showing ${count} of 214.` && /^Showing \d+ of 214\. A filter only changes what you see\. Nothing is unselected or deleted\./.test(f.showing) && word.test(f.note),
+      `T50/T59 ${name}: said "${f.status}"; shown "${f.showing.slice(0, 90)}…"`);
+    check(f.selected === '214', `T50/T59 ${name}: choosing it changes nothing (selected ${f.selected} of 214)`);
+  }
+  // Unticking one by hand works as anywhere else, and the file stays in the filter.
+  await page.locator('.tl-tile input[type=checkbox]').first().click();
+  let f1 = await filterState();
+  check(f1.selected === '213' && f1.tiles === 16 && f1.ticked === 15, `T59 untick one chat photo by hand: selected ${f1.selected}, still ${f1.tiles} shown`);
+  await page.locator('.tl-tile input[type=checkbox]').first().click();
+  await page.locator('.tl-filter .chip', { hasText: /^All/ }).click();
+  await page.waitForFunction(() => document.querySelector('main [role=status]')?.textContent === 'Showing all 214.', null, { timeout: 2000 }).catch(() => {});
+  f1 = await filterState();
+  check(f1.selected === '214' && f1.showing === '' && f1.status === 'Showing all 214.', `T50/T59 back to All: selected ${f1.selected}, said "${f1.status}"`);
+
   // D24: the viewer in Review.
   const vstate = () => page.evaluate(() => {
     const d = document.querySelector('dialog.viewer');

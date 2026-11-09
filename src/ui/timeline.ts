@@ -13,7 +13,11 @@ export type MediaType = 'photo' | 'video' | 'other';
 export const mediaType = (r: FileRecord): MediaType =>
   PHOTO_KINDS.has(r.kind) ? 'photo' : VIDEO_KINDS.has(r.kind) ? 'video' : 'other';
 
-export type Filter = 'all' | 'photos' | 'videos' | 'unselected';
+/**
+ * "Show only" on the review screen. 'screenshots' and 'chat' (T50, T59) use the scan's hints
+ * (FileRecord.look): like every filter, they only change what's shown, never the selection.
+ */
+export type Filter = 'all' | 'photos' | 'videos' | 'unselected' | 'screenshots' | 'chat';
 
 /** 'none' is the "No date" group; it always comes last. */
 export const NO_DATE = 'none';
@@ -51,8 +55,27 @@ export function inPlay(records: readonly FileRecord[], movedBack: ReadonlySet<Se
 const passes = (filter: Filter, keep?: (r: FileRecord) => boolean) => (r: FileRecord) => {
   if (filter === 'photos' && mediaType(r) !== 'photo') return false;
   if (filter === 'videos' && mediaType(r) !== 'video') return false;
+  if (filter === 'screenshots' && r.look !== 'screenshot') return false;
+  if (filter === 'chat' && r.look !== 'chat') return false;
   return keep ? keep(r) : true;
 };
+
+/**
+ * How many files each filter would show now, for the counts in the filter chips. "Not selected"
+ * counts the files unticked right now (the list itself keeps the snapshot taken when it was chosen).
+ */
+export function filterCounts(files: readonly FileRecord[], sel: Selection): Record<Filter, number> {
+  const c: Record<Filter, number> = { all: files.length, photos: 0, videos: 0, unselected: 0, screenshots: 0, chat: 0 };
+  for (const r of files) {
+    const t = mediaType(r);
+    if (t === 'photo') c.photos++;
+    else if (t === 'video') c.videos++;
+    if (!sel.has(r.index)) c.unselected++;
+    if (r.look === 'screenshot') c.screenshots++;
+    else if (r.look === 'chat') c.chat++;
+  }
+  return c;
+}
 
 /** How the review screen lists files: grouped by date (the default) or largest first (T60). */
 export type Order = 'date' | 'size';

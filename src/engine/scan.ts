@@ -4,6 +4,7 @@ import { PHOTO_KINDS, VIDEO_KINDS, endsCleanly, imageSize, sniff, type Kind, typ
 import type { FileRecord, FileSource, Progress, Rules } from './types';
 import { Sha256 } from './sha256';
 import { videoInfo, type VideoInfo } from './video';
+import { lookOf, metaSigns } from './looks';
 import { DEFAULT_RULES } from './types';
 
 const HEAD_BYTES = 256 * 1024; // enough for photo details and the JPEG frame header
@@ -14,12 +15,12 @@ const SLICE_BYTES = 1024 * 1024; // piece size when reading a big file in full
 const EXIF_MAX = 1024 * 1024; // a HEIF Exif block bigger than this is ignored (real ones are a few KB)
 const HEIF_KINDS: ReadonlySet<Kind> = new Set(['heic', 'avif']);
 
-type Meta = { camera?: string; takenAt?: string };
+type Meta = { camera?: string; takenAt?: string; /** exposure time, aperture or ISO present (T50/T59) */ exposure?: boolean };
 
 // One shared options object: exifr caches parsed options in a module-level Map keyed by the
 // object itself and never clears it, so a fresh literal per call leaked ~6 KB per photo (T27).
 const EXIFR_OPTIONS = {
-  pick: ['Make', 'Model', 'DateTimeOriginal', 'CreateDate'],
+  pick: ['Make', 'Model', 'DateTimeOriginal', 'CreateDate', 'ExposureTime', 'FNumber', 'ISO'],
   reviveValues: false, // keep the camera's own date text; no time zone guessing
 };
 
@@ -31,7 +32,8 @@ async function readMeta(bytes: Uint8Array): Promise<Meta> {
     const make = typeof t.Make === 'string' ? t.Make.trim() : '';
     const model = typeof t.Model === 'string' ? t.Model.trim() : '';
     const camera = model ? (model.toLowerCase().startsWith(make.toLowerCase()) ? model : `${make} ${model}`.trim()) : make || undefined;
-    return { camera, takenAt: normalizeDate(t.DateTimeOriginal ?? t.CreateDate) };
+    const exposure = t.ExposureTime !== undefined || t.FNumber !== undefined || t.ISO !== undefined;
+    return { camera, takenAt: normalizeDate(t.DateTimeOriginal ?? t.CreateDate), ...(exposure ? { exposure } : {}) };
   } catch {
     return {};
   }
@@ -109,7 +111,8 @@ export async function inspect(src: FileSource, index: number, rules: Rules = DEF
     // Couldn't check it fully (huge table of contents, or data stored in another file): keep it.
     if (layout.unchecked) {
       const dims = typeof layout.size === 'object' ? layout.size : undefined;
-      return { ...base, kind, ...dims, ...(await readHeifMeta(src, head, layout.exif)), group: 'keep', reason: 'not-checked' };
+      const { camera, takenAt } = await readHeifMeta(src, head, layout.exif);
+      return { ...base, kind, ...dims, ...(camera ? { camera } : {}), ...(takenAt ? { takenAt } : {}), group: 'keep', reason: 'not-checked' };
     }
     if (layout.cutOff) return { ...base, kind, group: 'damaged', reason: 'cut-off' };
     if (layout.size === 'invalid') return { ...base, kind, group: 'damaged', reason: 'unreadable' };
@@ -127,7 +130,10 @@ export async function inspect(src: FileSource, index: number, rules: Rules = DEF
     meta = await readMeta(head);
   }
   const dims = typeof size === 'object' ? size : undefined;
-  const rec: FileRecord = { ...base, kind, ...dims, ...meta, group: 'keep', reason: 'photo' };
+  const { exposure, ...details } = meta;
+  // T50/T59: a hint for the review filters only, from bytes already read; never changes the group.
+  const hint = lookOf({ kind, ...dims, ...details, exposure, signs: metaSigns(kind, head) });
+  const rec: FileRecord = { ...base, kind, ...dims, ...details, ...(hint ? { look: hint.look, lookSign: hint.sign } : {}), group: 'keep', reason: 'photo' };
 
   // Real photos carry camera details or a date taken; previews and icons made by apps almost never do.
   // So a small image with either is kept (an old phone's 320x240 photo is still a memory).

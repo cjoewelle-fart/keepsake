@@ -7,7 +7,7 @@ import { Preview } from './Preview';
 import { Viewer } from './Viewer';
 import { SafeNote } from './Results';
 import { playableHere } from './playable';
-import { NO_DATE, blocksOf, buildTimeline, chunks, columnsFor, inPlay, largestFirst, leftOutKind, mediaType, selectedIds, tally } from './timeline';
+import { NO_DATE, blocksOf, buildTimeline, chunks, columnsFor, filterCounts, inPlay, largestFirst, leftOutKind, mediaType, selectedIds, tally } from './timeline';
 import type { Block, Filter, Month, Order, Selection, TriState } from './timeline';
 import type { SetAsideGroup } from '../engine/summary';
 
@@ -24,7 +24,9 @@ type Props = {
 };
 
 const t = copy.timeline;
-const FILTERS: Filter[] = ['all', 'photos', 'videos', 'unselected'];
+const FILTERS: Filter[] = ['all', 'photos', 'videos', 'unselected', 'screenshots', 'chat'];
+/** T50/T59: filters from the scan's hints, shown only when some file has that hint (or the filter is on). */
+const HINT_FILTERS: ReadonlySet<Filter> = new Set(['screenshots', 'chat']);
 const ORDERS: Order[] = ['date', 'size'];
 /** Largest first: rows per lazily drawn block, and one row's height with its gap (a 56 px preview and 8 px). */
 const ROW_CHUNK = 50;
@@ -65,11 +67,9 @@ export function Timeline({ records, files, movedBack, setAside, selection: sel, 
   const sizeBlocks = useMemo(() => chunks(sizeIds, ROW_CHUNK), [sizeIds]);
   // `sel` is mutated in place, so `version` is what tells this to re-count.
   const sum = useMemo(() => { void version; return tally(kept, sel); }, [kept, sel, version]);
-
-  const chooseFilter = (f: Filter) => {
-    if (f === 'unselected') setSnapshot(() => sel.snapshot());
-    setFilter(f);
-  };
+  // The count in each filter chip ("Not selected" follows ticks as they happen).
+  const counts = useMemo(() => { void version; return filterCounts(kept, sel); }, [kept, sel, version]);
+  const shownCount = bySize ? sizeIds.length : tl.shown;
   // The group the last change was made to (a day or month), for the announcement.
   const lastGroup = useRef<{ label: string; ids: readonly number[] }>(undefined);
   const set = (ids: readonly number[], on: boolean, group?: string) => {
@@ -87,9 +87,11 @@ export function Timeline({ records, files, movedBack, setAside, selection: sel, 
   useEffect(() => { bySizeNow.current = bySize; }, [bySize]);
   // Tell screen-reader users the new count once they pause (not on first render).
   const [announce, setAnnounce] = useState('');
+  /** The count waiting to be said; choosing an order or filter cancels it, so the newest news is what's heard. */
+  const countTimer = useRef<ReturnType<typeof setTimeout>>(undefined);
   useEffect(() => {
     if (version === 0) return;
-    const id = setTimeout(() => {
+    const id = countTimer.current = setTimeout(() => {
       const g = lastGroup.current;
       const said = g ? t.announceGroup(g.label, sel.count(g.ids), g.ids.length, sum.selected, sum.total) : t.announce(sum.selected, sum.total);
       setAnnounce(bySizeNow.current && sum.selected > 0 ? said + t.announceSize(bytes(sum.selectedBytes)) : said);
@@ -114,15 +116,27 @@ export function Timeline({ records, files, movedBack, setAside, selection: sel, 
   const scrollOnSwitch = useRef(false);
   const chooseOrder = (o: Order) => {
     if (o === order) return;
+    clearTimeout(countTimer.current);
     scrollOnSwitch.current = (colRef.current?.getBoundingClientRect().top ?? 0) < 0;
     setOrder(o);
     setAnnounce(t.orderAnnounce[o]);
+  };
+  // Filters (T50/T59 for the status line): like the order, focus stays on the chip pressed, the
+  // status line says how many are showing, and a scrolled list goes back to its start.
+  const chooseFilter = (f: Filter) => {
+    if (f === 'unselected') setSnapshot(() => sel.snapshot());
+    if (f === filter) return;
+    clearTimeout(countTimer.current);
+    scrollOnSwitch.current = (colRef.current?.getBoundingClientRect().top ?? 0) < 0;
+    setFilter(f);
+    // The chip's own count is what the new list shows (for Not selected, the snapshot just taken).
+    setAnnounce(f === 'all' ? t.showingAll(kept.length) : t.showing(counts[f], kept.length));
   };
   useLayoutEffect(() => {
     if (!scrollOnSwitch.current) return;
     scrollOnSwitch.current = false;
     colRef.current?.scrollIntoView({ block: 'start' });
-  }, [order]);
+  }, [order, filter]);
 
   const cols = columnsFor(width);
   const gap = cols === 3 ? 8 : 12;
@@ -340,12 +354,24 @@ export function Timeline({ records, files, movedBack, setAside, selection: sel, 
                 <button key={o} type="button" className="chip chip-sm" aria-pressed={order === o} onClick={() => chooseOrder(o)}>{t.orders[o]}</button>
               ))}
             </div>
-            <div className="tl-filter" role="group" aria-label={t.filterLabel}>
-              {FILTERS.map((f) => (
-                <button key={f} type="button" className="chip chip-sm" aria-pressed={filter === f} onClick={() => chooseFilter(f)}>{t.filters[f]}</button>
-              ))}
-            </div>
           </div>
+        </div>
+
+        {/* T50/T59: "Show only" sits under the sticky bar, not in it, so the bar stays short (QA m1). */}
+        <div className="tl-show">
+          <div className="tl-filter tl-filter-show" role="group" aria-label={t.filterLabel}>
+            {FILTERS.filter((f) => !HINT_FILTERS.has(f) || counts[f] > 0 || filter === f).map((f) => (
+              <button key={f} type="button" className="chip chip-sm" aria-pressed={filter === f} onClick={() => chooseFilter(f)}>
+                {t.filters[f]} <span className="chip-n">{t.filterCount(counts[f])}</span>
+              </button>
+            ))}
+          </div>
+          {filter !== 'all' && (
+            <div className="tl-showing">
+              <p className="sub-sm"><strong>{t.showing(shownCount, kept.length)}</strong> {t.filterOnlyShows}</p>
+              {(filter === 'screenshots' || filter === 'chat') && shownCount > 0 && <p className="note-box">{t.lookNote[filter]}</p>}
+            </div>
+          )}
         </div>
 
         {tl.months.length === 0 && (

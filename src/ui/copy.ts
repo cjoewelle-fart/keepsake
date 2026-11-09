@@ -654,8 +654,21 @@ export const copy = {
     noDatePill: (x: number) => `No date · ${n(x)}`,
     monthOption: (label: string, sel: number, total: number) => `${label} · ${n(sel)} of ${n(total)}`,
     filterLabel: 'Show only',
-    // "Not selected" isn't in T22 (it has "Screenshots", which the app can't detect): needs UX writer review.
-    filters: { all: 'All', photos: 'Photos', videos: 'Videos', unselected: 'Not selected' },
+    // "Not selected" isn't in T22: needs UX writer review. T50 "Screenshots" and T59 "From chat apps"
+    // (new, needs UX writer review): neutral names, since photos from chat apps are often family photos.
+    filters: { all: 'All', photos: 'Photos', videos: 'Videos', unselected: 'Not selected', screenshots: 'Screenshots', chat: 'From chat apps' },
+    /** The count in each filter chip, after its name (the chip's name is "Photos 120"). */
+    filterCount: (x: number) => n(x),
+    /** T50/T59: under the filter chips while a filter other than All is on. Also said by the status line. */
+    showing: (shown: number, total: number) => `Showing ${n(shown)} of ${n(total)}.`,
+    showingAll: (total: number) => `Showing all ${n(total)}.`,
+    /** Next to "Showing N of M": filters never change what's saved. */
+    filterOnlyShows: 'A filter only changes what you see. Nothing is unselected or deleted.',
+    /** T50/T59: above the list while that filter is on. Plain about it being a guess, and about why someone might keep them. */
+    lookNote: {
+      screenshots: 'These look like screenshots of a phone or computer screen. Some are worth keeping, like a message or a ticket. This is a best guess from each file, so some may be missed.',
+      chat: 'These look like photos sent or saved through chat apps such as WhatsApp or Messenger. Many are family photos worth keeping. This is a best guess from each file, so some may be missed.',
+    },
     // T60 "Largest first" (all new, needs UX writer review: see review-export-copy.md §3b).
     orderLabel: 'Sort',
     orders: { date: 'By date', size: 'Largest first' },
@@ -711,6 +724,8 @@ export const copy = {
       photos: 'There are no photos to show.',
       videos: 'There are no videos to show.',
       unselected: 'Everything is selected right now. Anything you unselect will show here.',
+      screenshots: 'Nothing here looks like a screenshot.',
+      chat: 'Nothing here looks like it came from a chat app.',
       all: 'There’s nothing to choose from yet.',
     },
     /** Above the list while the Not selected filter is on. */
