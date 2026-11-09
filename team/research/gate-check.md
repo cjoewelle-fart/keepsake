@@ -25,7 +25,7 @@ Run every command from the repo root. Steps 1–9 and P are chained as `npm run 
 | 7 | `npm run a11y` | `0 serious, 0 minor, 0 info`. Every axe violation counts as serious or minor, so this means **zero axe violations** (WCAG 2.1 A/AA plus best practice) on every screen and state. It also means no failures in the keyboard, focus, live-region, reflow, reduced-motion and forced-colours checks. |
 | 8 | `node scripts/a11y-check.mjs --fixture "fixtures/pilot/Recovered from old phone" --shots e2e-shots/a11y-pilot` | The same check on the pilot folder: `0 serious, 0 minor, 0 info`. |
 | 9 | `node scripts/qa-save-opfs/run.mjs` | `OPFS probes: all refusal and safety expectations met`. In the built app, a save into the recovery folder, a subfolder, a folder 5 levels down or an empty subfolder is refused with "That's your recovery folder.". Saving into a folder that only *contains* the recovery folder works, and no file appears in the recovery folder. |
-| P | `npm run pilot-e2e` (`scripts/pilot-e2e.mjs`; needs step 0 and `npm run build:test`) | `PILOT E2E: 31/31 checks passed.` The six pilot tasks on the test build, in Chromium, with every on-screen number matching the answer key (table below), **zero outside requests**, and the recovery folder's file names and sizes unchanged. |
+| P | `npm run pilot-e2e` (`scripts/pilot-e2e.mjs`; needs step 0 and `npm run build:test`) | `PILOT E2E: 77/77 checks passed.` (77 since the T83 start-over checks; was 31) The six pilot tasks on the test build, in Chromium, with every on-screen number matching the answer key (table below), **zero outside requests**, and the recovery folder's file names and sizes unchanged. |
 | 10 | Pilot folder integrity, against the SHA-256 values in the answer key (one-liner below) | `523 files, 0 differ from the key`. Run it last. |
 
 Step 10 command:
@@ -80,9 +80,32 @@ The answer-key numbers come from `pilot-folder.md`.
 
 ## Latest run
 
-**Oct 29, 2026, QA, commit `a369d34`** (health check after the Oct 28 PhotoRec guide change, f4a3f12; not T74). Linux sandbox, Node 22.23.4, Chrome for Testing 153.0.8010.12, PhotoRec 7.1 and pillow-heif 1.8.1. Step 0 built the pilot folder with real PhotoRec in about 4.3 min: 523 files. `npm run gate` passed end to end on the first try in about 6 min 39 s. Tests: 261 passed, 4 expected fail. Fixture: 0/363 wrongly set aside, 0/363 junk in Keep. Pilot: 214 kept, 309 set aside, 0 wrongly set aside. Both accessibility runs: 0 serious, 0 minor, 0 info. Zero outside requests. Ended with `PILOT E2E: 31/31 checks passed.` Step 10: 523 files, 0 differ from the key. No new findings.
+**Nov 9, 2026, QA, commit `dc08416`** (T74: gate rerun on main after the T83 redo; evidence only, the owner passes the gate). Linux sandbox, Node 22.23.4, Playwright 1.64.1, Chrome for Testing 153.0.8010.12 (`CHROMIUM_PATH=/opt/pw-browsers/chromium`). PhotoRec 7.1 and pillow-heif 1.8.1 installed for step 0.
 
-**Oct 27, 2026, after T73** (developer): `CHROMIUM_PATH=/opt/pw-browsers/chromium npm run gate` passed end to end, 1 of 1 run, about 6 min 41 s, ending `PILOT E2E: 31/31 checks passed.` `npm run e2e` then passed 5 of 5 in a row and `npm run pilot-e2e` 3 of 3. Step 10 afterwards: 523 files, 0 differ from the key. QA's earlier run of the same day is below.
+`git diff 79f98c9..HEAD --stat -- src/`: 23 files, all in `src/App.tsx`, `src/ui/` and `src/assets/`. **Nothing in `src/engine/` or `src/worker/` changed.** The save screen (`src/ui/Save.tsx`) changed only in UI wiring: "Sort another folder" (`onStartOver`), focus on the problem heading, the month in the progress line, the span line. The same refusal checks run as before. `src/ui/timeline.ts` adds counts of the files left out. `src/App.tsx` `startOver` now stops the scan worker and drops cached previews.
+
+| # | Result |
+|---|---|
+| 0 | Built with real PhotoRec 7.1 in about 3.9 min: **523 files**, key groups keep 214 (208 photos, 6 videos), small 204, duplicate 22, damaged 2, system 81. Zip 92.0 MB. |
+| 1–P | `npm run gate`: **exit 0, first try, about 9 min 16 s.** |
+| 1 | 24 test files passed. **325 passed, 4 expected fail, 1 skipped** (330). |
+| 2 | `build` and `build:test` exit 0, 30 files precached in each. |
+| 3 | 1510 files (keep 363, small 660, duplicate 168, damaged 119, system 200). |
+| 4 | **Fixture:** wrongly set aside **0/363 (0.00%)**, junk in Keep **0/363 (0.00%)**, all on the diagonal. **Pilot:** 523 checked, kept 214 (208 photos, 6 videos), set aside 309 { small 204, duplicate 22, damaged 2, system 81 }, wrongly set aside **0/214**, junk in Keep **0/214**. After keeping previews 418 / 105. Timeline 2022 has 44 in 12 months, No date 20 (224 with previews). Card eval skipped (no `CARD_DIR`). |
+| 5 | Passed. Ledgers add up at desktop, phone and 200% zoom (1510 = 363 + 1147; 1023 + 487). Receipt 362 saved / 0 failed each time. Desktop folder: 362 copies. Phone and 200%: 362-file zip, `unzip -t` OK. "No console errors." "No requests left this computer." |
+| 6 | `OFFLINE CHECK PASSED`, 17 PASS lines. All 30 precached files load offline. Every offline request was answered by the service worker. **Zero requests to other origins.** |
+| 7 | `0 serious, 0 minor, 0 info`, 435 checks passed. |
+| 8 | Pilot folder: `0 serious, 0 minor, 0 info`, 430 checks passed. |
+| 9 | `OPFS probes: all refusal and safety expectations met`. The recovery folder, `recup_dir.2`, `a/b/c/d/e` and an empty subfolder were all refused with "That folder is part of your recovery folder.". A folder whose check throws was refused with "We couldn't check that folder.". The parent folder was allowed (3 saved). |
+| P | **`PILOT E2E: 77/77 checks passed.`** (The script now has 77 checks, up from 31, including the T83 start-over checks.) Test build. G1 523 / 214 / 309. T3 418 / 105, announced. G2: 44 selected, 44 saved / 0 failed, 12 month folders under `Keepsake photos/2022/`. Saves into the recovery folder and `recup_dir.2` were refused. Recovery folder after: 523 files, names and sizes unchanged, and still unchanged after "Sort another folder". No console errors. **Zero requests to other origins.** |
+| T100 | `node scripts/small-scan-check.mjs --runs 10`: 1, 2 and 3 files each 10/10 finished, **0 stuck**. `SMALL-SCAN CHECK PASSED`. |
+| 10 | **523 files, 0 differ from the key** (SHA-256), run last. Also byte-identical to a SHA-256 snapshot taken before the gate. `fixtures/recovery` (1510 files) is byte-identical to a fresh seeded regeneration in a separate folder. |
+
+No new findings. The step table above still says "31/31" for P. It's now 77/77.
+
+**Oct 29, 2026, QA, commit `a369d34`** (health check after the Oct 28 PhotoRec guide change, f4a3f12; not T74). Linux sandbox, Node 22.23.4, Chrome for Testing 153.0.8010.12, PhotoRec 7.1 and pillow-heif 1.8.1. Step 0 built the pilot folder with real PhotoRec in about 4.3 min: 523 files. `npm run gate` passed end to end on the first try in about 6 min 39 s. Tests: 261 passed, 4 expected fail. Fixture: 0/363 wrongly set aside, 0/363 junk in Keep. Pilot: 214 kept, 309 set aside, 0 wrongly set aside. Both accessibility runs: 0 serious, 0 minor, 0 info. Zero outside requests. Ended with `PILOT E2E: 77/77 checks passed.` (77 since the T83 start-over checks; was 31) Step 10: 523 files, 0 differ from the key. No new findings.
+
+**Oct 27, 2026, after T73** (developer): `CHROMIUM_PATH=/opt/pw-browsers/chromium npm run gate` passed end to end, 1 of 1 run, about 6 min 41 s, ending `PILOT E2E: 77/77 checks passed.` (77 since the T83 start-over checks; was 31) `npm run e2e` then passed 5 of 5 in a row and `npm run pilot-e2e` 3 of 3. Step 10 afterwards: 523 files, 0 differ from the key. QA's earlier run of the same day is below.
 
 **Oct 27, 2026**, QA, commit `ec739fc` with `package.json` changed (the `gate` script added, not yet committed). Linux sandbox, Node 22.23.4, Chrome for Testing 153.0.8010.12 (`CHROMIUM_PATH=/opt/pw-browsers/chromium`), PhotoRec 7.1 and pillow-heif 1.8.1 installed for step 0. Each step ran on its own first. `npm run gate` then ran once and stopped at step 5 (the flake in finding 3), so steps 5–9 were rerun separately.
 
