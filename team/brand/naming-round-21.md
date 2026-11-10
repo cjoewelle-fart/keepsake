@@ -37,3 +37,17 @@ The owner asked for more names with "sort" as a prefix or suffix. The UX writer 
 ## Sources
 
 SORTLY Reg. 7106436 (https://markinton.com/trademark/sortly-97441185); SortMate iOS (https://apps.apple.com/mx/app/sortmate/id6744516452); Sortpad (https://apps.apple.com/app/id937721272); PayPal vs FinPal (https://mk.com.au/friendly-financial-trade-marks-felled-by-fintech-giant); Inventory Nest (https://www.producthunt.com/products/inventory-nest/makers); GOODS SORT 99334274 (https://markinton.com/trademark/goods-sort-99334274); GoodSort (https://apps.apple.com/au/app/goodsort/id1587830409); Sorto (https://www.sorto.ca/about/); Sortio (https://play.google.com/store/apps/details?id=com.sortio.app); Home Sort (https://apps.apple.com/us/app/id6630369046); Sortroom listing (https://alternativeto.net/software/sortroom/about/).
+
+## Addendum: Upsort (owner's idea, Nov 10)
+
+**Web screen (PO): Caution.** No UPSORT mark, app or photo tool found. But:
+- **UPSERT**, live US Reg. 6169320, **class 42** (software, Upsert LLC): one vowel away and sounds close. The attorney must give an opinion on coexistence (https://markinton.com/trademark/upsert-88851530).
+- "Upsert" is an everyday database term and `usort` a PHP function, so search engines treat "upsort" as a typo. Hard to find without "Upsort photos".
+- **upsort.com** is an active Chinese financial-news site; the npm name `upsort` is taken (a 2018 ranking library).
+- Style it "Upsort", never "UPSort" (UPS sorts parcels).
+
+**Language (Team Lead, from rounds 13–21):**
+- Hear-it, type-it: medium. Likely typos: "Up Sort", "Upsert", "Upsorth". The p-s join is clean, and "Sort-" at the end avoids the "Short-" problem.
+- Meaning: "sort up" is honest, but **"up" also reads as upload** ("upload, then sort"), which works against the privacy promise. It also leans business/ranking ("upsell", "rank up").
+- "Upsort found 2,214 photos." reads fine.
+- **Verdict: Backup, behind Sortnest.** If tested, add the question "Does this app upload your photos?" (fails at 2 or more of 5) and count "Upsert" as a typing fail.
