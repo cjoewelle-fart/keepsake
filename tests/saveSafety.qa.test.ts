@@ -42,18 +42,18 @@ describe('QA T55: with the recovery folder’s handle', () => {
     ['depth 5', `${REC}/recup_dir.7/a/b/c/d`],
     ['an empty subfolder no file is in', `${REC}/empty`],
     ['5 deep in an empty subfolder', `${REC}/empty/a/b/c/d`],
-    ['a folder named like Keepsake photos inside it', `${REC}/Keepsake photos`],
+    ['a folder named like Upsort photos inside it', `${REC}/Upsort photos`],
   ];
   for (const [what, p] of inside) it(`refuses ${what}`, async () => expect(await inRecoveryFolder(root, dir(p))).toBe(true));
 
-  it('allows a folder that contains the recovery folder (copies go to <chosen>/Keepsake photos, beside it)', async () => {
+  it('allows a folder that contains the recovery folder (copies go to <chosen>/Upsort photos, beside it)', async () => {
     expect(await inRecoveryFolder(root, dir('/home/me'))).toBe(false);
     expect(await inRecoveryFolder(root, dir('/'))).toBe(false);
   });
-  it('refuses a folder whose "Keepsake photos" holds the recovery folder, at any depth or case', async () => {
-    expect(await inRecoveryFolder(dir('/p/Keepsake photos'), dir('/p'))).toBe(true);
-    expect(await inRecoveryFolder(dir('/p/KEEPSAKE PHOTOS/2019/x'), dir('/p'))).toBe(true);
-    expect(await inRecoveryFolder(dir('/p/Keepsake photos2/x'), dir('/p'))).toBe(false);
+  it('refuses a folder whose "Upsort photos" holds the recovery folder, at any depth or case', async () => {
+    expect(await inRecoveryFolder(dir('/p/Upsort photos'), dir('/p'))).toBe(true);
+    expect(await inRecoveryFolder(dir('/p/UPSORT PHOTOS/2019/x'), dir('/p'))).toBe(true);
+    expect(await inRecoveryFolder(dir('/p/Upsort photos2/x'), dir('/p'))).toBe(false);
   });
   it('allows look-alike neighbours (rec2, rec-old)', async () => {
     expect(await inRecoveryFolder(root, dir(`${REC}2`))).toBe(false);
@@ -85,9 +85,15 @@ describe('QA T55: fallback without the handle (scanned files’ folders only)', 
   it.fails('gap: an empty subfolder of the recovery folder', async () => {
     expect(await insideRecovery(dir(`${REC}/empty`), found)).toBe(true);
   });
-  it.fails('gap: the recovery folder inside "<chosen>/Keepsake photos"', async () => {
-    const files = [{ directoryHandle: dir('/p/Keepsake photos/rec/recup_dir.1'), webkitRelativePath: 'rec/recup_dir.1/f.jpg' }];
+  // Was a known gap; closed by QA follow-up on T94.
+  it('the fallback refuses when the recovery folder is inside "<chosen>/Upsort photos"', async () => {
+    const files = [{ directoryHandle: dir('/p/Upsort photos/rec/recup_dir.1'), webkitRelativePath: 'rec/recup_dir.1/f.jpg' }];
     expect(await insideRecovery(dir('/p'), scanFolders(files))).toBe(true);
+    // The save folder itself as the recovery folder, any case.
+    expect(await insideRecovery(dir('/p'), scanFolders([{ directoryHandle: dir('/p/UPSORT PHOTOS/recup_dir.1'), webkitRelativePath: 'Upsort photos/recup_dir.1/f.jpg' }]))).toBe(true);
+    // A look-alike name or another folder beside it is not the save folder.
+    expect(await insideRecovery(dir('/p'), scanFolders([{ directoryHandle: dir('/p/Upsort photos2/rec/recup_dir.1'), webkitRelativePath: 'rec/recup_dir.1/f.jpg' }]))).toBe(false);
+    expect(await insideRecovery(dir('/p'), scanFolders([{ directoryHandle: dir('/p/other/rec/recup_dir.1'), webkitRelativePath: 'rec/recup_dir.1/f.jpg' }]))).toBe(false);
   });
   it.fails('gap: files without directoryHandle leave nothing to check, and the answer is "not inside"', async () => {
     expect(await insideRecovery(dir(REC), scanFolders([{ webkitRelativePath: 'rec/recup_dir.1/f.jpg' }]))).toBe(true);
@@ -164,7 +170,7 @@ function chromiumLikeFs(h: Hooks = {}) {
   return { root: mkdir(''), files, dirs, removed };
 }
 
-const DAY = 'Keepsake photos/2024/06 June';
+const DAY = 'Upsort photos/2024/06 June';
 const FINAL = `${DAY}/2024-06-28 14.32.jpg`;
 const N2 = `${DAY}/2024-06-28 14.32 (2).jpg`;
 const MB = 1024 * 1024;
@@ -172,10 +178,10 @@ let idx = 0;
 const rec = (): FileRecord => ({ index: idx++, path: 'recup_dir.1/f.jpg', size: 0, kind: 'jpeg', takenAt: '2024-06-28T14:32:00', group: 'keep', reason: 'photo' } as FileRecord);
 const bytes = (n: number, seed: number) => new Uint8Array(n).map((_, k) => (k * 7 + seed) & 0xff);
 
-/** A folder that already has a "Keepsake photos" with the first planned name and an empty file of someone else's in it. */
+/** A folder that already has an "Upsort photos" with the first planned name and an empty file of someone else's in it. */
 function setup(n: number, h?: Hooks) {
   const fs = chromiumLikeFs(h);
-  for (const p of ['Keepsake photos', 'Keepsake photos/2024', DAY]) fs.dirs.add(p);
+  for (const p of ['Upsort photos', 'Upsort photos/2024', DAY]) fs.dirs.add(p);
   fs.files.set(FINAL, new Uint8Array([1, 1, 1]));
   fs.files.set(`${DAY}/their-empty.jpg`, new Uint8Array(0));
   const before = new Map(fs.files);

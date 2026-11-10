@@ -23,7 +23,7 @@ if (!pagePath) throw new Error('usage: sandbox-check.mjs <chromiumPath> <keepsak
 const app = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">\n${readFileSync(pagePath, 'utf8')}</body></html>`;
 const parent = `<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Viewer</title>
 <style>html,body{margin:0;height:100%}iframe{border:0;width:100%;height:100%}</style></head>
-<body><iframe title="Keepsake preview" sandbox="allow-scripts allow-same-origin" src="/app.html"></iframe></body></html>`;
+<body><iframe title="Upsort preview" sandbox="allow-scripts allow-same-origin" src="/app.html"></iframe></body></html>`;
 
 const server = createServer((req, res) => {
   const body = req.url === '/' ? parent : req.url === '/app.html' ? app : null;
@@ -58,7 +58,7 @@ async function run(browser, name, { framed, removePicker }) {
   await f.getByRole('heading', { level: 1 }).first().waitFor();
   const env = await appFrame.evaluate(() => ({ title: document.title, picker: 'showDirectoryPicker' in window, framed: self !== top }));
   console.log(`--- ${name}: framed=${env.framed}, showDirectoryPicker ${env.picker ? 'present' : 'absent'}, title "${env.title}"`);
-  check(env.title.includes('Keepsake (test)'), `${name}: title says "Keepsake (test)"`);
+  check(env.title.includes('Upsort (test)'), `${name}: title says "Upsort (test)"`);
   check(await f.getByRole('button', { name: 'Try with example files' }).count() === 0, `${name}: no "Try with example files" button`);
   const note = await f.locator('main .sub-sm').allInnerTexts();
   if (framed) check(note.some((t) => /Upload files to this site/.test(t)), `${name}: start screen explains the browser's "upload" wording`);

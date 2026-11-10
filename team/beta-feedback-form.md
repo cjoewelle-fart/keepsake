@@ -1,6 +1,6 @@
 # Beta feedback form (T87)
 
-By the Product owner, Nov 4, 2026. Follows D28: 5–8 testers the owner knows, a 5-question form the owner creates, and an optional 20-minute call. `[Name]` means the product name. It stays "Keepsake" until T94 renames the app, and the owner updates the form at the same time.
+By the Product owner, Nov 4, 2026. Follows D28: 5–8 testers the owner knows, a 5-question form the owner creates, and an optional 20-minute call. `[Name]` means the product name. The name is Upsort (decided Nov 10, T94). The owner updates the Google Form to say Upsort.
 
 **Principle:** private by design. The app never sends anything by itself. A tester sends feedback only by clicking a plain link, which opens the form in a new tab. Nothing from the app goes with it, and the app's `connect-src 'self'` doesn't change.
 

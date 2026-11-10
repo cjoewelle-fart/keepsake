@@ -92,7 +92,7 @@ export function Save({ records, files, scanId, ids, recoveryRoot, onBack, onDone
     /** This visit in the page-wide zip log. */
     visit: zipLog.newVisit(scanId),
     existed: false,
-    /** A newly chosen folder (and whether it already had a "Keepsake photos" folder). */
+    /** A newly chosen folder (and whether it already had an "Upsort photos" folder). */
     setFolder(f: FolderSession, existed: boolean) {
       this.folder = f;
       this.existed = existed;

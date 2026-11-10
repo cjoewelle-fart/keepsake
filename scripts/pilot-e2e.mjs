@@ -89,7 +89,7 @@ async function run(browser) {
   page.on('console', (m) => m.type() === 'error' && errors.push(`console: ${m.text()}`));
   await page.goto(`${base}/`);
   const title = await page.title();
-  check(/Keepsake \(test\)$/.test(title), `test build: title "${title}"`);
+  check(/Upsort \(test\)$/.test(title), `test build: title "${title}"`);
   check((await page.getByRole('button', { name: /example files/i }).count()) === 0, 'test build: no "Try with example files" button');
 
   // T83: the start screen says what it does, keeps the promise in view, and answers three questions.
@@ -104,7 +104,7 @@ async function run(browser) {
       c.querySelectorAll('[aria-hidden=true]').forEach((x) => x.remove());
       return c.textContent.replace(/\s+/g, ' ').trim();
     })),
-    oldNote: await page.getByText(/Keepsake runs in your browser|never leave this computer/).count(),
+    oldNote: await page.getByText(/Upsort runs in your browser|never leave this computer/).count(),
   });
   const st0 = await startScreen();
   check(st0.h1 === 'Recovered photos, sorted by date.', `Warmth start title: "${st0.h1}"`);
@@ -566,7 +566,7 @@ async function run(browser) {
   const failed = num(await page.locator('dd[data-k=failed]').innerText());
   check(saved === 44 && failed === 0, `G2 receipt: ${saved} saved, ${failed} couldn't save`);
   const find = await page.locator('[data-k=find]').innerText();
-  check(find.includes('Pictures › Keepsake photos'), `G2 done screen says where: "${flat(find)}"`);
+  check(find.includes('Pictures › Upsort photos'), `G2 done screen says where: "${flat(find)}"`);
   const [dl] = await Promise.all([page.waitForEvent('download'), page.getByRole('button', { name: 'Save receipt' }).click()]);
   const receipt = readFileSync(await dl.path(), 'utf8');
   check(/Recovery folder\s+Untouched/.test(receipt), `T6 receipt file: "${(receipt.match(/Recovery folder.*/) || ['(missing)'])[0]}"`);
@@ -575,7 +575,7 @@ async function run(browser) {
   check(rRow === 'Your files · None deleted, none sent anywhere', `T76 receipt screen: "${rRow}"`);
   const pics = await listIn(page, 'pictures');
   const months = new Set(pics.map((f) => f.p.split('/').slice(0, 3).join('/')));
-  check(pics.length === 44 && pics.every((f) => f.p.startsWith('Keepsake photos/2022/') && f.s > 0), `G2 Pictures holds ${pics.length} files, all under Keepsake photos/2022/, none empty`);
+  check(pics.length === 44 && pics.every((f) => f.p.startsWith('Upsort photos/2022/') && f.s > 0), `G2 Pictures holds ${pics.length} files, all under Upsort photos/2022/, none empty`);
   check(months.size === 12, `G2 month folders: ${[...months].map((m) => m.split('/')[2]).join(', ')}`);
   console.log(`e.g. ${pics.slice(0, 3).map((f) => f.p).join(' | ')}`);
 

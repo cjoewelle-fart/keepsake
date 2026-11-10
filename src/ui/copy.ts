@@ -52,7 +52,11 @@ export const bytes = (x: number) => {
   return u === 0 ? `${n(x)} ${plural(x, 'byte', 'bytes')}` : `${x >= 100 ? Math.round(x) : x.toFixed(1).replace(/\.0$/, '')} ${units[u]}`;
 };
 
-const APP = 'Keepsake';
+const APP = 'Upsort';
+// The save folder's name, used for the folder, the zips and every sentence that names it (T94).
+const ROOT_FOLDER = `${APP} photos`;
+/** ROOT_FOLDER for use inside a RegExp. */
+const ROOT_FOLDER_RE = ROOT_FOLDER.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 // The privacy page and PhotoRec guide texts (copy.info), in the small Markdown described there.
 const PRIVACY = `# Your privacy
@@ -123,7 +127,7 @@ const GUIDE = `# Get your photos back from a memory card with PhotoRec
 
 This guide helps you look for lost photos on a phone’s memory card (SD card), a USB stick or a camera card. It uses PhotoRec, a free program. It works on Windows and Mac.
 
-PhotoRec finds the photos. Then ${APP} sorts them for you.
+PhotoRec finds the photos. Then ${APP} puts them in order by date.
 
 ## Before you start
 
@@ -255,7 +259,7 @@ Now go to [Part 4B](#part-4b-search-with-the-text-version-mac-or-windows).
 4. Choose **Whole** or **Free**:
    - **Whole** searches the entire card. Choose this if the card stopped working, was formatted, or you’re not sure. It takes longer and also finds photos that are still on the card. That’s fine: ${APP} puts the extra copies aside for you.
    - **Free** only searches the empty space. Choose this if the card still works and you only deleted some photos. It’s faster.
-5. Leave **File Formats** as it is. PhotoRec looks for all kinds of files, and that’s fine. ${APP} sorts out what isn’t a photo or video.
+5. Leave **File Formats** as it is. PhotoRec looks for all kinds of files, and that’s fine. ${APP} sets aside what isn’t a photo or video.
 6. Click **Browse** and choose the \`Recovered photos\` folder on your Desktop.
    You should see: **Whole** or **Free** chosen, and your \`Recovered photos\` folder filled in as the place to save.
 7. Click **Search**.
@@ -280,7 +284,7 @@ In the text version, you use the **arrow keys** to move and **Enter** (Return on
 
 3. You see a list of the card’s parts. Choose the biggest one, or the one that says **No partition** or **Whole disk**.
 4. At the bottom, make sure **Search** is highlighted, then press **Enter**.
-   You don’t need **Options** or **File Opt**. PhotoRec looks for all kinds of files, and that’s fine. ${APP} sorts out what isn’t a photo or video.
+   You don’t need **Options** or **File Opt**. PhotoRec looks for all kinds of files, and that’s fine. ${APP} sets aside what isn’t a photo or video.
    You should see: a list of the card’s parts, with **Search** highlighted at the bottom.
 
 **Answer two questions**
@@ -339,7 +343,7 @@ You don’t need to sort through them yourself.
 
 ## Part 7: Sort your photos with ${APP}
 
-PhotoRec’s part is done. Now ${APP} sorts what it found.
+PhotoRec’s part is done. Now ${APP} puts what PhotoRec found in order.
 
 1. Go back to the start of ${APP}. You can use the **Sort my recovered files** button at the bottom of this page.
 2. Click **Choose recovery folder**.
@@ -402,7 +406,7 @@ export const copy = {
   /** Read after a finished step's name in the step indicator. */
   stepDone: '(done)',
   stepsLabel: 'Steps',
-  /** The browser tab's title on each step: "Sort · Keepsake". `app` keeps the test build's "(test)". */
+  /** The browser tab's title on each step: "Sort · Upsort". `app` keeps the test build's "(test)". */
   pageTitle: (step: string, app: string) => `${step} · ${app}`,
   skip: 'Skip to content',
 
@@ -448,8 +452,8 @@ export const copy = {
         },
         {
           title: 'We sort them by date',
-          body: 'Keepsake sorts each photo by the year and month it was taken. Copies and app images are set aside, never deleted.',
-          panel: ['Keepsake photos/', '2009/', '03 March/', '2009-03-14 19.05.jpg'],
+          body: `${APP} puts each photo in order by the year and month it was taken. Copies and app images are set aside, never deleted.`,
+          panel: [`${ROOT_FOLDER}/`, '2009/', '03 March/', '2009-03-14 19.05.jpg'],
         },
         {
           title: 'You choose what to keep',
@@ -461,11 +465,11 @@ export const copy = {
     /** T83: "Good to know", a short Q&A. Round 6: a quiet section at the bottom of the page. */
     faqH: 'Good to know',
     faq: [
-      { q: 'Do you see my photos?', a: 'No. Keepsake works inside your browser. Your photos are never sent to us.' },
+      { q: 'Do you see my photos?', a: `No. ${APP} works inside your browser. Your photos are never sent to us.` },
       { q: 'Do I need an account?', a: 'No. There’s nothing to sign up for.' },
       { q: 'Will it change my files?', a: 'No. It only reads them. Saving makes new copies, so you’ll need some free space.' },
     ],
-    browserNote: 'Keepsake works best in Chrome or Edge on a computer. You can still scan your folder in this browser.',
+    browserNote: `${APP} works best in Chrome or Edge on a computer. You can still scan your folder in this browser.`,
     stopped: 'Scan stopped. Nothing was changed, and you can start again any time.',
     /** Inside the claude.ai preview the folder is chosen with the browser's upload dialog. */
     uploadNote: 'Your browser may ask “Upload files to this site?” That’s the browser’s own wording. Your files are only read on this computer, not sent anywhere.',
@@ -761,16 +765,17 @@ export const copy = {
   // Save step (T25). Source: team/brand/quiet-prints/EX-choose and EX-done (.dc.html), strings from
   // team/content/review-export-copy.md sections 4 to 7 (T22). "new, not in T22" = needs UX writer review.
   save: {
-    // Folder and file names on the person's disk (D15 may rename "Keepsake photos").
-    rootFolder: 'Keepsake photos',
+    // Folder and file names on the person's disk. The folder name is ROOT_FOLDER (top of this file),
+    // so the folder, the zips and the sentences that name it can't drift apart.
+    rootFolder: ROOT_FOLDER,
     noDateFolder: 'No date',
     /** '06' → '06 June' */
     monthFolder: (mo: string) => `${mo} ${MONTHS[Number(mo) - 1]}`,
-    // T89 (UX writer, Nov 3): one zip is "Keepsake photos.zip"; any other is "part N", N counting
+    // T89 (UX writer, Nov 3): one zip is "Upsort photos.zip"; any other is "part N", N counting
     // every zip made while the page is open (so a save after Stop never reuses a name).
-    zipName: 'Keepsake photos.zip',
-    zipPart: (k: number) => `Keepsake photos part ${k}.zip`,
-    receiptFile: 'Keepsake receipt.txt', // new, not in T22
+    zipName: `${ROOT_FOLDER}.zip`,
+    zipPart: (k: number) => `${ROOT_FOLDER} part ${k}.zip`,
+    receiptFile: `${APP} receipt.txt`, // new, not in T22
     /** "photos and videos", or "files" when the selection has files that are neither. */
     what: (x: number, mediaOnly: boolean) => (mediaOnly ? plural(x, 'photo or video', 'photos and videos') : plural(x, 'file', 'files')),
 
@@ -802,7 +807,7 @@ export const copy = {
     previewH: 'Saving isn’t available in this preview.',
     previewBody: 'In the real app, your photos are saved to a folder you choose.',
     folderH: 'Save to a folder',
-    folderBody: 'Choose a folder or make a new one, for example in Pictures. We’ll put a folder called Keepsake photos inside it. Anything already there stays as it is.',
+    folderBody: `Choose a folder or make a new one, for example in Pictures. We’ll put a folder called ${ROOT_FOLDER} inside it. Anything already there stays as it is.`,
     notTheCard: 'Choose a place on this computer or on another drive. Don’t save onto the memory card your photos came from.',
     chooseFolder: 'Choose a folder',
     /** `bigFile`: a file over 2 GB makes its zip over 2 GB too, so "under 2 GB" isn't promised. */
@@ -817,8 +822,8 @@ export const copy = {
       }. They go to your Downloads folder. Open each one to see your photos, sorted the same way.`,
     /** A file over 2 GB on its own (a long video) makes its zip bigger than that. */
     zipBigFile: 'Any file over 2 GB, usually a long video, gets a zip file of its own. That zip will be over 2 GB too.',
-    zipAllowTip: 'Your browser may ask if Keepsake can download several files. Choose Allow.',
-    zipChromeTip: 'To save straight into a folder, open Keepsake in Chrome or Edge.',
+    zipAllowTip: `Your browser may ask if ${APP} can download several files. Choose Allow.`,
+    zipChromeTip: `To save straight into a folder, open ${APP} in Chrome or Edge.`,
     downloadZips: (parts: number) => (parts === 1 ? 'Download zip file' : `Download ${n(parts)} zip files`),
     treeH: 'How your folder will look',
     treeLabel: 'Example of how your folder will look',
@@ -828,24 +833,24 @@ export const copy = {
     back: 'Back to review',
 
     // Problems before saving starts
-    deniedH: 'Keepsake can’t save to that folder.',
+    deniedH: `${APP} can’t save to that folder.`,
     deniedBody: 'Your browser didn’t allow it, or the folder is protected. Nothing was saved there, and nothing was deleted. Try a folder in Pictures or Documents.',
     chooseDifferent: 'Choose a different folder',
     recoveryH: 'That folder is part of your recovery folder.', // T83
-    recoveryBody: 'Keepsake doesn’t save there, so your recovered files stay exactly as they are. Nothing was saved or changed. Choose a different folder, for example in Pictures.',
+    recoveryBody: `${APP} doesn’t save there, so your recovered files stay exactly as they are. Nothing was saved or changed. Choose a different folder, for example in Pictures.`,
     // New (T25 QA follow-up), needs UX writer review: the safety check itself failed.
     uncheckedH: 'We couldn’t check that folder.',
     uncheckedBody: 'Before saving, we make sure a folder isn’t inside your recovery folder. This time we couldn’t tell, so nothing was saved there. Your files are fine. Please choose a different folder, for example in Pictures or Documents.',
     // New (T25 QA follow-up), needs UX writer review: this browser can't save into a folder safely after all.
     unsupportedH: 'Saving into a folder didn’t work in this browser.',
     // T64: "empty folders" is true when move() exists but fails on the first copy: dirFor() in
-    // saveRun.ts has already made Keepsake photos/<year>/<month> by then (not when move() is missing).
+    // saveRun.ts has already made Upsort photos/<year>/<month> by then (not when move() is missing).
     unsupportedBody: (mediaOnly: boolean) =>
       mediaOnly
         ? 'No photos or videos were saved there, and your files are fine. You may see some new empty folders there. You can download your photos and videos as zip files instead, using the button below.'
         : 'No files were saved there, and your files are fine. You may see some new empty folders there. You can download your files as zip files instead, using the button below.',
-    // T22 proposed a new "Keepsake photos (2)" folder; T25 adds to the existing one instead. New, needs UX writer review.
-    existsNote: 'There’s already a Keepsake photos folder here, so we’re adding to it. Nothing in it is changed or replaced. If a name is already taken, the new copy gets (2) at the end.',
+    // T22 proposed a new "Keepsake photos (2)" folder (the name then); T25 adds to the existing one instead. New, needs UX writer review.
+    existsNote: `There’s already an ${ROOT_FOLDER} folder here, so we’re adding to it. Nothing in it is changed or replaced. If a name is already taken, the new copy gets (2) at the end.`,
 
     // Saving
     savingH: 'Saving your photos and videos…',
@@ -863,17 +868,17 @@ export const copy = {
     stoppedH: 'Saving stopped.',
     stoppedBody: (done: number, total: number, mediaOnly: boolean, zip: boolean) =>
       `${n(done)} of ${n(total)} ${mediaOnly ? 'photos and videos' : 'files'} ${done === 1 ? 'was' : 'were'} saved ${
-        zip ? 'in zip files in your Downloads folder' : 'to Keepsake photos'
+        zip ? 'in zip files in your Downloads folder' : `to ${ROOT_FOLDER}`
       }. None of your files were deleted. You can save the rest any time.`,
     saveRest: 'Save the rest',
     backToReview: 'Back to review',
     fullH: 'The drive is full.',
     fullBody: (done: number, total: number, mediaOnly: boolean, remaining: string, zip = false) =>
-      `We saved ${n(done)} of ${n(total)} ${mediaOnly ? 'photos and videos' : 'files'} before it ran out of space. ${zip ? 'They’re in zip files in your Downloads folder.' : 'They’re in Keepsake photos.'} None of your files were deleted, and your recovery folder is fine. Make some space, or choose a different drive, then try again. You need about ${remaining} more.`,
+      `We saved ${n(done)} of ${n(total)} ${mediaOnly ? 'photos and videos' : 'files'} before it ran out of space. ${zip ? 'They’re in zip files in your Downloads folder.' : `They’re in ${ROOT_FOLDER}.`} None of your files were deleted, and your recovery folder is fine. Make some space, or choose a different drive, then try again. You need about ${remaining} more.`,
     brokenH: 'Saving stopped partway.',
     brokenBody: (done: number, total: number, mediaOnly: boolean, zip = false) =>
-      `We saved ${n(done)} of ${n(total)} ${mediaOnly ? 'photos and videos' : 'files'} before something went wrong. ${zip ? 'They’re in zip files in your Downloads folder.' : 'They’re in Keepsake photos.'} None of your files were deleted, and your recovery folder is fine. If you’re saving to a USB drive, check that it’s still plugged in, then try again.`,
-    lostH: 'Keepsake can’t save to that folder anymore.',
+      `We saved ${n(done)} of ${n(total)} ${mediaOnly ? 'photos and videos' : 'files'} before something went wrong. ${zip ? 'They’re in zip files in your Downloads folder.' : `They’re in ${ROOT_FOLDER}.`} None of your files were deleted, and your recovery folder is fine. If you’re saving to a USB drive, check that it’s still plugged in, then try again.`,
+    lostH: `${APP} can’t save to that folder anymore.`,
     lostBody: (done: number, total: number, mediaOnly: boolean) =>
       `We saved ${n(done)} of ${n(total)} ${mediaOnly ? 'photos and videos' : 'files'}. None of your files were deleted. Choose the folder again to save the rest.`,
     chooseAgain: 'Choose the folder again',
@@ -886,13 +891,13 @@ export const copy = {
     partBefore: '',
     partAfter: (total: number, mediaOnly: boolean) => ` of your ${n(total)} ${mediaOnly ? 'photos and videos' : 'files'} are saved.`,
     failedLine: (x: number) => `${n(x)} ${plural(x, 'file', 'files')} couldn’t be copied. They may be damaged. They’re still in your recovery folder, so nothing is lost.`,
-    doneLine: 'They’re in Keepsake photos, sorted into a folder for each year and month.',
+    doneLine: `They’re in ${ROOT_FOLDER}, sorted into a folder for each year and month.`,
     doneZipLine: (parts: number) =>
       parts === 1
         ? 'They’re in a zip file in your Downloads folder. Open it to see your photos, sorted into a folder for each year and month.'
         : `They’re in ${n(parts)} zip files in your Downloads folder. Open each one to see your photos, sorted into a folder for each year and month.`,
     /** Browsers can't open a folder in File Explorer or Finder (T25 finding), so say where it is. */
-    findThem: (folder: string) => `To see them, open ${folder} › Keepsake photos in File Explorer (Windows) or Finder (Mac).`,
+    findThem: (folder: string) => `To see them, open ${folder} › ${ROOT_FOLDER} in File Explorer (Windows) or Finder (Mac).`,
     /**
      * Built from the names of this save's zips (T89, UX writer, Nov 3). 2 names go in the sentence
      * with "and"; 3 or more in an unbroken run read "… part 1.zip to … part 5.zip"; others come as a list.
@@ -902,8 +907,8 @@ export const copy = {
       const lead = 'In your Downloads folder, look for';
       if (total === 0) return { text: '' };
       if (total === 1) return { text: `${lead} ${names[0]}.` };
-      const first = /^Keepsake photos part (\d+)\.zip$/.exec(names[0]);
-      const unbroken = !!first && names.every((name, i) => name === `Keepsake photos part ${Number(first[1]) + i}.zip`);
+      const first = new RegExp(`^${ROOT_FOLDER_RE} part (\\d+)\\.zip$`).exec(names[0]);
+      const unbroken = !!first && names.every((name, i) => name === `${ROOT_FOLDER} part ${Number(first[1]) + i}.zip`);
       if (total === 2) return { text: `${lead} these 2 zip files: ${names[0]} and ${names[1]}.` };
       if (unbroken) return { text: `${lead} these ${n(total)} zip files: ${names[0]} to ${names[total - 1]}.` };
       return { text: `${lead} these ${n(total)} zip files:`, list: [...names] };
@@ -922,7 +927,7 @@ export const copy = {
           : `${one ? 'It has' : 'They have'} some ${what} that aren’t in this save.`
       }`;
     },
-    closeNow: 'You can close Keepsake now, or sort another folder.', // T83
+    closeNow: `You can close ${APP} now, or sort another folder.`, // T83
     /** T83: back to the start screen; this tab's results are cleared, nothing on disk is touched. */
     startOver: 'Sort another folder',
     startOverNote: 'Your saved photos stay where they are. This receipt will close, so save or print it first.',
@@ -932,7 +937,7 @@ export const copy = {
     rSavedValue: (x: number, mediaOnly: boolean) => `${n(x)} ${mediaOnly ? plural(x, 'photo or video', 'photos and videos') : plural(x, 'file', 'files')}`,
     rFailed: 'Couldn’t save',
     rSavedTo: 'Saved to',
-    rSavedToFolder: (folder: string) => `${folder} › Keepsake photos`,
+    rSavedToFolder: (folder: string) => `${folder} › ${ROOT_FOLDER}`,
     rSavedToZip: (parts: number) => `Downloads, ${n(parts)} zip ${plural(parts, 'file', 'files')}`,
     rSorted: 'Sorted into',
     rSortedValue: (years: number, months: number, noDate: number) => {
@@ -972,7 +977,7 @@ export const copy = {
     shot: (what: string) => `Screenshot to come: ${what}`,
     privacy: {
       link: `How ${APP} keeps your photos private`,
-      /** In the browser tab: "Your privacy · Keepsake". */
+      /** In the browser tab: "Your privacy · Upsort". */
       title: 'Your privacy',
       md: PRIVACY,
     },

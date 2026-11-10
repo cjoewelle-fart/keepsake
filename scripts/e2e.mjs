@@ -309,8 +309,8 @@ async function saveToFolder(page, label, selected) {
     const root = await navigator.storage.getDirectory();
     for await (const k of root.keys()) await root.removeEntry(k, { recursive: true });
     const picked = await root.getDirectoryHandle('Pictures', { create: true });
-    // A "Keepsake photos" folder that's already there: it must be added to, and this file left alone.
-    const old = await picked.getDirectoryHandle('Keepsake photos', { create: true });
+    // An "Upsort photos" folder that's already there: it must be added to, and this file left alone.
+    const old = await picked.getDirectoryHandle('Upsort photos', { create: true });
     const w = await (await old.getFileHandle('keep-me.txt', { create: true })).createWritable();
     await w.write('mine');
     await w.close();
@@ -331,16 +331,16 @@ async function saveToFolder(page, label, selected) {
     await walk(await (await navigator.storage.getDirectory()).getDirectoryHandle('Pictures'), '');
     return files;
   });
-  const copies = disk.filter((f) => f.path !== 'Keepsake photos/keep-me.txt');
-  const keep = disk.find((f) => f.path === 'Keepsake photos/keep-me.txt');
+  const copies = disk.filter((f) => f.path !== 'Upsort photos/keep-me.txt');
+  const keep = disk.find((f) => f.path === 'Upsort photos/keep-me.txt');
   console.log(`[${label}] folder: ${copies.length} copies written, e.g. ${copies.slice(0, 3).map((f) => f.path).join(' | ')}`);
   if (copies.length !== saved) problems.push(`[${label}] ${copies.length} files in the folder, receipt says ${saved}`);
-  if (keep?.text !== 'mine') problems.push(`[${label}] the existing file in Keepsake photos was changed or removed`);
-  const bad = copies.filter((f) => !/^Keepsake photos\/(\d{4}\/\d{2} [A-Z][a-z]+\/\d{4}-\d{2}-\d{2} \d{2}\.\d{2}( \(\d+\))?\.[a-z0-9]+|No date\/[^/]+)$/.test(f.path));
+  if (keep?.text !== 'mine') problems.push(`[${label}] the existing file in Upsort photos was changed or removed`);
+  const bad = copies.filter((f) => !/^Upsort photos\/(\d{4}\/\d{2} [A-Z][a-z]+\/\d{4}-\d{2}-\d{2} \d{2}\.\d{2}( \(\d+\))?\.[a-z0-9]+|No date\/[^/]+)$/.test(f.path));
   if (bad.length) problems.push(`[${label}] badly named copies: ${bad.slice(0, 5).map((f) => f.path).join(', ')}`);
   if (copies.some((f) => f.size === 0)) problems.push(`[${label}] empty copies in the folder`);
   const find = await page.locator('[data-k=find]').innerText();
-  if (!find.includes('Pictures › Keepsake photos')) problems.push(`[${label}] done screen doesn't say where the photos are ("${find}")`);
+  if (!find.includes('Pictures › Upsort photos')) problems.push(`[${label}] done screen doesn't say where the photos are ("${find}")`);
   await page.screenshot({ path: `${out}/${label}-7-done.png`, fullPage: true });
   await checkNoSideScroll(page, label, 'done');
 }
@@ -362,7 +362,7 @@ async function saveAsZip(page, label, selected) {
       const test = execFileSync('unzip', ['-t', join(dir, z)]).toString();
       if (!/No errors detected/.test(test)) problems.push(`[${label}] ${z} failed unzip -t`);
       const names = execFileSync('unzip', ['-Z1', join(dir, z)]).toString().trim().split('\n');
-      if (names.some((n) => !n.startsWith('Keepsake photos/'))) problems.push(`[${label}] ${z} has files outside Keepsake photos/`);
+      if (names.some((n) => !n.startsWith('Upsort photos/'))) problems.push(`[${label}] ${z} has files outside Upsort photos/`);
       entries += names.length;
     }
     console.log(`[${label}] zip: ${zips.join(', ')}: ${entries} files, unzip -t OK`);

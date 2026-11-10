@@ -1,8 +1,10 @@
-# Keepsake
+# Upsort
 
 Sort photos recovered by PhotoRec into a clean, dated library — entirely on your own computer.
 
-PhotoRec recovers files well but loses their names and folders, leaving thousands of files like `f12345678.jpg` mixed with thumbnails, copies, broken files and app junk. Keepsake finds the photos and videos worth keeping and sets the rest aside, without deleting or changing any of your files.
+The name comes from upcycling. Upsort turns the jumble of files a recovery program gives back into a photo library you can use.
+
+PhotoRec recovers files well but loses their names and folders, leaving thousands of files like `f12345678.jpg` mixed with thumbnails, copies, broken files and app junk. Upsort finds the photos and videos worth keeping and sets the rest aside, without deleting or changing any of your files.
 
 ## Privacy by design
 
@@ -13,8 +15,8 @@ PhotoRec recovers files well but loses their names and folders, leaving thousand
 - iPhone (HEIC) previews in Chrome, Edge and Firefox are decoded on your computer by libheif compiled to WebAssembly and bundled with the app (nothing is downloaded at runtime). Safari shows HEIC itself. Phones store a small copy (about 320 px) inside each HEIC; when it's there and shaped like the photo, that copy is decoded instead of the full 12 MP picture (about 15 ms instead of 1–1.5 s). Photos without one (often edited or exported ones) are decoded in full and scaled down. One decoding worker, or two on computers with 4+ cores and 4+ GB of memory. A decode that takes over 15 seconds is abandoned (its worker is replaced) and the tile shows the file type instead; at most 200 decoded previews are kept in memory.
 - Videos this browser can't play (old phone 3GP, HEVC in a browser without it, AVI, Motion JPEG) say "Can't play in this browser. It can still be saved." on their tile. The scan reads each video's codec from its 'stsd' box and the page asks the browser's `canPlayType`; the video itself isn't loaded or decoded. They stay selected and are saved like any other.
 - The recovery folder is opened read-only.
-- Saving makes new copies only inside "<chosen folder>/Keepsake photos", and never into the recovery folder or a folder Keepsake can't check. Each copy is written under a hidden temporary name and then renamed to a free name. Browsers that can't rename files (no `FileSystemFileHandle.move()`) don't save into folders at all; they get zip downloads instead, like Safari and Firefox.
-- Known limit: the rename (`move()`) replaces a file already at the new name, and browsers offer no "only if the name is free" option. Keepsake checks the name immediately before renaming, with nothing in between, so another program would have to create a file with that exact name (for example "2024-06-28 14.32 (2).jpg") in that same instant inside "Keepsake photos" for it to be replaced.
+- Saving makes new copies only inside "<chosen folder>/Upsort photos", and never into the recovery folder or a folder Upsort can't check. Each copy is written under a hidden temporary name and then renamed to a free name. Browsers that can't rename files (no `FileSystemFileHandle.move()`) don't save into folders at all; they get zip downloads instead, like Safari and Firefox.
+- Known limit: the rename (`move()`) replaces a file already at the new name, and browsers offer no "only if the name is free" option. Upsort checks the name immediately before renaming, with nothing in between, so another program would have to create a file with that exact name (for example "2024-06-28 14.32 (2).jpg") in that same instant inside "Upsort photos" for it to be replaced.
 - Works offline: after the first visit a service worker keeps a copy of the app's own files (never your photos), so you can turn off your Wi-Fi and it still works. It only stores files that are part of the app and never contacts any other site.
 
 ## Status: phase 1 (prototype the engine)
@@ -31,11 +33,11 @@ npm run preview    # serve the production build at http://localhost:4173
 npm run build:test # test build for usability sessions in dist-test/
 ```
 
-The test build (`npm run build:test`) is the production build (same privacy lock-down and offline install) with two differences: the "Try with example files" button is always off, even if `VITE_SAMPLES=1` is set (the build fails if the example-files code gets in), and the page title reads "Keepsake (test)" so session recordings can be told apart. Serve it with `npx vite preview --outDir dist-test`.
+The test build (`npm run build:test`) is the production build (same privacy lock-down and offline install) with two differences: the "Try with example files" button is always off, even if `VITE_SAMPLES=1` is set (the build fails if the example-files code gets in), and the page title reads "Upsort (test)" so session recordings can be told apart. Serve it with `npx vite preview --outDir dist-test`.
 
 ### Builds for usability sessions
 
-Two ways to give testers the app, both without the "Try with example files" button and titled "Keepsake (test)":
+Two ways to give testers the app, both without the "Try with example files" button and titled "Upsort (test)":
 
 - **Remote sessions: a shareable page.** `npm run build:artifact-test` makes one self-contained page, `dist-artifact-test/page/keepsake-test.html` (no sample pack), to publish as a claude.ai artifact. The steps by hand: `npx vite build --mode artifact-test`, then `node scripts/make-artifact.mjs --test <out-dir>`; both refuse to finish if the example-files code gets in. The artifact viewer runs the page in a sandboxed frame, so there:
   - the folder is chosen with the browser's folder-upload dialog (`<input webkitdirectory>`), never the folder picker, which Chromium refuses in sandboxed frames. Chrome then asks "Upload N files to this site?"; the start screen says that's the browser's wording and nothing is sent. Scanning works as usual.
@@ -65,7 +67,7 @@ npm run build && node scripts/perf-browser.mjs <path-to-chromium> /tmp/perf/reco
 
 `perf-browser.mjs` serves the production build on port 4175 (`--port`), runs each pass in a fresh browser, and prints one line per run plus the median and range. Add `--profile <dir>` to save CPU profiles of the page and the scan worker (open them in Chrome DevTools' Performance panel), or `--no-previews` to replace every preview with a blank image (tells picture decoding apart from the page's own work). `--handoff` measures only the seconds after picking (T52): the longest time the page is blocked, when progress first moves, and how fast Stop answers. `PERF_TRACE=<file>` writes memory samples over time; `PERF_MEMDUMP=1` adds Chrome's own memory breakdown (memory-infra) before and after the review screen (`PERF_MEMDUMP=2` adds sub-allocators; the tracing service itself then adds ~40 MB). Each run also reports memory on the results screen just before Review opens (`resultsPssMB`, by process type, plus the page and worker JS heaps). For memory work, `--results-only` stops there; `PERF_GC=1` measures again after a forced garbage collection and `PERF_GC_DURING=1` collects garbage in the workers every ~2 s of the scan (diagnostics only: the DevTools heap profiler adds its own memory); `PERF_HEAPSNAP=<dir>` saves heap snapshots of the page and workers. `node scripts/preview-check.mjs <chromium> <folder>` checks that review tiles show small, upright copies (HEIC included) and nothing leaves the computer. Timings depend on the machine and on anything else running; the load average is printed with each run.
 
-Memory with 40,000 picked files (T57, Chromium 1194, results screen, PSS of all browser processes): about 850 MB, of which Keepsake's own share is small. In a bare page with no Keepsake code, picking the same folder costs the browser process ~290 MB and the renderer ~50 MB (Chromium's bookkeeping for each picked file; dropping the File objects and collecting garbage gives none of it back), and handing the files to a worker and reading their first 256 KB brings the whole browser to ~735 MB. The page's own JS heap is ~15 MB (records included). What the app controls: the scan worker lets go of each set-aside file as soon as the first pass has sorted it (only files still in Keep are read again, by the copy check), and the worker is shut down once the scan ends, since its copies of the File objects live as long as it does. That took the results screen from ~898 to ~848 MB (median of 3). Previews on the review timeline add their own peak on top (decoding full-size photos for small copies).
+Memory with 40,000 picked files (T57, Chromium 1194, results screen, PSS of all browser processes): about 850 MB, of which Upsort's own share is small. In a bare page with no Upsort code, picking the same folder costs the browser process ~290 MB and the renderer ~50 MB (Chromium's bookkeeping for each picked file; dropping the File objects and collecting garbage gives none of it back), and handing the files to a worker and reading their first 256 KB brings the whole browser to ~735 MB. The page's own JS heap is ~15 MB (records included). What the app controls: the scan worker lets go of each set-aside file as soon as the first pass has sorted it (only files still in Keep are read again, by the copy check), and the worker is shut down once the scan ends, since its copies of the File objects live as long as it does. That took the results screen from ~898 to ~848 MB (median of 3). Previews on the review timeline add their own peak on top (decoding full-size photos for small copies).
 
 The exact-copy check fingerprints 4 files at a time (`copyConcurrency` in `scanAll`), so at most 4 whole files (each up to 64 MB) are in memory at once.
 
@@ -94,13 +96,13 @@ HEIC camera details and dates are read from the Exif item wherever the file's 'i
 Saving makes new copies; the recovery folder is only ever read.
 
 ```
-Keepsake photos/2024/06 June/2024-06-28 14.32.jpg
-Keepsake photos/2024/06 June/2024-06-28 14.32 (2).jpg   (same minute; numbered oldest first)
-Keepsake photos/No date/f12345678.jpg                   (original name)
+Upsort photos/2024/06 June/2024-06-28 14.32.jpg
+Upsort photos/2024/06 June/2024-06-28 14.32 (2).jpg   (same minute; numbered oldest first)
+Upsort photos/No date/f12345678.jpg                   (original name)
 ```
 
-- **Chrome and Edge** (`showDirectoryPicker`): you choose a folder and Keepsake writes into `<folder>/Keepsake photos/`. If that folder already exists it's added to: names already there are skipped (" (2)", " (3)"), and every name is checked on disk again just before it's created, so nothing is ever overwritten. Files are copied in 8 MB slices. A folder that is the recovery folder or inside it is refused (checked with `FileSystemDirectoryHandle.resolve`).
-- **Safari and Firefox**: zip downloads with the same layout inside, each under 2 GB (and under 65,000 files), named `Keepsake photos 1 of 5.zip` and so on. The zip writer (`src/ui/zip.ts`) is our own, store-only (photos don't compress), and builds each zip as a Blob of small headers around the original File objects, so photos are never copied into memory; only the CRC-32 reads them, in a worker. ZIP64 fields are written only for a file of 4 GiB or more.
+- **Chrome and Edge** (`showDirectoryPicker`): you choose a folder and Upsort writes into `<folder>/Upsort photos/`. If that folder already exists it's added to: names already there are skipped (" (2)", " (3)"), and every name is checked on disk again just before it's created, so nothing is ever overwritten. Files are copied in 8 MB slices. A folder that is the recovery folder or inside it is refused (checked with `FileSystemDirectoryHandle.resolve`).
+- **Safari and Firefox**: zip downloads with the same layout inside, each under 2 GB (and under 65,000 files), named `Upsort photos.zip`, or `Upsort photos part 1.zip`, `part 2` and so on when one zip isn't enough. The zip writer (`src/ui/zip.ts`) is our own, store-only (photos don't compress), and builds each zip as a Blob of small headers around the original File objects, so photos are never copied into memory; only the CRC-32 reads them, in a worker. ZIP64 fields are written only for a file of 4 GiB or more.
 - A file that can't be read is skipped and counted under "Couldn't save"; saving goes on. A full drive (`QuotaExceededError`), lost permission (`NotAllowedError`) or any other write error stops saving and says how many were saved; "Save the rest" carries on with the files not yet saved. Stop takes effect within one 8 MB slice and leaves no partial file.
 - The one thing the app ever removes: an empty file it created a moment earlier for a copy that then failed or was stopped (the File System Access API creates the file before any bytes arrive).
 - The receipt can be saved as a small `.txt` (made on this computer) or printed.

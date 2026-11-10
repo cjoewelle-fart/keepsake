@@ -24,7 +24,7 @@ REPO = os.path.dirname(HERE)
 REAL = os.path.join(REPO, "tests", "real-phones")
 SYN = os.path.join(REPO, "tests", "heic")
 HEIC_BRANDS = {b"heic", b"heix", b"heim", b"heis", b"hevc", b"hevx", b"mif1", b"msf1", b"MiHE", b"MiHB", b"miaf"}
-D = "Keepsake photos"
+D = "Upsort photos"
 
 
 def sha(b):

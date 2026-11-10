@@ -40,13 +40,14 @@ try {
   const B = p.B;
   for (const k of ['same', 'depth1 recup_dir.1', 'depth1 recup_dir.300', 'depth5 a/b/c/d/e', 'empty subfolder']) expect(B[k].withHandle === true, `not refused with handle: ${k}`);
   for (const k of ['parent home (contains rec)', 'sibling rec2', 'Pictures', 'usb']) expect(B[k].withHandle === false, `wrongly refused: ${k}`);
-  expect(B['rec inside Pictures/Keepsake photos, chosen=Pictures'].withHandle === true, 'not refused: recovery inside <chosen>/Keepsake photos');
+  expect(B['rec inside Pictures/Upsort photos, chosen=Pictures'].withHandle === true, 'not refused: recovery inside <chosen>/Upsort photos');
+  expect(B['fallback: rec inside Pictures/Upsort photos, chosen=Pictures'].fallback === true, 'fallback not refused: recovery inside <chosen>/Upsort photos');
   const saves = {};
   for (const s of ['normal', 'race-at-move', 'stop-mid-file', 'read-error-mid-file', 'move-unsupported', 'move-fails-after-write', 'move-quota-after-write', 'no-move-race-create', 'no-move-race-create-then-stop']) {
     saves[s] = await page.evaluate((x) => window.runSave(x), s);
     console.log(s, JSON.stringify(saves[s]));
     const after = saves[s].after;
-    expect(after.includes('Keepsake photos/2024/06 June/2024-06-28 14.32.jpg:3') && after.includes('Keepsake photos/2024/06 June/empty-theirs.jpg:0'), `${s}: a file that was there before changed or went`);
+    expect(after.includes('Upsort photos/2024/06 June/2024-06-28 14.32.jpg:3') && after.includes('Upsort photos/2024/06 June/empty-theirs.jpg:0'), `${s}: a file that was there before changed or went`);
     expect(!after.some((x) => x.includes('.keepsake-partial-')), `${s}: a temporary file was left behind`);
     if (s.startsWith('no-move') || s === 'move-unsupported') expect(saves[s].end === 'unsupported' && saves[s].saved.length === 0, `${s}: without move() the save should end 'unsupported' with nothing written`);
   }

@@ -117,7 +117,7 @@ try {
   check(fontsOk > 0, `${fontsOk} bundled font files loaded offline`);
 
   // The privacy page and the PhotoRec guide open offline too (T67); they're part of the app.
-  for (const [link, heading] of [['How Keepsake keeps your photos private', 'Your privacy'], ['New to PhotoRec? Here’s how to recover your files', 'Get your photos back']]) {
+  for (const [link, heading] of [['How Upsort keeps your photos private', 'Your privacy'], ['New to PhotoRec? Here’s how to recover your files', 'Get your photos back']]) {
     await page.getByRole('button', { name: link }).click();
     const opened = await page.getByRole('heading', { level: 1, name: heading }).waitFor({ timeout: 5000 }).then(() => true, () => false);
     check(opened, `"${heading}" page opens offline`);

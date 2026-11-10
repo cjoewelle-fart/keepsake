@@ -21,3 +21,7 @@ Pass: 6/8 type it exactly, 7/8 read it right, 6/8 recall it. Fail if the Filipin
 
 Sources: trademarks.justia.com/997/97/tuck-99797640.html, apps.apple.com/au/app/tuck-screenshot-organizer/id6778143508,
 trademarks.justia.com/785/94/tuckaway-78594212.html, tagalog.com/dictionary/sinop
+
+## The name: Upsort (decided Nov 10, 2026)
+
+Upsort comes from upcycling, which means making something messy useful again. A recovery program gives back a jumble of files with strange names, and Upsort turns that jumble into a photo library sorted by date. Write it as one word with only the first letter in capitals: "Upsort". Never write "UPSort", "UpSort", "Up Sort" or "Upsert". Say it "UP-sort". The "up" means "better", like in upcycling. It never means upload (your photos stay on your computer), never upsell, and never recovery (Upsort only sorts files a recovery program has already found).

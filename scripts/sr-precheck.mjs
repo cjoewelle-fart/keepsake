@@ -116,7 +116,7 @@ async function pilot(browser) {
   }
 
   // 3. Info pages.
-  for (const link of ['How Keepsake keeps your photos private', 'New to PhotoRec? Here’s how to recover your files']) {
+  for (const link of ['How Upsort keeps your photos private', 'New to PhotoRec? Here’s how to recover your files']) {
     await page.getByRole('button', { name: link }).click();
     await wait(page, 300);
     say(3, `${link}: title`, await page.title());
@@ -134,7 +134,7 @@ async function pilot(browser) {
     await wait(page, 300);
     say(3, 'after Back to start (bottom): title / focus', `${await page.title()} / ${await focused(page)}`);
   }
-  await page.getByRole('button', { name: 'How Keepsake keeps your photos private' }).click();
+  await page.getByRole('button', { name: 'How Upsort keeps your photos private' }).click();
   await wait(page, 200);
   await page.getByRole('button', { name: 'Back to start' }).first().click();
   await wait(page, 300);

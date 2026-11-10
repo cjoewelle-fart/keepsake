@@ -17,10 +17,10 @@ const rec = (takenAt: string | undefined, path?: string, kind: FileRecord['kind'
   ({ index: i++, path: path ?? `recup_dir.1/f${String(i).padStart(7, '0')}.jpg`, size, kind, takenAt, group: 'keep', reason: 'photo' });
 
 describe('where each copy goes', () => {
-  it('dated files: Keepsake photos/YYYY/MM Month/YYYY-MM-DD HH.MM.ext', () => {
+  it('dated files: Upsort photos/YYYY/MM Month/YYYY-MM-DD HH.MM.ext', () => {
     const p = placeFor(rec('2024-06-28T14:32:09'));
     expect(p).toEqual({ dir: ['2024', '06 June'], base: '2024-06-28 14.32', ext: 'jpg' });
-    expect(zipPath({ dir: p.dir, name: '2024-06-28 14.32.jpg' })).toBe('Keepsake photos/2024/06 June/2024-06-28 14.32.jpg');
+    expect(zipPath({ dir: p.dir, name: '2024-06-28 14.32.jpg' })).toBe('Upsort photos/2024/06 June/2024-06-28 14.32.jpg');
   });
 
   it('"No date" files keep their original name', () => {
@@ -208,10 +208,10 @@ describe('name collisions', () => {
     const same = rec(undefined, 'recup_dir.1/f1.jpg');
     const plan = planNames([later, other, earlier, same]);
     expect(plan.map((p) => [p.id, zipPath(p)])).toEqual([
-      [earlier.index, 'Keepsake photos/2024/06 June/2024-06-28 14.32.jpg'],
-      [later.index, 'Keepsake photos/2024/06 June/2024-06-28 14.32 (2).jpg'],
-      [same.index, 'Keepsake photos/No date/f1.jpg'],
-      [other.index, 'Keepsake photos/No date/f1 (2).jpg'],
+      [earlier.index, 'Upsort photos/2024/06 June/2024-06-28 14.32.jpg'],
+      [later.index, 'Upsort photos/2024/06 June/2024-06-28 14.32 (2).jpg'],
+      [same.index, 'Upsort photos/No date/f1.jpg'],
+      [other.index, 'Upsort photos/No date/f1 (2).jpg'],
     ]);
   });
 
@@ -271,41 +271,50 @@ describe('receipt', () => {
     expect(copy.save.browserNote(4)).toMatch(/4 zip files instead, each under 2 GB\.$/);
     expect(copy.save.browserNote(4, true)).toMatch(/4 zip files instead\.$/);
     expect(copy.save.fullBody(1, 3, true, '2 GB', true)).toContain('They’re in zip files in your Downloads folder. None of your files were deleted');
-    expect(copy.save.brokenBody(1, 3, true)).toContain('They’re in Keepsake photos. None of your files were deleted');
-    const L = 'In your Downloads folder, look for';
-    const parts = (a: number, b: number) => Array.from({ length: b - a + 1 }, (_, k) => `Keepsake photos part ${a + k}.zip`);
-    expect(copy.save.findZip(parts(1, 5))).toEqual({ text: `${L} these 5 zip files: Keepsake photos part 1.zip to Keepsake photos part 5.zip.` });
-    expect(copy.save.findZip(['Keepsake photos.zip'])).toEqual({ text: `${L} Keepsake photos.zip.` });
+    expect(copy.save.brokenBody(1, 3, true)).toContain('They’re in Upsort photos. None of your files were deleted');
+    // T94: the final name, and one folder name behind the folder, the zips and the sentences.
+    expect(copy.appName).toBe('Upsort');
+    expect(copy.save.rootFolder).toBe('Upsort photos');
+    expect(copy.save.zipName).toBe(`${copy.save.rootFolder}.zip`);
+    expect(copy.save.zipPart(3)).toBe(`${copy.save.rootFolder} part 3.zip`);
+    expect(copy.save.existsNote).toMatch(/^There’s already an Upsort photos folder here/);
+    expect(copy.save.rSavedToFolder('Pictures')).toBe('Pictures › Upsort photos');
+    expect(copy.save.doneLine).toContain('They’re in Upsort photos,');
+    expect(JSON.stringify(copy)).not.toMatch(/keepsake/i);
+    const L ='In your Downloads folder, look for';
+    const parts = (a: number, b: number) => Array.from({ length: b - a + 1 }, (_, k) => `Upsort photos part ${a + k}.zip`);
+    expect(copy.save.findZip(parts(1, 5))).toEqual({ text: `${L} these 5 zip files: Upsort photos part 1.zip to Upsort photos part 5.zip.` });
+    expect(copy.save.findZip(['Upsort photos.zip'])).toEqual({ text: `${L} Upsort photos.zip.` });
   });
 
   it('zip find text (T89): built from the names; an unbroken run, 2 names in the sentence, 3 or more as a list', () => {
     const L = 'In your Downloads folder, look for';
-    expect(copy.save.findZip(['Keepsake photos part 4.zip', 'Keepsake photos part 5.zip', 'Keepsake photos part 6.zip']))
-      .toEqual({ text: `${L} these 3 zip files: Keepsake photos part 4.zip to Keepsake photos part 6.zip.` });
-    expect(copy.save.findZip(['Keepsake photos.zip', 'Keepsake photos part 2.zip']))
-      .toEqual({ text: `${L} these 2 zip files: Keepsake photos.zip and Keepsake photos part 2.zip.` });
+    expect(copy.save.findZip(['Upsort photos part 4.zip', 'Upsort photos part 5.zip', 'Upsort photos part 6.zip']))
+      .toEqual({ text: `${L} these 3 zip files: Upsort photos part 4.zip to Upsort photos part 6.zip.` });
+    expect(copy.save.findZip(['Upsort photos.zip', 'Upsort photos part 2.zip']))
+      .toEqual({ text: `${L} these 2 zip files: Upsort photos.zip and Upsort photos part 2.zip.` });
     // A gap (a part with no readable file made no zip) is not an unbroken run.
-    expect(copy.save.findZip(['Keepsake photos part 1.zip', 'Keepsake photos part 3.zip', 'Keepsake photos part 4.zip']))
-      .toEqual({ text: `${L} these 3 zip files:`, list: ['Keepsake photos part 1.zip', 'Keepsake photos part 3.zip', 'Keepsake photos part 4.zip'] });
-    expect(copy.save.findZip(['Keepsake photos.zip', 'Keepsake photos part 2.zip', 'Keepsake photos part 3.zip']).list).toHaveLength(3);
+    expect(copy.save.findZip(['Upsort photos part 1.zip', 'Upsort photos part 3.zip', 'Upsort photos part 4.zip']))
+      .toEqual({ text: `${L} these 3 zip files:`, list: ['Upsort photos part 1.zip', 'Upsort photos part 3.zip', 'Upsort photos part 4.zip'] });
+    expect(copy.save.findZip(['Upsort photos.zip', 'Upsort photos part 2.zip', 'Upsort photos part 3.zip']).list).toHaveLength(3);
     expect(copy.save.findZip([])).toEqual({ text: '' });
-    expect(copy.save.findZip(['Keepsake photos part 2.zip', 'Keepsake photos part 3.zip']))
-      .toEqual({ text: `${L} these 2 zip files: Keepsake photos part 2.zip and Keepsake photos part 3.zip.` });
-    expect(copy.save.zipAgain('Keepsake photos part 2.zip')).toBe('Download Keepsake photos part 2.zip again');
+    expect(copy.save.findZip(['Upsort photos part 2.zip', 'Upsort photos part 3.zip']))
+      .toEqual({ text: `${L} these 2 zip files: Upsort photos part 2.zip and Upsort photos part 3.zip.` });
+    expect(copy.save.zipAgain('Upsort photos part 2.zip')).toBe('Download Upsort photos part 2.zip again');
   });
 
   it('zip names (T89): one name per zip for the whole page; "part N" counts every zip made', () => {
     const log = new ZipLog();
     const v1 = log.newVisit(1);
-    expect(log.add(v1, 1, [1, 2])).toBe('Keepsake photos.zip'); // first save fits in one zip
-    expect(log.add(v1, 1, [3])).toBe('Keepsake photos part 2.zip'); // Save the rest
+    expect(log.add(v1, 1, [1, 2])).toBe('Upsort photos.zip'); // first save fits in one zip
+    expect(log.add(v1, 1, [3])).toBe('Upsort photos part 2.zip'); // Save the rest
     log.finish(v1);
     const v2 = log.newVisit(1);
-    expect(log.add(v2, 1, [1, 2, 3])).toBe('Keepsake photos part 3.zip'); // a later save never reuses "Keepsake photos.zip"
+    expect(log.add(v2, 1, [1, 2, 3])).toBe('Upsort photos part 3.zip'); // a later save never reuses "Upsort photos.zip"
     const multi = new ZipLog();
     const m = multi.newVisit(1);
     expect([multi.add(m, 3, [1]), multi.add(m, 3, [2]), multi.add(m, 3, [3])])
-      .toEqual(['Keepsake photos part 1.zip', 'Keepsake photos part 2.zip', 'Keepsake photos part 3.zip']);
+      .toEqual(['Upsort photos part 1.zip', 'Upsort photos part 2.zip', 'Upsort photos part 3.zip']);
   });
 
   it('earlier zips (T89): only from saves that did not finish, and whether this save has all of it', () => {
@@ -317,40 +326,40 @@ describe('receipt', () => {
     log.add(stopped, 2, [1, 2]);
     const now = log.newVisit(1);
     log.add(now, 1, [1, 2, 3]);
-    expect(log.leftovers(now, new Set([1, 2, 3]))).toEqual({ names: ['Keepsake photos part 2.zip'], covered: true });
-    expect(log.leftovers(now, new Set([1, 3]))).toEqual({ names: ['Keepsake photos part 2.zip'], covered: false });
+    expect(log.leftovers(now, new Set([1, 2, 3]))).toEqual({ names: ['Upsort photos part 2.zip'], covered: true });
+    expect(log.leftovers(now, new Set([1, 3]))).toEqual({ names: ['Upsort photos part 2.zip'], covered: false });
     expect(log.leftovers(stopped, new Set([1, 2]))).toEqual({ names: [], covered: true }); // its own zips aren't "earlier"
   });
 
   it('earlier zips (T89): a zip from another scan is never mentioned, and never "covered", even with the same indices', () => {
     const log = new ZipLog();
     const a = log.newVisit(1); // folder A
-    expect(log.add(a, 1, [0, 1, 2])).toBe('Keepsake photos.zip'); // stopped; indices 0-2 of scan 1
+    expect(log.add(a, 1, [0, 1, 2])).toBe('Upsort photos.zip'); // stopped; indices 0-2 of scan 1
     const b = log.newVisit(2); // folder B: its indices also start at 0
-    expect(log.add(b, 1, [0, 1, 2, 3])).toBe('Keepsake photos part 2.zip'); // the name counter is page-wide
+    expect(log.add(b, 1, [0, 1, 2, 3])).toBe('Upsort photos part 2.zip'); // the name counter is page-wide
     expect(log.leftovers(b, new Set([0, 1, 2, 3]))).toEqual({ names: [], covered: true });
     // The same folder scanned again is a new scan too: its indices may point at other files.
     const a2 = log.newVisit(3);
     expect(log.leftovers(a2, new Set([0, 1, 2]))).toEqual({ names: [], covered: true });
     // Back in scan 2, a later visit still sees only scan 2's unfinished zip.
     const b2 = log.newVisit(2);
-    expect(log.leftovers(b2, new Set([0, 1, 2]))).toEqual({ names: ['Keepsake photos part 2.zip'], covered: false });
-    expect(log.leftovers(b2, new Set([0, 1, 2, 3]))).toEqual({ names: ['Keepsake photos part 2.zip'], covered: true });
-    expect(copy.save.earlierZips(['Keepsake photos.zip'], true, 1, true))
-      .toBe('Keepsake photos.zip is from an earlier save that didn’t finish. Everything in it is also in the zip file above.');
-    expect(copy.save.earlierZips(['Keepsake photos.zip', 'Keepsake photos part 2.zip'], false, 3, true))
-      .toBe('Keepsake photos.zip and Keepsake photos part 2.zip are from an earlier save that didn’t finish. They have some photos and videos that aren’t in this save.');
+    expect(log.leftovers(b2, new Set([0, 1, 2]))).toEqual({ names: ['Upsort photos part 2.zip'], covered: false });
+    expect(log.leftovers(b2, new Set([0, 1, 2, 3]))).toEqual({ names: ['Upsort photos part 2.zip'], covered: true });
+    expect(copy.save.earlierZips(['Upsort photos.zip'], true, 1, true))
+      .toBe('Upsort photos.zip is from an earlier save that didn’t finish. Everything in it is also in the zip file above.');
+    expect(copy.save.earlierZips(['Upsort photos.zip', 'Upsort photos part 2.zip'], false, 3, true))
+      .toBe('Upsort photos.zip and Upsort photos part 2.zip are from an earlier save that didn’t finish. They have some photos and videos that aren’t in this save.');
   });
 
   it('the text file says the same as the screen, and lists what could not be saved', () => {
     const txt = receiptText({
-      when: new Date(2026, 9, 16, 16, 5), saved: 2224, failed: 1, mediaOnly: true, savedTo: 'Pictures › Keepsake photos',
+      when: new Date(2026, 9, 16, 16, 5), saved: 2224, failed: 1, mediaOnly: true, savedTo: 'Pictures › Upsort photos',
       sorted: { years: 6, months: 41, noDate: 312 }, failedPaths: ['recup_dir.4/f0099.jpg'],
     });
     expect(txt).toContain('16 October 2026, 16:05');
     expect(txt).toMatch(/Saved\s+2,224 photos and videos/);
     expect(txt).toMatch(/Couldn’t save\s+1/);
-    expect(txt).toMatch(/Saved to\s+Pictures › Keepsake photos/);
+    expect(txt).toMatch(/Saved to\s+Pictures › Upsort photos/);
     expect(txt).toMatch(/Sorted into\s+6 years, 41 months, plus No date \(312\)/);
     expect(txt).toMatch(/Recovery folder\s+Untouched/);
     // T76: the promise in words, no "0 · 0" counter or "upload" wording.
@@ -445,9 +454,9 @@ const has = (cmd: string) => { try { execFileSync('sh', ['-c', `command -v ${cmd
 
 describe('ZIP writer', () => {
   const entries = [
-    { name: 'Keepsake photos/2024/06 June/2024-06-28 14.32.jpg', data: new Uint8Array(5000).map((_, k) => k & 0xff) },
-    { name: 'Keepsake photos/2024/06 June/2024-06-28 14.32 (2).jpg', data: new Uint8Array([0xff, 0xd8, 0xff, 0xd9]) },
-    { name: 'Keepsake photos/No date/f0001234 café.jpg', data: new Uint8Array(0) },
+    { name: 'Upsort photos/2024/06 June/2024-06-28 14.32.jpg', data: new Uint8Array(5000).map((_, k) => k & 0xff) },
+    { name: 'Upsort photos/2024/06 June/2024-06-28 14.32 (2).jpg', data: new Uint8Array([0xff, 0xd8, 0xff, 0xd9]) },
+    { name: 'Upsort photos/No date/f0001234 café.jpg', data: new Uint8Array(0) },
   ];
 
   it('writes the local header byte for byte', () => {

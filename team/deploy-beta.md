@@ -1,6 +1,6 @@
 # Putting the beta online (T85)
 
-How to put `dist/` on a free static host at a private, unlisted HTTPS address (D27), under the working name Keepsake (D26). Once the owner has an account on Cloudflare Pages or Netlify, this takes about 10–15 minutes. Both hosts take a direct upload of the `dist/` folder, so there's no Git connection and the repo stays private.
+How to put `dist/` on a free static host at a private, unlisted HTTPS address (D27), under the name Upsort (decided Nov 10; D26 had the working name Keepsake). Once the owner has an account on Cloudflare Pages or Netlify, this takes about 10–15 minutes. Both hosts take a direct upload of the `dist/` folder, so there's no Git connection and the repo stays private.
 
 ## What the build already contains
 

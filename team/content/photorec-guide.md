@@ -4,7 +4,7 @@
 
 This guide helps you look for lost photos on a phone's memory card (SD card), a USB stick or a camera card. It uses PhotoRec, a free program. It works on Windows and Mac.
 
-PhotoRec finds the photos. Then [Name] sorts them for you.
+PhotoRec finds the photos. Then [Name] puts them in order by date.
 
 ## Before you start
 
@@ -136,7 +136,7 @@ Now go to [Part 4B](#part-4b-search-with-the-text-version-mac-or-windows).
 4. Choose **Whole** or **Free**:
    - **Whole** searches the entire card. Choose this if the card stopped working, was formatted, or you're not sure. It takes longer and also finds photos that are still on the card. That's fine: [Name] puts the extra copies aside for you.
    - **Free** only searches the empty space. Choose this if the card still works and you only deleted some photos. It's faster.
-5. Leave **File Formats** as it is. PhotoRec looks for all kinds of files, and that's fine. [Name] sorts out what isn't a photo or video.
+5. Leave **File Formats** as it is. PhotoRec looks for all kinds of files, and that's fine. [Name] sets aside what isn't a photo or video.
 6. Click **Browse** and choose the `Recovered photos` folder on your Desktop.
    You should see: **Whole** or **Free** chosen, and your `Recovered photos` folder filled in as the place to save.
 7. Click **Search**.
@@ -161,7 +161,7 @@ In the text version, you use the **arrow keys** to move and **Enter** (Return on
 
 3. You see a list of the card's parts. Choose the biggest one, or the one that says **No partition** or **Whole disk**.
 4. At the bottom, make sure **Search** is highlighted, then press **Enter**.
-   You don't need **Options** or **File Opt**. PhotoRec looks for all kinds of files, and that's fine. [Name] sorts out what isn't a photo or video.
+   You don't need **Options** or **File Opt**. PhotoRec looks for all kinds of files, and that's fine. [Name] sets aside what isn't a photo or video.
    You should see: a list of the card's parts, with **Search** highlighted at the bottom.
 
 **Answer two questions**
@@ -220,7 +220,7 @@ You don't need to sort through them yourself.
 
 ## Part 7: Sort your photos with [Name]
 
-PhotoRec's part is done. Now [Name] sorts what it found.
+PhotoRec's part is done. Now [Name] puts what PhotoRec found in order.
 
 1. Go back to the start of [Name]. You can use the **Sort my recovered files** button at the bottom of this page.
 2. Click **Choose recovery folder**.

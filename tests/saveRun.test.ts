@@ -6,7 +6,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import type { FileRecord } from '../src/engine/types';
-import { TEMP_PREFIX, newFolderSession, saveAsZip, saveToFolder } from '../src/ui/saveRun';
+import { TEMP_PREFIX, hasRoot, newFolderSession, saveAsZip, saveToFolder } from '../src/ui/saveRun';
 import type { DirHandle } from '../src/ui/saveRun';
 import { ZipLog, planNames, splitParts } from '../src/ui/savePlan';
 import type { Planned } from '../src/ui/savePlan';
@@ -129,26 +129,46 @@ function setup(n: number, opts?: Opts) {
 }
 
 describe('saving to a folder', () => {
-  it('writes new copies into Keepsake photos, byte for byte', async () => {
+  it('writes new copies into Upsort photos, byte for byte', async () => {
     const t = setup(3);
     expect(await saveToFolder(t.session, t.items, t.ev)).toBe('done');
     expect([...t.fs.files.keys()].sort()).toEqual([
-      'Keepsake photos/2024/06 June/2024-06-28 14.32 (2).jpg',
-      'Keepsake photos/2024/06 June/2024-06-28 14.32 (3).jpg',
-      'Keepsake photos/2024/06 June/2024-06-28 14.32.jpg',
+      'Upsort photos/2024/06 June/2024-06-28 14.32 (2).jpg',
+      'Upsort photos/2024/06 June/2024-06-28 14.32 (3).jpg',
+      'Upsort photos/2024/06 June/2024-06-28 14.32.jpg',
     ]);
-    expect(t.fs.files.get('Keepsake photos/2024/06 June/2024-06-28 14.32 (2).jpg')).toEqual(bytesOf(1001, 1));
+    expect(t.fs.files.get('Upsort photos/2024/06 June/2024-06-28 14.32 (2).jpg')).toEqual(bytesOf(1001, 1));
     expect(t.saved).toEqual(t.items.map((x) => x.r.index));
   });
 
-  it('adds to an existing Keepsake photos folder without changing anything in it', async () => {
+  it('adds to an existing Upsort photos folder without changing anything in it', async () => {
     const t = setup(1);
     const old = new Uint8Array([1, 2, 3]);
-    t.fs.files.set('Keepsake photos/2024/06 June/2024-06-28 14.32.jpg', old);
-    await t.fs.root.getDirectoryHandle('Keepsake photos', { create: true }).then((d) => d.getDirectoryHandle('2024', { create: true })).then((d) => d.getDirectoryHandle('06 June', { create: true }));
+    t.fs.files.set('Upsort photos/2024/06 June/2024-06-28 14.32.jpg', old);
+    await t.fs.root.getDirectoryHandle('Upsort photos', { create: true }).then((d) => d.getDirectoryHandle('2024', { create: true })).then((d) => d.getDirectoryHandle('06 June', { create: true }));
     expect(await saveToFolder(t.session, t.items, t.ev)).toBe('done');
-    expect(t.fs.files.get('Keepsake photos/2024/06 June/2024-06-28 14.32.jpg')).toBe(old);
-    expect(t.fs.files.has('Keepsake photos/2024/06 June/2024-06-28 14.32 (2).jpg')).toBe(true);
+    expect(t.fs.files.get('Upsort photos/2024/06 June/2024-06-28 14.32.jpg')).toBe(old);
+    expect(t.fs.files.has('Upsort photos/2024/06 June/2024-06-28 14.32 (2).jpg')).toBe(true);
+  });
+
+  it('T94: a folder saved by an older version ("Keepsake photos", "Keepsake photos.zip") is left alone', async () => {
+    const t = setup(1);
+    const oldPhoto = new Uint8Array([1, 2, 3]);
+    const oldZip = new Uint8Array([0x50, 0x4b, 5, 6]);
+    t.fs.files.set('Keepsake photos/2024/06 June/2024-06-28 14.32.jpg', oldPhoto);
+    t.fs.files.set('Keepsake photos.zip', oldZip);
+    await t.fs.root.getDirectoryHandle('Keepsake photos', { create: true }).then((d) => d.getDirectoryHandle('2024', { create: true })).then((d) => d.getDirectoryHandle('06 June', { create: true }));
+    expect(await hasRoot(t.fs.root)).toBe(false);
+    expect(await saveToFolder(t.session, t.items, t.ev)).toBe('done');
+    expect(t.fs.files.get('Keepsake photos/2024/06 June/2024-06-28 14.32.jpg')).toBe(oldPhoto);
+    expect(t.fs.files.get('Keepsake photos.zip')).toBe(oldZip);
+    expect(t.fs.used.removed).toEqual([]);
+    expect([...t.fs.files.keys()].sort()).toEqual([
+      'Keepsake photos.zip',
+      'Keepsake photos/2024/06 June/2024-06-28 14.32.jpg',
+      'Upsort photos/2024/06 June/2024-06-28 14.32.jpg', // its own folder, so no " (2)"
+    ]);
+    expect(t.fs.files.get('Upsort photos/2024/06 June/2024-06-28 14.32.jpg')).toEqual(bytesOf(1000, 0));
   });
 
   it('a file that can’t be read is skipped and counted, saving goes on, nothing empty is left', async () => {
@@ -191,7 +211,7 @@ describe('saving to a folder', () => {
 });
 
 const MB = 1024 * 1024;
-const FINAL = 'Keepsake photos/2024/06 June/2024-06-28 14.32.jpg';
+const FINAL = 'Upsort photos/2024/06 June/2024-06-28 14.32.jpg';
 const isTemp = (p: string) => p.split('/').pop()!.startsWith(TEMP_PREFIX);
 /** A file whose first `okBytes` read fine and the rest can't be read (a card pulled out mid-copy). */
 class FailsPartway extends File {
@@ -220,7 +240,7 @@ describe('saving to a folder: only ever removing the empty file this save made (
       expect(await saveToFolder(t.session, t.items, ev)).toBe('stopped');
       expect(t.saved).toEqual([t.items[0].r.index, t.items[1].r.index]);
       expect([...t.fs.files.keys()].sort()).toEqual([
-        'Keepsake photos/2024/06 June/2024-06-28 14.32 (2).jpg',
+        'Upsort photos/2024/06 June/2024-06-28 14.32 (2).jpg',
         FINAL,
       ]);
       expectOnlyOwnRemoved(t.fs.used.removed);
@@ -243,20 +263,20 @@ describe('saving to a folder: only ever removing the empty file this save made (
     const t = setup(1, { onWrite: (p, n) => { if (n === 1 && isTemp(p)) t.fs.files.set(FINAL, theirs); } });
     expect(await saveToFolder(t.session, t.items, t.ev)).toBe('done');
     expect(t.fs.files.get(FINAL)).toBe(theirs);
-    expect(t.fs.files.get('Keepsake photos/2024/06 June/2024-06-28 14.32 (2).jpg')).toEqual(bytesOf(1000, 0));
+    expect(t.fs.files.get('Upsort photos/2024/06 June/2024-06-28 14.32 (2).jpg')).toEqual(bytesOf(1000, 0));
     expect([...t.fs.files.keys()].some(isTemp)).toBe(false);
   });
 
   {
     it('a name that appears after the folder was listed is never written to', async () => {
       const t = setup(2);
-      const second = 'Keepsake photos/2024/06 June/2024-06-28 14.32 (2).jpg';
+      const second = 'Upsort photos/2024/06 June/2024-06-28 14.32 (2).jpg';
       let calls = 0;
       // Between the first and second copy (after the listing), another program makes the next planned name.
       const ev = { ...t.ev, shouldStop: () => { if (++calls === 2) t.fs.files.set(second, new Uint8Array(0)); return false; } };
       expect(await saveToFolder(t.session, t.items, ev)).toBe('done');
       expect(t.fs.files.get(second)).toEqual(new Uint8Array(0)); // theirs: still there, still empty
-      expect(t.fs.files.get('Keepsake photos/2024/06 June/2024-06-28 14.32 (3).jpg')).toEqual(bytesOf(1001, 1));
+      expect(t.fs.files.get('Upsort photos/2024/06 June/2024-06-28 14.32 (3).jpg')).toEqual(bytesOf(1001, 1));
       expect(t.fs.used.removed.filter((p) => !isTemp(p))).toEqual([]);
     });
   }
@@ -337,7 +357,7 @@ describe('saving as zip files', () => {
         expect(execFileSync('unzip', ['-t', p]).toString()).toMatch(/No errors detected/);
         names.push(...execFileSync('unzip', ['-Z1', p]).toString().trim().split('\n'));
       }
-      expect(names).toEqual(['Keepsake photos/2024/06 June/2024-06-28 14.32.jpg', 'Keepsake photos/No date/f9.jpg']);
+      expect(names).toEqual(['Upsort photos/2024/06 June/2024-06-28 14.32.jpg', 'Upsort photos/No date/f9.jpg']);
     } finally {
       rmSync(dir, { recursive: true, force: true });
     }
@@ -378,49 +398,49 @@ function zipPage(count: number, perPart: number, log = new ZipLog(), scan = 1) {
 }
 
 describe('zip names across Stop, "Save the rest" and "Back to review" (T89)', () => {
-  it('an uninterrupted save: "Keepsake photos.zip", or parts 1 to N', async () => {
-    expect((await zipPage(5, 10).visit(Infinity)).zips).toEqual(['Keepsake photos.zip']);
+  it('an uninterrupted save: "Upsort photos.zip", or parts 1 to N', async () => {
+    expect((await zipPage(5, 10).visit(Infinity)).zips).toEqual(['Upsort photos.zip']);
     const v = await zipPage(5, 2).visit(Infinity);
-    expect(v.zips).toEqual(['Keepsake photos part 1.zip', 'Keepsake photos part 2.zip', 'Keepsake photos part 3.zip']);
-    expect(v.find.text).toBe('In your Downloads folder, look for these 3 zip files: Keepsake photos part 1.zip to Keepsake photos part 3.zip.');
+    expect(v.zips).toEqual(['Upsort photos part 1.zip', 'Upsort photos part 2.zip', 'Upsort photos part 3.zip']);
+    expect(v.find.text).toBe('In your Downloads folder, look for these 3 zip files: Upsort photos part 1.zip to Upsort photos part 3.zip.');
   });
 
   it('one part, Stop then Save the rest: two names, and the Done text names both (both are needed)', async () => {
     const v = await zipPage(6, 10).visit(2);
     expect(v.saved).toBe(6);
-    expect(v.zips).toEqual(['Keepsake photos.zip', 'Keepsake photos part 2.zip']);
-    expect(v.find.text).toBe('In your Downloads folder, look for these 2 zip files: Keepsake photos.zip and Keepsake photos part 2.zip.');
+    expect(v.zips).toEqual(['Upsort photos.zip', 'Upsort photos part 2.zip']);
+    expect(v.find.text).toBe('In your Downloads folder, look for these 2 zip files: Upsort photos.zip and Upsort photos part 2.zip.');
     expect(v.earlier.names).toEqual([]);
   });
 
   it('several parts, Stop then Save the rest: numbering goes on, with no gap and no "of N"', async () => {
     const v = await zipPage(7, 2).visit(3); // parts of 2: stopped after 1 file of part 2
     expect(v.saved).toBe(7);
-    expect(v.zips).toEqual(['Keepsake photos part 1.zip', 'Keepsake photos part 2.zip', 'Keepsake photos part 3.zip', 'Keepsake photos part 4.zip']);
-    expect(v.find.text).toBe('In your Downloads folder, look for these 4 zip files: Keepsake photos part 1.zip to Keepsake photos part 4.zip.');
+    expect(v.zips).toEqual(['Upsort photos part 1.zip', 'Upsort photos part 2.zip', 'Upsort photos part 3.zip', 'Upsort photos part 4.zip']);
+    expect(v.find.text).toBe('In your Downloads folder, look for these 4 zip files: Upsort photos part 1.zip to Upsort photos part 4.zip.');
   });
 
   it('Stop, Back to review, Save again (one part): no name reused; Done names only this save and explains the old zip', async () => {
     const page = zipPage(6, 10);
     const first = await page.visit(2, true);
-    expect(first.zips).toEqual(['Keepsake photos.zip']);
+    expect(first.zips).toEqual(['Upsort photos.zip']);
     const again = await page.visit(Infinity);
     expect(again.saved).toBe(6); // everything again, not just the rest
-    expect(again.zips).toEqual(['Keepsake photos part 2.zip']);
+    expect(again.zips).toEqual(['Upsort photos part 2.zip']);
     expect(new Set(page.all).size).toBe(page.all.length);
-    expect(again.find.text).toBe('In your Downloads folder, look for Keepsake photos part 2.zip.');
-    expect(again.earlier).toEqual({ names: ['Keepsake photos.zip'], covered: true });
+    expect(again.find.text).toBe('In your Downloads folder, look for Upsort photos part 2.zip.');
+    expect(again.earlier).toEqual({ names: ['Upsort photos.zip'], covered: true });
   });
 
   it('Stop, Back to review, Save again (several parts): every name new; the Done text is this save only', async () => {
     const page = zipPage(7, 2);
     const first = await page.visit(3, true);
-    expect(first.zips).toEqual(['Keepsake photos part 1.zip', 'Keepsake photos part 2.zip']);
+    expect(first.zips).toEqual(['Upsort photos part 1.zip', 'Upsort photos part 2.zip']);
     const again = await page.visit(Infinity);
-    expect(again.zips).toEqual(['Keepsake photos part 3.zip', 'Keepsake photos part 4.zip', 'Keepsake photos part 5.zip', 'Keepsake photos part 6.zip']);
+    expect(again.zips).toEqual(['Upsort photos part 3.zip', 'Upsort photos part 4.zip', 'Upsort photos part 5.zip', 'Upsort photos part 6.zip']);
     expect(new Set(page.all.map((n) => n.toLowerCase())).size).toBe(page.all.length);
-    expect(again.find.text).toBe('In your Downloads folder, look for these 4 zip files: Keepsake photos part 3.zip to Keepsake photos part 6.zip.');
-    expect(again.earlier).toEqual({ names: ['Keepsake photos part 1.zip', 'Keepsake photos part 2.zip'], covered: true });
+    expect(again.find.text).toBe('In your Downloads folder, look for these 4 zip files: Upsort photos part 3.zip to Upsort photos part 6.zip.');
+    expect(again.earlier).toEqual({ names: ['Upsort photos part 1.zip', 'Upsort photos part 2.zip'], covered: true });
     // And after that save finished, a later one doesn't mention any of them.
     expect((await page.visit(Infinity)).earlier.names).toEqual([]);
   });
@@ -428,11 +448,11 @@ describe('zip names across Stop, "Save the rest" and "Back to review" (T89)', ()
   it('Stop on folder A, Start over, scan folder B, save: the Done screen for B never mentions the zip from A (indices restart per scan)', async () => {
     const log = new ZipLog();
     const a = zipPage(6, 10, log, 1);
-    expect((await a.visit(2, true)).zips).toEqual(['Keepsake photos.zip']);
+    expect((await a.visit(2, true)).zips).toEqual(['Upsort photos.zip']);
     const b = zipPage(8, 10, log, 2); // indices 0-7: they include all of A's 0-5
     const v = await b.visit(Infinity);
-    expect(v.zips).toEqual(['Keepsake photos part 2.zip']);
+    expect(v.zips).toEqual(['Upsort photos part 2.zip']);
     expect(v.earlier).toEqual({ names: [], covered: true });
-    expect(v.find.text).toBe('In your Downloads folder, look for Keepsake photos part 2.zip.');
+    expect(v.find.text).toBe('In your Downloads folder, look for Upsort photos part 2.zip.');
   });
 });

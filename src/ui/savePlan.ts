@@ -2,9 +2,9 @@
 // tested in Node. The browser-only parts (writing to a folder, building zip downloads) live in
 // saveRun.ts; this file only decides paths and names.
 //
-//   Keepsake photos/2024/06 June/2024-06-28 14.32.jpg
-//   Keepsake photos/2024/06 June/2024-06-28 14.32 (2).jpg   (same minute)
-//   Keepsake photos/No date/f12345678.jpg                   (original name)
+//   Upsort photos/2024/06 June/2024-06-28 14.32.jpg
+//   Upsort photos/2024/06 June/2024-06-28 14.32 (2).jpg   (same minute)
+//   Upsort photos/No date/f12345678.jpg                   (original name)
 import type { Kind } from '../engine/sniff';
 import type { FileRecord } from '../engine/types';
 import { copy } from './copy';
@@ -58,10 +58,12 @@ const LONE_SURROGATE = /[\ud800-\udbff](?![\udc00-\udfff])|(?<![\ud800-\udbff])[
 
 /**
  * Longest name safeName gives, in UTF-8 bytes (macOS and Linux allow 255 per name) and in
- * UTF-16 code units (for the path). NameBook may add " (n)" after it, and the longest folder
- * part is "Keepsake photos/No date/" (24), so a full path inside the zip or the chosen folder
- * stays under 160 characters (Windows Explorer adds the Downloads folder and the zip's own
- * folder in front, and its limit is 260).
+ * UTF-16 code units (for the path). NameBook may add " (n)" after it. Only "No date" keeps
+ * original names this long; dated folders (up to "Upsort photos/2024/09 September/", 32) hold
+ * short "YYYY-MM-DD HH.MM (n).ext" names. So the worst case is "Upsort photos/No date/" (22)
+ * + 120 + " (n)", and a full path inside the zip or the chosen folder stays under 160
+ * characters while " (n)" is under 18 (any n up to 13 digits). Windows Explorer adds the
+ * Downloads folder and the zip's own folder in front, and its limit is 260.
  */
 export const NAME_LIMITS = { bytes: 150, chars: 120 } as const;
 
@@ -113,7 +115,7 @@ export function safeName(name: string): string {
   return s;
 }
 
-/** The folder (below "Keepsake photos") and preferred name for one file, before collisions. */
+/** The folder (below "Upsort photos") and preferred name for one file, before collisions. */
 export function placeFor(r: Pick<FileRecord, 'takenAt' | 'kind' | 'path'>): { dir: string[]; base: string; ext: string } {
   const p = dateParts(r.takenAt);
   if (p) {
@@ -196,7 +198,7 @@ export function orderForSave<T extends Pick<FileRecord, 'takenAt' | 'path'>>(rec
 export type Planned = {
   /** FileRecord.index */
   id: number;
-  /** Folders below "Keepsake photos". */
+  /** Folders below "Upsort photos". */
   dir: string[];
   name: string;
   size: number;
@@ -214,8 +216,8 @@ export function planNames(records: readonly FileRecord[], sizeOf: (r: FileRecord
 /**
  * Every zip downloaded while this page is open (T89), so no two downloads ever share a name, even
  * after Stop, "Back to review" and Save again (which starts a new visit to the Save step).
- * - The very first zip, when its save fits in one, is "Keepsake photos.zip".
- * - Every other zip is "Keepsake photos part N.zip", N counting every zip made on this page.
+ * - The very first zip, when its save fits in one, is "Upsort photos.zip".
+ * - Every other zip is "Upsort photos part N.zip", N counting every zip made on this page.
  * Names are given out when a zip is made, not when it's planned, so a stopped part or one with no
  * readable file never leaves a gap.
  */
@@ -262,7 +264,7 @@ export class ZipLog {
   }
 }
 
-/** Full path inside a zip ("Keepsake photos/2024/06 June/…"). */
+/** Full path inside a zip ("Upsort photos/2024/06 June/…"). */
 export const zipPath = (p: Pick<Planned, 'dir' | 'name'>) => [copy.save.rootFolder, ...p.dir, p.name].join('/');
 
 /** "6 years, 41 months, plus No date (312)" comes from these. */
@@ -330,7 +332,7 @@ export type FolderCheck = 'inside' | 'outside' | 'unknown';
 
 /**
  * Is `chosen` the recovery folder or anywhere inside it (T55), at any depth, empty subfolders
- * included? Also 'inside' if the recovery folder is inside "<chosen>/Keepsake photos", where the
+ * included? Also 'inside' if the recovery folder is inside "<chosen>/Upsort photos", where the
  * copies would go. 'unknown' if the browser couldn't answer.
  */
 export async function checkRecoveryFolder(root: RecoveryRootDir, chosen: ResolvingDir): Promise<FolderCheck> {
@@ -345,7 +347,7 @@ export async function checkRecoveryFolder(root: RecoveryRootDir, chosen: Resolvi
 }
 
 /**
- * Must Keepsake refuse to save into `chosen`? Yes if it's inside the recovery folder (above), and
+ * Must Upsort refuse to save into `chosen`? Yes if it's inside the recovery folder (above), and
  * yes if the browser can't answer: a folder we can't check is never written to.
  */
 export async function inRecoveryFolder(root: RecoveryRootDir, chosen: ResolvingDir): Promise<boolean> {
@@ -371,6 +373,8 @@ export function scanFolders(files: readonly ScannedFile[]): { dir: ResolvingDir;
  * in (`directoryHandle`, e.g. recup_dir.1) and their path from the recovery folder
  * ('recovery/recup_dir.1/f1.jpg'), so for each such folder D at depth k below the recovery
  * folder: chosen is inside D, or chosen is D or one of its k ancestors up to the recovery folder.
+ * Also true when the recovery folder is inside "<chosen>/<rootFolder>", where the copies would go
+ * (same case-insensitive name compare as checkRecoveryFolder).
  * It can miss a subfolder with no scanned files in it; that's why the handle check comes first.
  */
 export async function insideRecovery(chosen: ResolvingDir, dirs: readonly { dir: ResolvingDir; depth: number }[]): Promise<boolean> {
@@ -378,6 +382,8 @@ export async function insideRecovery(chosen: ResolvingDir, dirs: readonly { dir:
     if ((await dir.resolve(chosen)) !== null) return true; // chosen is D or below it
     const down = await chosen.resolve(dir); // chosen is above D
     if (down !== null && down.length <= depth) return true;
+    // chosen is above the recovery folder: refuse if the path down goes through the save folder.
+    if (down !== null && down.length > depth && key(down[0]) === key(copy.save.rootFolder)) return true;
   }
   return false;
 }

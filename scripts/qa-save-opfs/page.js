@@ -46,7 +46,7 @@ window.runProbes = async () => {
   const d300 = await rec.getDirectoryHandle('recup_dir.300');
   const sib = await mk(home, 'rec2');
   const pics = await mk(home, 'Pictures');
-  const recInKp = await mk(pics, 'Keepsake photos/old-rec');
+  const recInKp = await mk(pics, 'Upsort photos/old-rec');
   const recInOther = await mk(pics, 'other/rec3');
   const usb = await mk(root, 'usb');
   const cases = { 'same': rec, 'depth1 recup_dir.1': d1, 'depth1 recup_dir.300': d300, 'depth5 a/b/c/d/e': deep5, 'empty subfolder': empty,
@@ -56,11 +56,11 @@ window.runProbes = async () => {
   for (const [n, c] of Object.entries(cases)) {
     B[n] = { withHandle: await window.K.inRecoveryFolder(rec, c), fallback: await window.K.insideRecovery(c, fb).catch(() => 'threw->true') };
   }
-  B['rec inside Pictures/Keepsake photos, chosen=Pictures'] = { withHandle: await window.K.inRecoveryFolder(recInKp, pics) };
+  B['rec inside Pictures/Upsort photos, chosen=Pictures'] = { withHandle: await window.K.inRecoveryFolder(recInKp, pics) };
   B['rec inside Pictures/other, chosen=Pictures'] = { withHandle: await window.K.inRecoveryFolder(recInOther, pics) };
-  // Fallback with files that DO carry handles, chosen = Pictures, recovery inside Pictures/Keepsake photos
+  // Fallback with files that DO carry handles, chosen = Pictures, recovery inside Pictures/Upsort photos
   const kpFiles = [{ directoryHandle: recInKp, webkitRelativePath: 'old-rec/f.jpg' }];
-  B['fallback: rec inside Pictures/Keepsake photos, chosen=Pictures'] = { fallback: await window.K.insideRecovery(pics, window.K.scanFolders(kpFiles)) };
+  B['fallback: rec inside Pictures/Upsort photos, chosen=Pictures'] = { fallback: await window.K.insideRecovery(pics, window.K.scanFolders(kpFiles)) };
   B['fallback: no directoryHandle on files (file input)'] = { fallback: await window.K.insideRecovery(rec, window.K.scanFolders([{ webkitRelativePath: 'rec/recup_dir.1/f.jpg' }])) };
   // A removed/stale recovery handle
   const gone = await mk(root, 'gone');
@@ -81,7 +81,7 @@ window.runSave = async (scenario) => {
   for await (const n of root.keys()) await root.removeEntry(n, { recursive: true });
   const chosen = await root.getDirectoryHandle('chosen', { create: true });
   // Pre-existing content that must never change
-  let d = chosen; for (const p of ['Keepsake photos', '2024', '06 June']) d = await d.getDirectoryHandle(p, { create: true });
+  let d = chosen; for (const p of ['Upsort photos', '2024', '06 June']) d = await d.getDirectoryHandle(p, { create: true });
   const put = async (dd, name, bytes) => { const fh = await dd.getFileHandle(name, { create: true }); const w = await fh.createWritable(); await w.write(bytes); await w.close(); };
   await put(d, '2024-06-28 14.32.jpg', new Uint8Array([1, 1, 1]));
   await put(d, 'empty-theirs.jpg', new Uint8Array(0));

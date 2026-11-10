@@ -1,7 +1,7 @@
 // Turns `vite build --mode artifact` output into one self-contained page plus a sample pack.
 // Usage: node scripts/make-artifact.mjs <photorec-output-dir> <out-dir>
 //
-// Pilot test page (no example files, title "Keepsake (test)"), from `vite build --mode artifact-test`:
+// Pilot test page (no example files, title "Upsort (test)"), from `vite build --mode artifact-test`:
 //        node scripts/make-artifact.mjs --test <out-dir>    (writes <out-dir>/keepsake-test.html only)
 import { mkdirSync, readFileSync, readdirSync, statSync, writeFileSync } from 'node:fs';
 import { join, relative } from 'node:path';

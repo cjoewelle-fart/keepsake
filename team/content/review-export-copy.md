@@ -1,6 +1,6 @@
 # Review and save: screen copy
 
-<!-- T22 · UX writer · 2026-10-19. For T24 (review timeline) and T25 (save: folder and zip). Source mockups: team/brand/quiet-prints/TL-desktop, TL-phone, EX-choose, EX-done (.dc.html). "Keepsake" is the working name until D15. {n}, {total}, {size} etc. are real values filled in by the app; numbers always use thousands separators (copy.ts `n()`). "new" = state not in the mockups yet. [CONFIRM: …] = developer to check before shipping. Status: draft, awaiting owner review on the dashboard. -->
+<!-- T22 · UX writer · 2026-10-19. For T24 (review timeline) and T25 (save: folder and zip). Source mockups: team/brand/quiet-prints/TL-desktop, TL-phone, EX-choose, EX-done (.dc.html). Name decided Nov 10 by the owner: Upsort (T94); every "Upsort" here was swapped for it. {n}, {total}, {size} etc. are real values filled in by the app; numbers always use thousands separators (copy.ts `n()`). "new" = state not in the mockups yet. [CONFIRM: …] = developer to check before shipping. Status: draft, awaiting owner review on the dashboard. -->
 
 ## Words we use on these screens
 
@@ -126,13 +126,13 @@ Not new: the filters, empty messages, "Not selected" note and Save button are th
 | Ledger | Your files · Not deleted, not sent anywhere | T76 | |
 | Note | We make new copies. Your recovery folder stays exactly as it was. | We save new copies. Your recovery folder stays exactly as it was. | |
 | Section h2 | Choose a folder | Save to a folder | The h2 and the button said the same thing twice. |
-| Body | Pick or make a folder, for example in Pictures. We'll add your photos to it and won't change anything already there. | Choose a folder or make a new one, for example in Pictures. We'll put a folder called Keepsake photos inside it. Anything already there stays as it is. | Matches the receipt ("Pictures › Keepsake photos"). |
+| Body | Pick or make a folder, for example in Pictures. We'll add your photos to it and won't change anything already there. | Choose a folder or make a new one, for example in Pictures. We'll put a folder called Upsort photos inside it. Anything already there stays as it is. | Matches the receipt ("Pictures › Upsort photos"). |
 | new line under body | (none) | Choose a place on this computer or on another drive. Don't save onto the memory card your photos came from. | Saving onto the source card could overwrite unrecovered files. |
 | Button | Choose a folder | keep | |
 | Browser note | In Safari and Firefox, your photos download as zip files instead: 9.8 GB comes as 5 files of under 2 GB each. | In Safari and Firefox, your photos and videos download as 5 zip files instead, each under 2 GB. | |
 | Example h2 | How your folder will look | keep | |
 | Example aria-label | Folder layout example | Example of how your folder will look | |
-| Example items | Keepsake photos / 2024 / 06 June / 2024-06-28 14.32.jpg / 2024-06-28 14.32 (2).jpg / No date | keep | "Keepsake photos" changes with the name (D15). |
+| Example items | Upsort photos / 2024 / 06 June / 2024-06-28 14.32.jpg / 2024-06-28 14.32 (2).jpg / No date | keep | "Upsort photos" follows the app name (copy.ts ROOT_FOLDER, T94). |
 | Caption | A folder for each year and month. Each photo is named by the date and time it was taken. | A folder for each year and month, and one called No date. Each file is named by the date and time it was taken. If two have the same time, the second gets (2) at the end. | |
 | **new** Back link | (none) | Back to review | |
 
@@ -142,16 +142,16 @@ Not new: the filters, empty messages, "Not selected" note and Save button are th
 |---|---|---|---|
 | **new** Safari/Firefox (zip) | Section h2 | Download as zip files | |
 | | Body | This browser can't save straight into a folder. So your 2,224 photos and videos come as 5 zip files, each under 2 GB. They go to your Downloads folder. Open each one to see your photos, sorted the same way. | |
-| | Tip | Your browser may ask if Keepsake can download several files. Choose Allow. | [CONFIRM: what Safari and Firefox show.] |
-| | Tip | To save straight into a folder, open Keepsake in Chrome or Edge. | |
+| | Tip | Your browser may ask if Upsort can download several files. Choose Allow. | [CONFIRM: what Safari and Firefox show.] |
+| | Tip | To save straight into a folder, open Upsort in Chrome or Edge. | |
 | | Button | Download 5 zip files | Singular: "Download zip file". |
 | **new** Folder picker cancelled | (none) | No message. Stay on this screen. | |
-| **new** Permission denied | Heading | Keepsake can't save to that folder. | |
+| **new** Permission denied | Heading | Upsort can't save to that folder. | |
 | | Body | Your browser didn't allow it, or the folder is protected. Nothing was saved there, and nothing was deleted. Try a folder in Pictures or Documents. | [CONFIRM: which folders Chrome and Edge block.] |
 | | Button | Choose a different folder | |
 | **new** Chose the recovery folder | Heading | That's your recovery folder. | |
-| | Body | To keep it exactly as it was, Keepsake won't save there. Please choose a different folder. | Only if the app can tell. [CONFIRM] |
-| **new** Keepsake photos folder exists | Note while saving | There's already a Keepsake photos folder here, so we're adding to it. Nothing in it is changed or replaced. If a name is already taken, the new copy gets (2) at the end. | Team decision: add to it, don't make "Keepsake photos (2)". |
+| | Body | To keep it exactly as it was, Upsort won't save there. Please choose a different folder. | Only if the app can tell. [CONFIRM] |
+| **new** Upsort photos folder exists | Note while saving | There's already an Upsort photos folder here, so we're adding to it. Nothing in it is changed or replaced. If a name is already taken, the new copy gets (2) at the end. | Team decision: add to it, don't make "Upsort photos (2)". |
 | **new** A file over 2 GB (zip) | Body | Any file over 2 GB, usually a long video, gets a zip file of its own. That zip will be over 2 GB too. | When shown, drop "each under 2 GB" from the zip body and browser note. |
 
 ## 5. Saving in progress (new)
@@ -167,7 +167,7 @@ Not new: the filters, empty messages, "Not selected" note and Save button are th
 | Button | Stop saving / Stopping… | |
 | Announcements | Saved {done} of 2,224. | Polite, about every 10%. |
 | Stopped: heading | Saving stopped. | |
-| Stopped: body | {done} of 2,224 photos and videos were saved to Keepsake photos. None of your files were deleted. You can save the rest any time. | [CONFIRM: "Save the rest" skips files already saved.] |
+| Stopped: body | {done} of 2,224 photos and videos were saved to Upsort photos. None of your files were deleted. You can save the rest any time. | [CONFIRM: "Save the rest" skips files already saved.] |
 | Stopped: buttons | Save the rest · Back to review | |
 
 ## 6. Saving problems (new)
@@ -175,16 +175,16 @@ Not new: the filters, empty messages, "Not selected" note and Save button are th
 | State | Location | Proposed |
 |---|---|---|
 | **Drive full** | Heading | The drive is full. (Zip: "Your Downloads drive is full.") |
-| | Body | We saved {done} of 2,224 photos and videos before it ran out of space. They're in Keepsake photos. None of your files were deleted, and your recovery folder is fine. Make some space, or choose a different drive, then try again. You need about {remainingSize} more. |
+| | Body | We saved {done} of 2,224 photos and videos before it ran out of space. They're in Upsort photos. None of your files were deleted, and your recovery folder is fine. Make some space, or choose a different drive, then try again. You need about {remainingSize} more. |
 | | Buttons | Save the rest · Choose a different folder |
 | **Stopped partway** | Heading | Saving stopped partway. |
-| | Body | We saved {done} of 2,224 photos and videos before something went wrong. They're in Keepsake photos. None of your files were deleted, and your recovery folder is fine. If you're saving to a USB drive, check that it's still plugged in, then try again. |
+| | Body | We saved {done} of 2,224 photos and videos before something went wrong. They're in Upsort photos. None of your files were deleted, and your recovery folder is fine. If you're saving to a USB drive, check that it's still plugged in, then try again. |
 | | Buttons | Save the rest · Choose a different folder |
-| **Permission lost mid-save** | Heading | Keepsake can't save to that folder anymore. |
+| **Permission lost mid-save** | Heading | Upsort can't save to that folder anymore. |
 | | Body | We saved {done} of 2,224 photos and videos. None of your files were deleted. Choose the folder again to save the rest. |
 | | Button | Choose the folder again |
 | **Zip download didn't start** | Body | Zip file {i} of 5 didn't download. Your photos are fine, and nothing was deleted. |
-| | Button | Download {zip file name} again, e.g. "Download Keepsake photos part 2.zip again" (T89, UX writer approved Nov 3) |
+| | Button | Download {zip file name} again, e.g. "Download Upsort photos part 2.zip again" (T89, UX writer approved Nov 3) |
 | **Some files couldn't be saved** (Done screen) | h1 | {saved} of your 2,224 photos and videos are saved. |
 | | Line | {failed} files couldn't be copied. They may be damaged. They're still in your recovery folder, so nothing is lost. |
 | | Receipt row / button | Couldn't save · {failed} / See which ones |
@@ -194,12 +194,12 @@ Not new: the filters, empty messages, "Not selected" note and Save button are th
 | Location | Current | Proposed | Why |
 |---|---|---|---|
 | h1 | Your 2,224 photos and videos are saved. | keep | |
-| Line | They're in Keepsake photos, sorted into a folder for each year and month. | keep | |
-| Button | Show me where they are | Remove. Line: "To see them, open {folder} › Keepsake photos in File Explorer (Windows) or Finder (Mac)." | A browser can't open the folder. |
-| Line | You can close Keepsake now. Nothing else needs doing. | You can close Keepsake now. There's nothing else to do. | |
+| Line | They're in Upsort photos, sorted into a folder for each year and month. | keep | |
+| Button | Show me where they are | Remove. Line: "To see them, open {folder} › Upsort photos in File Explorer (Windows) or Finder (Mac)." | A browser can't open the folder. |
+| Line | You can close Upsort now. Nothing else needs doing. | You can close Upsort now. There's nothing else to do. | |
 | **new** Tip | (none) | If you can, keep a second copy too, on a USB drive or a backup you already use. | |
 | Receipt | Your receipt / date / Saved / Couldn't save / Saved to / Sorted into / Recovery folder · Untouched / Your files | Last row: Your files · None deleted, none sent anywhere (T76; screen reader says the same words); same row in the saved receipt file | T58, D17: Save may remove an empty file it made itself; none of *your* files. Reworded by D18 (owner, Oct 22). |
-| Note | Keep this so you can find your photos later, even after closing Keepsake. | Save or print this so you can find your photos later. | |
+| Note | Keep this so you can find your photos later, even after closing Upsort. | Save or print this so you can find your photos later. | |
 | Button | Save this receipt | Save receipt | |
 | Button | Print | keep | |
 
@@ -208,9 +208,9 @@ Not new: the filters, empty messages, "Not selected" note and Save button are th
 | Location | Proposed |
 |---|---|
 | Line | They're in 5 zip files in your Downloads folder. Open each one to see your photos, sorted into a folder for each year and month. |
-| Location text | One zip: "In your Downloads folder, look for Keepsake photos.zip." An unbroken run of 3 or more: "In your Downloads folder, look for these 5 zip files: Keepsake photos part 1.zip to Keepsake photos part 5.zip." Any 2 names (developer choice, "to" read oddly for 2; **needs UX writer check**): "… look for these 2 zip files: Keepsake photos.zip and Keepsake photos part 2.zip." Three or more that aren't a run: "… look for these 3 zip files:" then the names, one per line. Built from the names of this save's zips. (T89, UX writer approved Nov 3) |
-| Zip file names | One zip in the save: Keepsake photos.zip. More than one, or any zip after the first while the page is open: Keepsake photos part N.zip, N counting on across the page (so a save after Stop never reuses a name). No "of N". (T89, UX writer approved Nov 3) |
-| Earlier zip note (T89, new, **needs UX writer check**) | After Stop, Back to review, then Save again, under the location text: "Keepsake photos.zip is from an earlier save that didn't finish. Everything in it is also in the zip file above." If it has files this save doesn't: "… It has some photos and videos that aren't in this save." Plural: "Keepsake photos part 1.zip and Keepsake photos part 2.zip are from … Everything in them …" / "They have some …" |
+| Location text | One zip: "In your Downloads folder, look for Upsort photos.zip." An unbroken run of 3 or more: "In your Downloads folder, look for these 5 zip files: Upsort photos part 1.zip to Upsort photos part 5.zip." Any 2 names (developer choice, "to" read oddly for 2; **needs UX writer check**): "… look for these 2 zip files: Upsort photos.zip and Upsort photos part 2.zip." Three or more that aren't a run: "… look for these 3 zip files:" then the names, one per line. Built from the names of this save's zips. (T89, UX writer approved Nov 3) |
+| Zip file names | One zip in the save: Upsort photos.zip. More than one, or any zip after the first while the page is open: Upsort photos part N.zip, N counting on across the page (so a save after Stop never reuses a name). No "of N". (T89, UX writer approved Nov 3) |
+| Earlier zip note (T89, new, **needs UX writer check**) | After Stop, Back to review, then Save again, under the location text: "Upsort photos.zip is from an earlier save that didn't finish. Everything in it is also in the zip file above." If it has files this save doesn't: "… It has some photos and videos that aren't in this save." Plural: "Upsort photos part 1.zip and Upsort photos part 2.zip are from … Everything in them …" / "They have some …" |
 | Receipt row | Saved to · Downloads, 5 zip files |
 
 ---
@@ -225,4 +225,4 @@ Decided Oct 19: 1, 2 and 3 (Screenshots dropped; location shown as text; filter 
 2. **"Show me where they are" / "Open my photos".** Browsers can't open a folder in File Explorer or Finder. Proposed: show the location as text (matches the T25 note).
 3. **Screenshots filter, and the phone layout.** Nothing in `src` detects screenshots, so drop that filter unless it's built. The phone mockup has no Select all / Unselect all, filters or set-aside card: on purpose?
 4. **Two copy.ts fixes** for T24/T25: `steps[4]` "Export" → "Save"; `results.undatedMore` "Undated" → "No date". On day rows, `aria-checked="mixed"` on a native checkbox does nothing; set `indeterminate` in code.
-5. **Behaviour the copy depends on:** (a) "Back to Clean up" keeps review selections; (b) "Save the rest" skips files already saved; (c) what happens if a "Keepsake photos" folder exists; (d) whether the app can tell the chosen folder is the recovery folder.
+5. **Behaviour the copy depends on:** (a) "Back to Clean up" keeps review selections; (b) "Save the rest" skips files already saved; (c) what happens if an "Upsort photos" folder exists; (d) whether the app can tell the chosen folder is the recovery folder.

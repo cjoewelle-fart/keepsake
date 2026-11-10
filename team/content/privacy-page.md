@@ -26,7 +26,7 @@ When we set files aside, they stay exactly where they were. "Set aside" only mea
 When you save your photos, [Name] makes new copies in a folder you choose. It never replaces a file that's already there. Your recovery folder stays as it was.
 
 If saving stops partway, [Name] removes the one empty file it had just started for that copy. It never removes anything that was there before, any copy it finished, or anything in your recovery folder.
-<!-- D17. Saving has shipped: writes only inside <chosen folder>/Keepsake photos, refuses the recovery folder, copies and never moves, never overwrites. Removes only its own 0-byte file when a copy fails or is stopped. -->
+<!-- D17. Saving has shipped: writes only inside <chosen folder>/Upsort photos, refuses the recovery folder, copies and never moves, never overwrites. Removes only its own 0-byte file when a copy fails or is stopped. -->
 
 ## Nothing is hidden
 

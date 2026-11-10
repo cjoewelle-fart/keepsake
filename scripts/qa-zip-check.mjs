@@ -142,8 +142,8 @@ try {
   if (dupNames.length) problems.push(`the app gave two downloads the same name: ${[...new Set(dupNames)].join(', ')} (all: ${app.zipNames.join(' | ')})`);
   if (app.saved !== app.selected) problems.push(`receipt says ${app.saved} saved, ${app.selected} were selected`);
   // T89 acceptance: the Done text and the "download again" buttons name the real downloads.
-  for (const n of app.zipNames) if (!app.find.includes(n) && !/\.zip to Keepsake/.test(app.find)) problems.push(`Done text doesn't name ${n}: ${app.find}`);
-  for (const m of app.find.matchAll(/Keepsake photos[^,.]*?\.zip/g)) if (!app.zipNames.includes(m[0])) problems.push(`Done text names ${m[0]}, which wasn't downloaded`);
+  for (const n of app.zipNames) if (!app.find.includes(n) && !/\.zip to Upsort/.test(app.find)) problems.push(`Done text doesn't name ${n}: ${app.find}`);
+  for (const m of app.find.matchAll(/Upsort photos[^,.]*?\.zip/g)) if (!app.zipNames.includes(m[0])) problems.push(`Done text names ${m[0]}, which wasn't downloaded`);
   const wantAgain = app.zipNames.map((n) => `Download ${n} again`);
   if (JSON.stringify(app.againButtons) !== JSON.stringify(wantAgain)) problems.push(`download-again buttons ${JSON.stringify(app.againButtons)} != ${JSON.stringify(wantAgain)}`);
 } catch (e) {

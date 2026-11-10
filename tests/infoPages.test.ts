@@ -17,7 +17,7 @@ describe('the small Markdown of the in-app pages', () => {
   it('makes GitHub-style heading ids', () => {
     expect(slug('Part 4A: Search with QPhotoRec (Windows)')).toBe('part-4a-search-with-qphotorec-windows');
     expect(slug('Part 4B: Search with the text version (Mac or Windows)')).toBe('part-4b-search-with-the-text-version-mac-or-windows');
-    expect(slug('What Keepsake stores')).toBe('what-keepsake-stores');
+    expect(slug('What Upsort stores')).toBe('what-upsort-stores');
   });
 
   it('keeps line breaks, nests lists and screenshots inside items, and continues numbering', () => {
@@ -103,7 +103,7 @@ describe('privacy page and PhotoRec guide (T67)', () => {
   it('guide ends PhotoRec’s part with Part 7, which points at the button under it (T83)', () => {
     const doc = parse(pages.guide);
     const heads = doc.filter((b): b is Extract<Block, { t: 'h' }> => b.t === 'h').map((h) => h.id);
-    expect(heads.indexOf('part-7-sort-your-photos-with-keepsake')).toBe(heads.indexOf('part-6-what-youll-see') + 1);
+    expect(heads.indexOf('part-7-sort-your-photos-with-upsort')).toBe(heads.indexOf('part-6-what-youll-see') + 1);
     expect(pages.guide).not.toContain('Now open');
     expect(pages.guide).toContain(`**${copy.info.guide.cta}** button at the bottom of this page`);
     expect(pages.guide).toContain(`Click **${copy.start.choose}**`);

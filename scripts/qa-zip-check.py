@@ -1,4 +1,4 @@
-"""Zip save check (T89): verifies the zip downloads Keepsake made against the recovery folder.
+"""Zip save check (T89): verifies the zip downloads Upsort made against the recovery folder.
 
 Run by scripts/qa-zip-check.mjs (with python3 -I); can also be run on its own:
   python3 -I scripts/qa-zip-check.py snapshot <recovery_dir> <snap.json>
@@ -20,8 +20,8 @@ from collections import Counter
 MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
 ILLEGAL = re.compile(r'[<>:"\\|?*\x00-\x1f\x7f]')
 RESERVED = re.compile(r"^(con|prn|aux|nul|com[1-9]|lpt[1-9])(\.|$)", re.I)
-DATED = re.compile(r"^Keepsake photos/(\d{4})/(\d{2}) ([A-Za-z]+)/(\d{4})-(\d{2})-(\d{2}) (\d{2})\.(\d{2})( \((\d+)\))?(\.[a-z0-9]{1,5})?$")
-NODATE = re.compile(r"^Keepsake photos/No date/[^/]+$")
+DATED = re.compile(r"^Upsort photos/(\d{4})/(\d{2}) ([A-Za-z]+)/(\d{4})-(\d{2})-(\d{2}) (\d{2})\.(\d{2})( \((\d+)\))?(\.[a-z0-9]{1,5})?$")
+NODATE = re.compile(r"^Upsort photos/No date/[^/]+$")
 # Windows MAX_PATH is 260 including the folder the zip is extracted into: leave ~100 for that.
 MAX_INNER_PATH = 160
 
@@ -138,8 +138,8 @@ def check(rec, snap_path, zip_dir, app_path, labels_path=None):
         parts = n.split("/")
         if n.startswith("/") or "\\" in n or any(p in ("", ".", "..") for p in parts):
             fails.append(f"unsafe path (traversal/absolute/empty part): {n!r}")
-        if parts[0] != "Keepsake photos":
-            fails.append(f"outside Keepsake photos/: {n!r}")
+        if parts[0] != "Upsort photos":
+            fails.append(f"outside Upsort photos/: {n!r}")
         for p in parts:
             if ILLEGAL.search(p) or RESERVED.match(p) or p != p.rstrip(" .") or p != p.strip():
                 fails.append(f"name not safe on Windows: {n!r} (part {p!r})")
@@ -153,7 +153,7 @@ def check(rec, snap_path, zip_dir, app_path, labels_path=None):
     if clashes:
         fails.append(f"{len(clashes)} paths clash case-insensitively, e.g. {clashes[:3]}")
 
-    # Layout: Keepsake photos/YYYY/MM Month/YYYY-MM-DD HH.MM[ (n)].ext, or No date/<name>.
+    # Layout: Upsort photos/YYYY/MM Month/YYYY-MM-DD HH.MM[ (n)].ext, or No date/<name>.
     months, years, nodate = Counter(), set(), 0
     exif_ok = exif_bad = exif_none_in_dated = nodate_with_exif = 0
     exif_bad_eg = []

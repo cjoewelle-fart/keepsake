@@ -35,7 +35,7 @@ describe('hosting headers (_headers)', () => {
   const text = headersFile(workers);
 
   it('send exactly the <meta> CSP on the page and the service worker', () => {
-    const meta = metaFor('<html><head><title>Keepsake</title></head></html>');
+    const meta = metaFor('<html><head><title>Upsort</title></head></html>');
     expect(meta).toEqual([CSP]);
     for (const path of CSP_PAGE_PATHS) expect(cspFromHeaders(text, path), path).toEqual(meta);
   });

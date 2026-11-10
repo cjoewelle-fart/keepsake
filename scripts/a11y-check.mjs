@@ -235,7 +235,7 @@ async function scanFolder(page, dir, viaKeyboard = false) {
  * same-page links must lead to a heading on it.
  */
 const INFO = [
-  { link: 'How Keepsake keeps your photos private', h1: /^Your privacy$/, screen: 'privacy page' },
+  { link: 'How Upsort keeps your photos private', h1: /^Your privacy$/, screen: 'privacy page' },
   { link: 'New to PhotoRec? Here’s how to recover your files', h1: /^Get your photos back/, screen: 'PhotoRec guide' },
 ];
 async function infoPages(page, run, { min = 24, severity = 'minor', criterion = '2.5.8, WCAG 2.2', keyboard = false } = {}) {

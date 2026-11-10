@@ -3,7 +3,7 @@
 // bytes) are in savePlan.ts and zip.ts, which are tested in Node.
 //
 // Safety rules this file keeps:
-// - It only ever writes inside "<chosen>/Keepsake photos". The recovery folder is never opened
+// - It only ever writes inside "<chosen>/Upsort photos". The recovery folder is never opened
 //   for writing (the scan's File objects are read-only), and the screen refuses a chosen folder
 //   that is the recovery folder or inside it.
 // - It never opens a file it didn't make: each copy is written under a temporary name of its own
@@ -69,7 +69,7 @@ export async function ensureWritable(dir: DirHandle): Promise<boolean> {
   }
 }
 
-/** Whether "Keepsake photos" is already in the chosen folder (it's added to, never replaced). */
+/** Whether "Upsort photos" is already in the chosen folder (it's added to, never replaced). */
 export async function hasRoot(chosen: DirHandle): Promise<boolean> {
   try {
     await chosen.getDirectoryHandle(copy.save.rootFolder);
@@ -222,7 +222,7 @@ export type FolderSession = {
   /** Names handed out so far, per folder, seeded from what was on disk. Kept for "Save the rest". */
   book: NameBook;
   dirs: Map<string, DirHandle>;
-  /** Where each saved file went (folders below "Keepsake photos"), for the receipt. */
+  /** Where each saved file went (folders below "Upsort photos"), for the receipt. */
   placed: Map<number, string[]>;
   /** Whether copies can be moved into place from a temporary name (learned on the first copy; false ends the save 'unsupported'). */
   canMove?: boolean;
@@ -241,7 +241,7 @@ async function dirFor(s: FolderSession, path: string[]): Promise<DirHandle> {
   return d;
 }
 
-/** Write new copies into "<chosen>/Keepsake photos/…", oldest first. */
+/** Write new copies into "<chosen>/Upsort photos/…", oldest first. */
 export async function saveToFolder(s: FolderSession, items: readonly { r: FileRecord; file: File }[], ev: RunEvents): Promise<RunEnd> {
   // A browser whose file handles have no move(): don't create anything (not even the folders).
   const FH = (globalThis as { FileSystemFileHandle?: { prototype?: { move?: unknown } } }).FileSystemFileHandle;

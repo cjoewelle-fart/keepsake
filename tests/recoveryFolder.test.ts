@@ -54,10 +54,10 @@ describe('save folder inside the recovery folder (with the recovery folder’s h
     expect(await inRecoveryFolder(root, dir(`${REC}/a/b/c/d/e/f/g`))).toBe(true);
   });
 
-  it('refuses when the recovery folder is inside "<chosen>/Keepsake photos", where copies go', async () => {
-    const root = dir('/home/me/Pictures/Keepsake photos/2019');
+  it('refuses when the recovery folder is inside "<chosen>/Upsort photos", where copies go', async () => {
+    const root = dir('/home/me/Pictures/Upsort photos/2019');
     expect(await inRecoveryFolder(root, dir('/home/me/Pictures'))).toBe(true);
-    const odd = dir('/home/me/Pictures/keepsake PHOTOS');
+    const odd = dir('/home/me/Pictures/upsort PHOTOS');
     expect(await inRecoveryFolder(odd, dir('/home/me/Pictures'))).toBe(true);
   });
 

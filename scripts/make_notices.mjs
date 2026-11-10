@@ -58,9 +58,9 @@ sections.push([
   read('licenses/zlib-LICENSE'),
 ].join('\n'));
 
-const out = `Keepsake: third-party notices
+const out = `Upsort: third-party notices
 
-Keepsake ships the following third-party software in the app. Each is listed with its version,
+Upsort ships the following third-party software in the app. Each is listed with its version,
 licence and full licence text. Nothing here is fetched at runtime.
 
 ${sections.join('\n\n\n')}

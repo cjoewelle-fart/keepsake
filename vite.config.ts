@@ -15,9 +15,9 @@ const TEST_BUILD = 'testbuild'
 const ARTIFACT_TEST = 'artifact-test'
 const isArtifact = (mode: string) => mode === 'artifact' || mode === ARTIFACT_TEST
 
-// The app's name in one place (a rename is pending): install name and home-screen label.
-const APP_NAME = 'Keepsake'
-const APP_SHORT_NAME = 'Keepsake'
+// The app's name in one place (Upsort, decided Nov 10; must match copy.appName and index.html): install name and home-screen label.
+const APP_NAME = 'Upsort'
+const APP_SHORT_NAME = 'Upsort'
 const THEME = '#23596B'
 const BACKGROUND = '#ECF1F0'
 

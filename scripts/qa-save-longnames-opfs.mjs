@@ -1,7 +1,7 @@
 // QA (T89 acceptance): folder save with long names, against Chromium's real File System Access API (OPFS).
 // Usage: LANG=C.UTF-8 node scripts/qa-save-longnames-opfs.mjs <chromiumPath>
 // (Under LANG=C/POSIX, Chromium on Linux rejects every non-ASCII OPFS name with TypeMismatchError.)
-// Seeds "Keepsake photos/No date" with files whose names equal (or differ only by case from) the names
+// Seeds "Upsort photos/No date" with files whose names equal (or differ only by case from) the names
 // the long sources are cut to, saves undated files with long names (ASCII, CJK, emoji, é, reserved, dots
 // and spaces at the cut, names equal after the cut), then checks: every pre-existing file is byte-for-byte
 // unchanged, every copy got its own name (case-insensitively), each name <= 150 UTF-8 bytes and 124 chars
@@ -34,7 +34,7 @@ try {
     const root = await navigator.storage.getDirectory();
     for await (const n of root.keys()) await root.removeEntry(n, { recursive: true });
     const chosen = await root.getDirectoryHandle('chosen', { create: true });
-    let nd = chosen; for (const p of ['Keepsake photos', 'No date']) nd = await nd.getDirectoryHandle(p, { create: true });
+    let nd = chosen; for (const p of ['Upsort photos', 'No date']) nd = await nd.getDirectoryHandle(p, { create: true });
     const put = async (dd, name, bytes) => { const fh = await dd.getFileHandle(name, { create: true }); const w = await fh.createWritable(); await w.write(bytes); await w.close(); };
     const x = 'x'.repeat(200);
     // What's there already: the cut name of x…A.jpg, a case variant of the cut é name, and its "(2)".
@@ -77,7 +77,7 @@ for (const n of names) {
   ok(!/[. ]$/.test(n) && !/^(con|prn|aux|nul|com[1-9]|lpt[1-9])(\.|$)/i.test(n) && !n.startsWith('.keepsake-partial-'), `unsafe or temp name: ${n}`);
   ok(n === n.normalize('NFC'), `not NFC: ${n}`);
 }
-ok(JSON.stringify(res.top) === JSON.stringify(['Keepsake photos']), `chosen folder top level: ${res.top}`);
+ok(JSON.stringify(res.top) === JSON.stringify(['Upsort photos']), `chosen folder top level: ${res.top}`);
 const mine = names.filter((n) => !(n in res.theirs)).map((n) => `${n.length}c ${enc.encode(n).length}b ${n.length > 40 ? `${n.slice(0, 12)}…${n.slice(-16)}` : n}`);
 console.log(mine.sort().join('\n'));
 console.log(JSON.stringify({ end: res.end, saved: res.saved, failed: res.failed, filesInNoDate: names.length, problems }, null, 1));

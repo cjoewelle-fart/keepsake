@@ -153,14 +153,14 @@ const lastFinished = {};
 for (const d of dones) {
   const mine = downloads.filter((z) => z.visit === d.visit && z.k <= d.downloadsSoFar);
   const mineNames = mine.map((z) => z.name);
-  const shown = new Set([...d.findText.matchAll(/Keepsake photos[^,:]*?\.zip/g)].map((m) => m[0]).concat(d.findList));
-  const range = / to Keepsake photos part/.test(d.findText);
+  const shown = new Set([...d.findText.matchAll(/Upsort photos[^,:]*?\.zip/g)].map((m) => m[0]).concat(d.findList));
+  const range = / to Upsort photos part/.test(d.findText);
   for (const n of mineNames) ok(shown.has(n) || range, `visit ${d.visit} Done doesn't name ${n}: ${d.findText} ${d.findList}`);
   for (const n of shown) ok(mineNames.includes(n), `visit ${d.visit} Done names ${n}, not a zip of this save`);
   ok(JSON.stringify(d.again) === JSON.stringify(mineNames.map((n) => `Download ${n} again`)), `visit ${d.visit} again buttons ${JSON.stringify(d.again)}`);
   const unfinished = downloads.filter((z) => z.scan === d.scan && z.visit > (lastFinished[d.scan] ?? 0) && z.visit < d.visit);
   const expectNames = unfinished.map((z) => z.name);
-  const noteNames = d.earlier ? [...d.earlier.matchAll(/Keepsake photos[^,]*?\.zip/g)].map((m) => m[0]) : [];
+  const noteNames = d.earlier ? [...d.earlier.matchAll(/Upsort photos[^,]*?\.zip/g)].map((m) => m[0]) : [];
   ok(JSON.stringify(noteNames) === JSON.stringify(expectNames), `visit ${d.visit} earlier note names ${JSON.stringify(noteNames)}, want ${JSON.stringify(expectNames)} (${d.earlier})`);
   if (d.earlier) queries.push({ d, now: mine.map((z) => z.file), old: unfinished.map((z) => z.file) });
   lastFinished[d.scan] = d.visit;

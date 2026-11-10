@@ -47,7 +47,7 @@ type InfoName = 'privacy' | 'guide';
 
 /** Files the operating system adds to folders; they're not part of the recovery. */
 const isOsClutter = (name: string) => name.startsWith('.') || /^(thumbs\.db|desktop\.ini)$/i.test(name);
-/** The title the page loaded with ("Keepsake", or "Keepsake (test)" in the test build). */
+/** The title the page loaded with ("Upsort", or "Upsort (test)" in the test build). */
 const APP_TITLE = (typeof document !== 'undefined' && document.title) || copy.appName;
 const pathOf = (f: File) => (f as File & { webkitRelativePath?: string }).webkitRelativePath || f.name;
 
@@ -311,7 +311,7 @@ function Start({ note, noteKey, onChoose, onSamples, onInfo }: { note?: string; 
         </div>
       </div>
       {/* Round 7: the one raised card below the hero. Panels 1 and 2 are a before and after, joined
-          by an arrow (Keepsake's own work); step 3 is the person's turn, so it has no arrow. */}
+          by an arrow (Upsort's own work); step 3 is the person's turn, so it has no arrow. */}
       <section className="how" aria-labelledby="how-h">
         <h2 id="how-h">{copy.start.how.h}</h2>
         <ol className="how-steps">
