@@ -659,6 +659,8 @@ export const copy = {
     filters: { all: 'All', photos: 'Photos', videos: 'Videos', unselected: 'Not selected', screenshots: 'Screenshots', chat: 'From chat apps' },
     /** The count in each filter chip, after its name (the chip's name is "Photos 120"). */
     filterCount: (x: number) => n(x),
+    /** m4: said after the number in each filter chip, not shown ("Screenshots 4 files"). */
+    filterCountUnit: (x: number) => ` ${plural(x, 'file', 'files')}`,
     /** T50/T59: under the filter chips while a filter other than All is on. Also said by the status line. */
     showing: (shown: number, total: number) => `Showing ${n(shown)} of ${n(total)}.`,
     showingAll: (total: number) => `Showing all ${n(total)}.`,

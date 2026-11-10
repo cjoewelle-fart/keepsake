@@ -131,9 +131,7 @@ export async function inspect(src: FileSource, index: number, rules: Rules = DEF
   }
   const dims = typeof size === 'object' ? size : undefined;
   const { exposure, ...details } = meta;
-  // T50/T59: a hint for the review filters only, from bytes already read; never changes the group.
-  const hint = lookOf({ kind, ...dims, ...details, exposure, signs: metaSigns(kind, head) });
-  const rec: FileRecord = { ...base, kind, ...dims, ...details, ...(hint ? { look: hint.look, lookSign: hint.sign } : {}), group: 'keep', reason: 'photo' };
+  const rec: FileRecord = { ...base, kind, ...dims, ...details, group: 'keep', reason: 'photo' };
 
   // Real photos carry camera details or a date taken; previews and icons made by apps almost never do.
   // So a small image with either is kept (an old phone's 320x240 photo is still a memory).
@@ -143,7 +141,11 @@ export async function inspect(src: FileSource, index: number, rules: Rules = DEF
     if (dims && Math.min(dims.width, dims.height) < rules.minShortSide) return { ...rec, group: 'small', reason: 'low-resolution' };
     if (!dims && src.size < rules.smallBytes) return { ...rec, group: 'small', reason: 'tiny-file' };
   }
-  return rec;
+  // T50/T59: a hint for the review filters only, from bytes already read; never changes the group.
+  // Only files that stay in Keep get one (M2): a set-aside file kept by hand isn't a screenshot
+  // or a chat photo just because it was set aside. Copies lose theirs in markCopies.
+  const hint = lookOf({ kind, ...dims, ...details, exposure, signs: metaSigns(kind, head) });
+  return hint ? { ...rec, look: hint.look, lookSign: hint.sign } : rec;
 }
 
 const hex = (buf: ArrayBuffer) => Array.from(new Uint8Array(buf), (x) => x.toString(16).padStart(2, '0')).join('');
@@ -328,6 +330,8 @@ export async function markCopies(
         r.group = 'duplicate';
         r.reason = 'copy';
         r.copyOf = keeper.index;
+        delete r.look; // M2: hints are for files in Keep only
+        delete r.lookSign;
       }
     }
   }

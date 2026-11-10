@@ -164,6 +164,9 @@ export function isScreenSize(w: number, h: number): boolean {
  */
 export const CHAT_LONG_SIDES: ReadonlySet<number> = new Set([1280, 1600, 2048]);
 
+/** The longest side the JFIF-with-no-Exif sign counts at: no chat app sends anything bigger. */
+export const CHAT_JFIF_MAX_LONG = 2560;
+
 export const isChatSize = (w: number, h: number) => CHAT_LONG_SIDES.has(Math.max(w, h));
 
 // ---------------------------------------------------------------------------------------------
@@ -198,6 +201,11 @@ export function lookOf(p: LookInput): { look: Look; sign: LookSign } | undefined
   // JPEG: chat apps take away the camera details and the date taken.
   if (p.takenAt) return undefined;
   if (sized && isChatSize(p.width!, p.height!)) return { look: 'chat', sign: 'chat-size' };
-  if (p.signs.jfif && !p.signs.exif) return { look: 'chat', sign: 'jfif-no-exif' };
+  // JFIF with no Exif block also fits a camera photo whose details were stripped by an editor or
+  // an upload, so it only counts at the sizes chat apps send (long side up to 2560, which covers
+  // WhatsApp HD at 2560 and every standard-quality size). A size we couldn't read gets no hint.
+  if (p.signs.jfif && !p.signs.exif && sized && Math.max(p.width!, p.height!) <= CHAT_JFIF_MAX_LONG) {
+    return { look: 'chat', sign: 'jfif-no-exif' };
+  }
   return undefined;
 }

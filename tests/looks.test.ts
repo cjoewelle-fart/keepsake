@@ -5,7 +5,7 @@ import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import { hasScreenshotWord, isChatSize, isScreenSize, lookOf, metaSigns } from '../src/engine/looks';
 import type { LookInput, MetaSigns } from '../src/engine/looks';
-import { inspect } from '../src/engine/scan';
+import { inspect, scanAll } from '../src/engine/scan';
 import type { FileSource } from '../src/engine/types';
 import { fsSource } from './fs-source';
 
@@ -79,10 +79,22 @@ describe('lookOf', () => {
     expect(look({ kind: 'jpeg', width: 1536, height: 2048 })).toBe('chat');
     expect(look({ kind: 'jpeg', width: 1280, height: 720 })).toBe('chat');
   });
-  it('calls a JPEG with JFIF and no Exif block at all "from a chat app", whatever its size', () => {
+  it('calls a JPEG with JFIF and no Exif block at all "from a chat app" at chat app sizes', () => {
     expect(lookOf({ kind: 'jpeg', width: 960, height: 720, signs: { ...none, jfif: true } })).toEqual({ look: 'chat', sign: 'jfif-no-exif' });
+    // WhatsApp-style 1600 long side, either way round, and the 2560 edge.
+    expect(lookOf({ kind: 'jpeg', width: 1200, height: 1600, signs: { ...none, jfif: true } })).toEqual({ look: 'chat', sign: 'chat-size' });
+    expect(lookOf({ kind: 'jpeg', width: 1600, height: 1066, signs: { ...none, jfif: true } })).toEqual({ look: 'chat', sign: 'chat-size' });
+    expect(lookOf({ kind: 'jpeg', width: 1599, height: 1066, signs: { ...none, jfif: true } })).toEqual({ look: 'chat', sign: 'jfif-no-exif' });
+    expect(look({ kind: 'jpeg', width: 2560, height: 1920, signs: { ...none, jfif: true } })).toBe('chat');
     expect(look({ kind: 'jpeg', width: 1500, height: 1000, signs: { ...none, jfif: true, exif: true } })).toBeUndefined();
     expect(look({ kind: 'jpeg', width: 1500, height: 1000 })).toBeUndefined(); // no JFIF either: no sign
+  });
+  it('M1: leaves camera-sized JFIF photos with their details stripped alone', () => {
+    expect(look({ kind: 'jpeg', width: 4000, height: 3000, signs: { ...none, jfif: true } })).toBeUndefined();
+    expect(look({ kind: 'jpeg', width: 3264, height: 2448, signs: { ...none, jfif: true } })).toBeUndefined();
+    expect(look({ kind: 'jpeg', width: 2448, height: 3264, signs: { ...none, jfif: true } })).toBeUndefined();
+    expect(look({ kind: 'jpeg', width: 2561, height: 1920, signs: { ...none, jfif: true } })).toBeUndefined();
+    expect(look({ kind: 'jpeg', signs: { ...none, jfif: true } })).toBeUndefined(); // size unknown
   });
   it('leaves camera photos alone, even at a chat size', () => {
     expect(look({ kind: 'jpeg', width: 1600, height: 1200, camera: 'samsung SM-A525F', signs: { ...none, exif: true } })).toBeUndefined();
@@ -140,6 +152,32 @@ describe('inspect gives the hint, and never changes the group (tests/looks, made
       expect(r).not.toHaveProperty('exposure');
     });
   }
+  // QA M2: only files that stay in Keep carry a hint, so keeping a set-aside group by hand
+  // doesn't swell the chip counts. Groups and reasons are unchanged.
+  const mem = (path: string, data: Uint8Array): FileSource => ({ path, size: data.length, read: async (s, e) => data.slice(s, e) });
+  const resized = (data: Uint8Array, w: number, h: number) => {
+    const out = data.slice();
+    for (let at = 2; at + 9 < out.length;) {
+      if (out[at] !== 0xff) break;
+      const m = out[at + 1];
+      if (m >= 0xc0 && m <= 0xc3) { out.set([h >> 8, h & 255, w >> 8, w & 255], at + 5); return out; }
+      at += 2 + ((out[at + 2] << 8) | out[at + 3]);
+    }
+    throw new Error('no SOF');
+  };
+  it('M2: a small preview with the chat sign gets no hint (still set aside as before)', async () => {
+    const small = resized(new Uint8Array(readFileSync(join(dir, 'messenger.jpg'))), 200, 150);
+    const r = await inspect(mem('recup_dir.1/f0000001.jpg', small), 0);
+    expect([r.group, r.reason, r.width]).toEqual(['small', 'low-resolution', 200]);
+    expect(r).not.toHaveProperty('look');
+    expect(r).not.toHaveProperty('lookSign');
+  });
+  it('M2: a copy loses its hint; the copy it matches keeps it', async () => {
+    const data = new Uint8Array(readFileSync(join(dir, 'messenger.jpg')));
+    const rs = (await scanAll([mem('recup_dir.1/f0000001.jpg', data), mem('recup_dir.1/f0000002.jpg', data.slice())]))!;
+    expect(rs.map((r) => [r.group, r.reason, r.look])).toEqual([['keep', 'photo', 'chat'], ['duplicate', 'copy', undefined]]);
+    expect(rs[1]).not.toHaveProperty('lookSign');
+  });
   it('a screenshot keeps its date taken', async () => {
     expect((await inspect(sample('ios-screenshot.png'), 0)).takenAt).toBe('2023-05-06T07:08:09');
   });

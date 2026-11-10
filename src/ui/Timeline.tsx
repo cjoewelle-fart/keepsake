@@ -362,7 +362,7 @@ export function Timeline({ records, files, movedBack, setAside, selection: sel, 
           <div className="tl-filter tl-filter-show" role="group" aria-label={t.filterLabel}>
             {FILTERS.filter((f) => !HINT_FILTERS.has(f) || counts[f] > 0 || filter === f).map((f) => (
               <button key={f} type="button" className="chip chip-sm" aria-pressed={filter === f} onClick={() => chooseFilter(f)}>
-                {t.filters[f]} <span className="chip-n">{t.filterCount(counts[f])}</span>
+                {t.filters[f]} <span className="chip-n">{t.filterCount(counts[f])}</span><span className="sr-only">{t.filterCountUnit(counts[f])}</span>
               </button>
             ))}
           </div>

@@ -1,3 +1,5 @@
+import { readFileSync } from 'node:fs';
+import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
 import type { SetAsideGroup } from '../src/engine/summary';
 import { summarize } from '../src/engine/summary';
@@ -91,6 +93,30 @@ describe('screenshot and chat-app filters (T50, T59)', () => {
     expect(selectedIds(files, sel)).toHaveLength(4);
   });
 
+  // QA: the active filter never changes what is saved. There's no DOM test setup in this repo, so
+  // this drives the same pure functions Timeline.tsx uses: the view comes from buildTimeline /
+  // largestFirst with the filter, and Save hands over selectedIds(kept, sel), which has no filter.
+  it('with Screenshots or From chat apps on, Save gets every selected kept file, shown or not', () => {
+    const allOrder = buildTimeline(files).months.flatMap((m) => m.ids);
+    for (const filter of ['screenshots', 'chat'] as const) {
+      const sel = new Selection(i);
+      const shown = buildTimeline(files, filter).months.flatMap((m) => m.ids);
+      expect(shown.length).toBeGreaterThan(0);
+      expect(shown.length).toBeLessThan(files.length); // some kept files are hidden by the filter
+      expect(selectedIds(files, sel)).toEqual(allOrder); // nothing ticked off: all of them, hidden ones too
+      expect(largestFirst(files, filter)).toEqual(shown); // the other order shows the same files
+      sel.set([shown[0]], false); // untick one in the filtered view
+      const saved = selectedIds(files, sel);
+      expect(saved).toEqual(allOrder.filter((id) => id !== shown[0]));
+      expect(saved).toEqual(files.map((r) => r.index).filter((id) => sel.has(id)).sort((a, b) => allOrder.indexOf(a) - allOrder.indexOf(b)));
+    }
+  });
+  it('Timeline.tsx saves selectedIds(kept, sel), never the filtered view', () => {
+    const src = readFileSync(join(__dirname, '../src/ui/Timeline.tsx'), 'utf8');
+    const calls = src.match(/onSave\(([^)]*\)?)\)/g) ?? [];
+    expect(calls).toEqual(['onSave(selectedIds(kept, sel))']);
+  });
+
   it('count every filter for the chips; Not selected follows ticks as they happen', () => {
     const sel = new Selection(i);
     expect(filterCounts(files, sel)).toEqual({ all: 4, photos: 3, videos: 1, unselected: 0, screenshots: 1, chat: 1 });
@@ -104,6 +130,8 @@ describe('screenshot and chat-app filters (T50, T59)', () => {
     expect(t.filters.chat).toBe('From chat apps');
     expect(t.filters.screenshots).toBe('Screenshots');
     expect(t.showing(4, 1234)).toBe('Showing 4 of 1,234.');
+    expect(t.filterCountUnit(1)).toBe(' file'); // m4: read after the chip's number, not shown
+    expect(t.filterCountUnit(4)).toBe(' files');
     expect(t.filterOnlyShows).toMatch(/only changes what you see/);
     expect(t.filterOnlyShows).toMatch(/Nothing is unselected or deleted/);
     for (const words of [t.filters.chat, t.lookNote.chat]) expect(words).not.toMatch(/junk|spam|clutter|low.quality|remove/i);

@@ -334,7 +334,7 @@ async function run(browser) {
   // T50 and T59: the Screenshots and From chat apps filters (key: 4 screenshots, 16 photos saved
   // from Messenger). They only show files: nothing is unticked or set aside by choosing one.
   const chipTexts = (await page.locator('.tl-filter[aria-label="Show only"] .chip').allInnerTexts()).map(flat);
-  check(chipTexts.join('|') === 'All 214|Photos 208|Videos 6|Not selected 0|Screenshots 4|From chat apps 16', `T50/T59 filter chips with counts: ${chipTexts.join(', ')}`);
+  check(chipTexts.join('|') === 'All 214 files|Photos 208 files|Videos 6 files|Not selected 0 files|Screenshots 4 files|From chat apps 16 files', `T50/T59 filter chips with counts: ${chipTexts.join(', ')}`);
   const filterState = () => page.evaluate(() => ({
     pressed: [...document.querySelectorAll('.tl-filter-show .chip[aria-pressed=true]')].map((c) => c.textContent.replace(/\s+/g, ' ')),
     tiles: document.querySelectorAll('.tl-tile').length,
@@ -348,8 +348,11 @@ async function run(browser) {
   for (const [name, count, word] of [['Screenshots', 4, /look like screenshots/], ['From chat apps', 16, /chat apps.*family photos worth keeping/]]) {
     await page.locator('.tl-filter .chip', { hasText: name }).click();
     await page.waitForFunction((c) => document.querySelector('main [role=status]')?.textContent?.startsWith(`Showing ${c} of`), count, { timeout: 2000 }).catch(() => {});
+    // QA m3: tiles are drawn lazily, so wait for them too before counting.
+    await page.waitForFunction((c) => document.querySelectorAll('.tl-tile').length === c, count, { timeout: 3000 }).catch(() => {});
     const f = await filterState();
-    check(f.pressed.join() === `${name} ${count}` && f.focus === `${name} ${count}` && f.tiles === count && f.ticked === count,
+    // m4: each chip's number is followed by a visually hidden " files".
+    check(f.pressed.join() === `${name} ${count} files` && f.focus === `${name} ${count} files` && f.tiles === count && f.ticked === count,
       `T50/T59 ${name}: pressed "${f.pressed.join()}", focus stays on it, ${f.tiles} tiles shown, ${f.ticked} still ticked (key ${count})`);
     check(f.status === `Showing ${count} of 214.` && /^Showing \d+ of 214\. A filter only changes what you see\. Nothing is unselected or deleted\./.test(f.showing) && word.test(f.note),
       `T50/T59 ${name}: said "${f.status}"; shown "${f.showing.slice(0, 90)}…"`);
