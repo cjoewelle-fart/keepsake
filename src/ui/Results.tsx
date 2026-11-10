@@ -106,7 +106,7 @@ export function Results({ records, files, movedBack, countUp = false, onToggleGr
           <h1 id="found-h" tabIndex={-1}>
             {r.titleBefore}
             <CountUp value={s.keep} animate={countUp} />
-            {r.titleAfter(s.keep)}
+            {r.titleAfter(s.keep, s.others === 0)}
           </h1>
         ) : (
           <>

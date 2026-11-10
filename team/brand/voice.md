@@ -33,9 +33,9 @@ Use: photos, files, copies, folder, your computer, set aside, keep, save, safe, 
 
 ## Key moments
 
-- Start: "Let's find the photos in your recovered files." / "Choose the folder your recovery program made. [Name] reads it on this computer and never changes it."
+- Start: "Recovered photos, sorted by date." / "Seeing lots of files with strange names? That’s normal after a recovery."
 - Scanning: "Checked {n} of {total} files. This is all happening on your computer. You can stop any time, and nothing will be changed."
-- Results: "We found {n} photos and videos worth keeping." / "They're sorted by the date each one was taken."
+- Results: "We found {n} photos and videos." / "They're sorted by the date each one was taken."
 - Nothing deleted: "We set aside {n} files that look like leftovers from the recovery. Nothing was deleted. Your recovery folder is exactly as it was, and you can keep any of these."
 - Export done: "Your {n} photos and videos are saved." / "They're in [folder name], sorted into a folder for each year and month. Your recovery folder hasn't been touched." Button: "Open my photos". (Check against the real export layout.)
 - Error: "We couldn't open that folder." / "Your files are fine. Nothing was changed. If the folder is on a memory card or USB drive, check that it's still plugged in, then try again." Button: "Choose the folder again".

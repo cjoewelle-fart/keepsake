@@ -107,7 +107,7 @@ async function run(browser) {
     oldNote: await page.getByText(/Keepsake runs in your browser|never leave this computer/).count(),
   });
   const st0 = await startScreen();
-  check(st0.h1 === 'Find your photos, sort them by date.', `Warmth start title: "${st0.h1}"`);
+  check(st0.h1 === 'Recovered photos, sorted by date.', `Warmth start title: "${st0.h1}"`);
   const steps = await page.evaluate(() => ({
     names: [...document.querySelectorAll('ol.steps li')].map((li) => li.textContent),
     current: document.querySelector('ol.steps [aria-current=step]')?.textContent,
@@ -121,7 +121,7 @@ async function run(browser) {
   check(st0.faqH === 'Good to know' && st0.faq.join(' | ') === 'Do you see my photos? | Do I need an account? | Will it change my files?' && st0.oldNote === 0,
     `T83 start Q&A: "${st0.faqH}": ${st0.faq.join(' | ')}; old privacy lines left: ${st0.oldNote}`);
   // Round 6: How it works, three numbered steps (the number is decorative; the list gives the order).
-  check(st0.howH === 'How it works' && st0.how.join(' | ') === 'Your files come back jumbled | We sort them by date | You choose what to keep',
+  check(st0.howH === 'How it works' && st0.how.join(' | ') === 'Files come back unsorted | We sort them by date | You choose what to keep',
     `Round 6 How it works: "${st0.howH}": ${st0.how.join(' | ')}`);
 
   // Copy the pilot folder into OPFS: Desktop/<pilot folder>, plus an empty Desktop/Pictures to save into.
@@ -187,7 +187,7 @@ async function run(browser) {
   await page.waitForTimeout(800); // let previews decode
   await page.screenshot({ path: `${out}/1-results.png`, fullPage: true });
   const h1 = await h1Text(page);
-  check(h1 === 'We found 214 photos and videos worth keeping.', `G1 title: "${h1}"`);
+  check(h1 === 'We found 214 photos and videos.', `G1 title: "${h1}"`);
   const led = (await page.locator('dl.ledger dd').allInnerTexts()).map(flat);
   check(num(led[0]) === 523 && num(led[1]) === 214 && num(led[2]) === 309, `G1 ledger: checked ${led[0]}, kept ${led[1]}, set aside ${led[2]} (key 523/214/309)`);
   // Warmth: the promise is one note under the ledger (no ledger row, no separate paragraph).
@@ -292,7 +292,7 @@ async function run(browser) {
   check(after.tinted.join('|') === 'Kept, sorted by date|Set aside, kept safe below', `T77 changed ledger rows tinted: ${after.tinted.join(', ')}`);
   const h3 = await h1Text(page);
   const led3 = (await page.locator('dl.ledger dd').allInnerTexts()).map(num);
-  check(h3 === 'We found 418 photos and videos worth keeping.' && led3[1] === 418 && led3[2] === 105, `T3 after Keep these files: "${h3}", ledger kept ${led3[1]}, set aside ${led3[2]} (key 418/105)`);
+  check(h3 === 'We found 418 photos and videos.' && led3[1] === 418 && led3[2] === 105, `T3 after Keep these files: "${h3}", ledger kept ${led3[1]}, set aside ${led3[2]} (key 418/105)`);
   const status = page.locator('main [role=status]');
   await status.filter({ hasText: /^Now keeping/ }).waitFor({ timeout: 2000 }).catch(() => {});
   const said = await status.innerText();
@@ -316,7 +316,7 @@ async function run(browser) {
   await page.getByRole('button', { name: 'Set these aside again' }).click();
   const hu = await h1Text(page);
   const liveBack = await page.locator('main h1 .count-live').innerText();
-  check(hu === 'We found 214 photos and videos worth keeping.' && liveBack === '214', `T3 undo: "${hu}" (no count-up after coming back: shows ${liveBack})`);
+  check(hu === 'We found 214 photos and videos.' && liveBack === '214', `T3 undo: "${hu}" (no count-up after coming back: shows ${liveBack})`);
 
   // T4 + G2 in the review timeline.
   await page.getByRole('button', { name: /^Review my/ }).click();
@@ -590,7 +590,7 @@ async function run(browser) {
   const againNote = flat(await page.locator('#start-over-note').innerText());
   check(await again.isVisible() && againNote === 'Your saved photos stay where they are. This receipt will close, so save or print it first.', `T83 done screen: Sort another folder, "${againNote}"`);
   await again.click();
-  await page.getByRole('heading', { level: 1, name: /Find your photos/ }).waitFor();
+  await page.getByRole('heading', { level: 1, name: /Recovered photos/ }).waitFor();
   await page.waitForTimeout(300);
   const st1 = await startScreen();
   const afterOver = await page.evaluate(() => ({
@@ -607,7 +607,7 @@ async function run(browser) {
   await page.getByRole('button', { name: 'Choose recovery folder' }).click();
   await page.getByText('Files checked').waitFor({ timeout: 120_000 });
   const h1b = await h1Text(page);
-  check(h1b === 'We found 214 photos and videos worth keeping.', `T83 second scan after start over: "${h1b}"`);
+  check(h1b === 'We found 214 photos and videos.', `T83 second scan after start over: "${h1b}"`);
   await ctx.close();
 }
 

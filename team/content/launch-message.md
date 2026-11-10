@@ -5,7 +5,7 @@
 **For the team (not for users)**
 - **Source:** owner decision D34 (Nov 9). The launch message leads with "made for recovered files". Many other tools now promise private, offline and never deletes, so those come after it as reassurance, not as the lead.
 - **Name:** not final. The name test (T44) runs by Nov 15. "Keepsake" below is a placeholder. Swap every "Keepsake" once the name is chosen (T94).
-- **Scope:** this is for the launch page and store listings only. **The app's start screen doesn't change** ("Find your photos, sort them by date.").
+- **Scope:** this is for the launch page and store listings only. The app's start screen now reads "Recovered photos, sorted by date." (owner request, Nov 10), in line with the primary line below.
 - **Words:** we say "recovery program" to match the app. The owner's sentence says "recovery tool", and we keep that as written.
 - **Not yet public.** Publishing any of this is the owner's call. The privacy and no-delete lines are waiting for the owner's OK (D35).
 

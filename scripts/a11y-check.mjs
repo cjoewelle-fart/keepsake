@@ -277,7 +277,7 @@ async function infoPages(page, run, { min = 24, severity = 'minor', criterion = 
     if (/guide/.test(screen)) check((await cta.count()) === 1, 'serious', run, screen, 'guide ends with "Sort my recovered files"');
     const back = /guide/.test(screen) ? cta : page.getByRole('button', { name: 'Back to start' }).last();
     if (keyboard) { await back.focus(); await page.keyboard.press('Enter'); } else await back.click();
-    await h1(page, /Find your photos/).waitFor({ timeout: 5000 });
+    await h1(page, /Recovered photos/).waitFor({ timeout: 5000 });
     await focusOnHeading(page, run, `start (back from the ${screen})`);
   }
 }
@@ -444,7 +444,7 @@ async function desktop(browser) {
   await targets(page, run, 'done', 24, 'minor', '2.5.8, WCAG 2.2');
   // T83: "Sort another folder" goes back to the start screen.
   await page.getByRole('button', { name: 'Sort another folder' }).click();
-  await h1(page, /Find your photos/).waitFor({ timeout: 5000 });
+  await h1(page, /Recovered photos/).waitFor({ timeout: 5000 });
   await focusOnHeading(page, run, 'start (after Sort another folder)');
   await axe(page, run, 'start (after Sort another folder)');
   await page.context().close();

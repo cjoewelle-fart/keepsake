@@ -410,12 +410,13 @@ export const copy = {
     // Warmth (Nov 6, UX writer option A): one plain sentence that doesn't promise a result.
     // Round 4 (Nov 7): one h1, the prints between its two parts (one line on desktop). Round 6: the
     // comma is shown, so screen readers hear titleA + titleJoin + titleB exactly as the line reads
-    // ("Find your photos, sort them by date.").
-    titleA: 'Find your photos,',
+    // ("Recovered photos, sorted by date.").
+    // Nov 10: owner asked for a more human start (UX writer).
+    titleA: 'Recovered photos,',
     titleJoin: ' ',
-    titleB: 'sort them by date.',
+    titleB: 'sorted by date.',
     /** Round 6: How it works now covers the year and month folders, so the lede is short. */
-    body: 'Start with the folder your recovery program made.',
+    body: 'Seeing lots of files with strange names? That’s normal after a recovery. Start with the folder your recovery program made.',
     choose: 'Choose recovery folder',
     /** Small text under the button, first in the help group. */
     hint: 'Look for the one that holds recup_dir.1, recup_dir.2 and so on.',
@@ -439,8 +440,8 @@ export const copy = {
       after: 'After',
       steps: [
         {
-          title: 'Your files come back jumbled',
-          body: 'Your recovery program puts them in numbered folders with names like f0123456.jpg, mixed in with app images and copies.',
+          title: 'Files come back unsorted',
+          body: 'Your recovery program brings back files, but not their names or folders. Photos end up mixed in with app images and copies, with names like f0123456.jpg.',
           panel: ['recup_dir.1/', 'f0123456.jpg', 'f0123457.jpg', 'f0124410.jpg'],
         },
         {
@@ -523,20 +524,14 @@ export const copy = {
       x === 0
         ? 'You’re keeping all of these files. You can set any group aside again.'
         : `We set aside ${n(x)} ${plural(x, 'file that looks', 'files that look')} like leftovers from the recovery. You can keep any of these.`,
+    /** The results h1: "We found 214 photos and videos." `mediaOnly` is false once a kept group adds other files (same test as `review`). */
+    titleBefore: 'We found ',
+    titleAfter: (keep: number, mediaOnly = true) =>
+      mediaOnly ? ` ${plural(keep, 'photo or video', 'photos and videos')}.` : ` ${plural(keep, 'file', 'files')} to look through.`,
     // Not shown since the Quiet Prints layout (T38); kept for the UX writer.
     eyebrow: (total: number) => `Scan finished · ${n(total)} files checked`,
-    titleBefore: 'We found ',
-    titleAfter: (keep: number) => ` ${plural(keep, 'photo or video', 'photos and videos')} worth keeping.`,
-    body: (setAside: number) =>
-      setAside === 0
-        ? 'Everything here looks worth keeping.'
-        : `The other ${n(setAside)} ${plural(setAside, 'file looks', 'files look')} like leftovers from the recovery. We’ve set them aside so you don’t have to dig through them. Nothing has been deleted.`,
     keepingLegend: (x: number) => `Keeping ${n(x)}`,
     asideLegend: (x: number) => `Set aside ${n(x)}`,
-    ratio: (total: number, keep: number) => {
-      const every = Math.round(total / Math.max(1, keep));
-      return every < 2 ? 'Most of these files are worth keeping.' : `About 1 in every ${n(every)} files is worth keeping.`;
-    },
     readyTitle: 'Ready to review',
     readySub: 'Sorted by the date each photo was taken.',
     photos: 'Photos',

@@ -79,7 +79,7 @@ describe('the start screen shows the real save naming (round 6)', () => {
       for (const line of panel) expect(line.length).toBeLessThanOrEqual(20);
     }
     // Screen readers hear the line as it is shown.
-    expect(copy.start.titleA + copy.start.titleJoin + copy.start.titleB).toBe('Find your photos, sort them by date.');
+    expect(copy.start.titleA + copy.start.titleJoin + copy.start.titleB).toBe('Recovered photos, sorted by date.');
   });
 });
 

@@ -579,7 +579,7 @@ progress::-moz-progress-bar { background: var(--accent); border-radius: 999px; }
 .hero-grain { position: absolute; inset: calc(-24 * var(--u)); z-index: -1; pointer-events: none; -webkit-mask-image: radial-gradient(farthest-side at 50% 50%, #000 35%, transparent 100%); mask-image: radial-gradient(farthest-side at 50% 50%, #000 35%, transparent 100%); }
 .hero-grain::before { content: ''; position: absolute; inset: 0; background: url('../assets/grain.png') repeat; background-size: 256px 256px; opacity: 0.04; }
 @media (min-width: 960px) {
-  /* One line, "Find your photos, [fan] sort them by date.", centred, the words centred on the prints.
+  /* One line, "Recovered photos, [fan] sorted by date.", centred, the words centred on the prints.
      Sizes are measured on the start screen's own content width (cqw: no page padding, no scrollbar).
      --u is one px of the drawing: 1px from an 1100px row up, easing to 0.8px at the 897px row (960
      window). The type fills what the fan leaves: the two parts are about 14.6em in Bricolage plus two

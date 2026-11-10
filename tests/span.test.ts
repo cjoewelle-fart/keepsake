@@ -47,3 +47,16 @@ describe('span: days and years covered', () => {
     expect(copy.results.sortedLine()).toBe('They’re sorted by the date each one was taken.');
   });
 });
+
+describe('results title (Nov 10): says what was found, no "worth keeping"', () => {
+  const title = (keep: number, mediaOnly?: boolean) => copy.results.titleBefore + keep + copy.results.titleAfter(keep, mediaOnly);
+  it('names photos and videos when only those are kept (the default)', () => {
+    expect(title(214)).toBe('We found 214 photos and videos.');
+    expect(title(214, true)).toBe('We found 214 photos and videos.');
+    expect(title(1, true)).toBe('We found 1 photo or video.');
+  });
+  it('says files to look through once other files are kept', () => {
+    expect(title(418, false)).toBe('We found 418 files to look through.');
+    expect(title(1, false)).toBe('We found 1 file to look through.');
+  });
+});
