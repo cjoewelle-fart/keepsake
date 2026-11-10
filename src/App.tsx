@@ -315,13 +315,13 @@ function Start({ note, noteKey, onChoose, onSamples, onInfo }: { note?: string; 
       <section className="how" aria-labelledby="how-h">
         <h2 id="how-h">{copy.start.how.h}</h2>
         <ol className="how-steps">
-          {copy.start.how.steps.map(({ title, body, panel }, i) => (
+          {copy.start.how.steps.map(({ title, body, panel, sizes }, i) => (
             <li key={title} className="how-step">
               {/* The caption and picture are decorative, like the panel itself. Step 3's empty caption
                   keeps the three panels level in the row. */}
               <div className="how-fig" aria-hidden="true">
                 <span className="how-cap">{i === 0 ? copy.start.how.before : i === 1 ? copy.start.how.after : ''}</span>
-                <HowPanel lines={panel} n={i + 1} />
+                <HowPanel lines={panel} sizes={sizes} n={i + 1} />
               </div>
               <div className="how-text">
                 <h3><span className="how-num" aria-hidden="true">{i + 1}</span>{title}</h3>
@@ -354,8 +354,9 @@ function Start({ note, noteKey, onChoose, onSamples, onInfo }: { note?: string; 
 /**
  * A How it works step's small picture (decorative). Lines are a folder listing: a line ending in "/"
  * is a folder, and every folder indents the lines after it. No lines: three photo tiles, two ticked.
+ * `sizes`: an optional size per line, shown right-aligned ('' for none).
  */
-function HowPanel({ lines, n }: { lines: readonly string[]; n: number }) {
+function HowPanel({ lines, sizes, n }: { lines: readonly string[]; sizes?: readonly string[]; n: number }) {
   if (!lines.length) {
     return (
       <div className={`how-panel p${n} how-tiles`}>
@@ -371,13 +372,14 @@ function HowPanel({ lines, n }: { lines: readonly string[]; n: number }) {
   let depth = 0;
   return (
     <div className={`how-panel p${n} how-list`}>
-      {lines.map((line) => {
+      {lines.map((line, i) => {
         const folder = line.endsWith('/');
         const d = depth;
         if (folder) depth += 1;
         return (
           <span key={line} className={`how-line d${Math.min(d, 3)}${folder ? ' dir' : ''}`}>
             {folder ? <FolderIcon size={16} /> : null}{line}
+            {sizes?.[i] ? <span className="how-size">{sizes[i]}</span> : null}
           </span>
         );
       })}

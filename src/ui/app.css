@@ -191,6 +191,11 @@ progress::-moz-progress-bar { background: var(--accent); border-radius: 999px; }
 .ledger > div { display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; border-top: 1px solid var(--rule); }
 .ledger dd { margin: 0; font-weight: 700; }
 .ledger .ledger-total { border-bottom: 2px solid var(--ink); }
+/* First arrival from scanning only: the three rows come in one after another, then the safe note. */
+.ledger-reveal > div { animation: rise-in 240ms var(--ease-out) backwards; }
+.ledger-reveal > div:nth-child(2) { animation-delay: 160ms; }
+.ledger-reveal > div:nth-child(3) { animation-delay: 320ms; }
+.ledger-reveal + .promise-safe { animation: rise-in 240ms var(--ease-out) 480ms backwards; }
 /* T77: the rows a Keep or Set aside changed, until the next change. No motion. */
 .ledger > div { transition: background-color var(--dur-base) var(--ease-std); }
 .ledger > div.changed { background: var(--tint); margin: 0 -8px; padding-left: 8px; padding-right: 8px; }
@@ -230,6 +235,11 @@ progress::-moz-progress-bar { background: var(--accent); border-radius: 999px; }
 .prints { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; grid-auto-flow: dense; }
 .print { margin: 0; position: relative; aspect-ratio: 1; border-radius: 12px; overflow: hidden; box-shadow: var(--shadow); background: var(--blank); }
 .print-big { grid-column: span 2; grid-row: span 2; }
+/* A year chip pressed: the new tiles come in one after another (index capped at 10, so at most 450ms
+   of delay), month headings fade up. Not on the first load of the screen. */
+@keyframes print-in { from { opacity: 0; transform: translateY(6px) scale(0.97); } }
+.months.stagger .print { animation: print-in 240ms var(--ease-out) backwards; animation-delay: calc(min(var(--i, 0), 10) * 45ms); }
+.months.stagger .month-h { animation: rise-in 160ms var(--ease-out) backwards; }
 .tag { position: absolute; left: 8px; bottom: 8px; margin: 0; padding: 2px 9px; border-radius: 999px; background: #FFFFFF; font-size: 13px; font-weight: 700; line-height: 1.5; color: var(--date); max-width: calc(100% - 16px); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .tag-n { color: var(--ink-soft); }
 .print-more { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-height: 44px; padding: 8px; border: 0; background: var(--surface); color: var(--accent); text-align: center; cursor: pointer; box-shadow: none; }
@@ -526,6 +536,9 @@ progress::-moz-progress-bar { background: var(--accent); border-radius: 999px; }
 @keyframes draw { from { stroke-dashoffset: 1; } }
 .done-check .draw-ring { animation: draw 500ms var(--ease-std) 200ms backwards; }
 .done-check .draw-tick { animation: draw 260ms var(--ease-out) 560ms backwards; }
+/* Scanning: a stage's tick draws itself when that stage really finishes (the path mounts then). */
+.stage-tick { stroke-dasharray: 1; stroke-dashoffset: 0; }
+.stage-done .stage-tick { animation: draw 260ms var(--ease-out) backwards; }
 /* "Nothing worth keeping" and "couldn't open": an empty print with a folder on it. */
 .blank-print { width: 120px; height: 92px; display: flex; align-items: center; justify-content: center; border: 2px dashed var(--control-edge); border-radius: 14px; background: var(--surface); color: var(--accent); transform: rotate(-3deg); }
 .done-side h1 { font-size: clamp(30px, 4.6vw, 40px); line-height: 1.08; }
@@ -569,11 +582,20 @@ progress::-moz-progress-bar { background: var(--accent); border-radius: 999px; }
 .hero-fan .tag { left: calc(10 * var(--u)); bottom: calc(10 * var(--u)); max-width: calc(100% - 20 * var(--u)); }
 /* The date tag sits inside the h1: give it back its own type (the heading's tracking would squash it). */
 .hero-h .tag { font-family: var(--body); font-variation-settings: normal; letter-spacing: 0; line-height: 1.5; text-align: left; }
-/* The deal, in drawing units (the shared deal-l/deal-r move in px). */
-@keyframes hero-deal-l { from { transform: translate(calc(86 * var(--u)), calc(18 * var(--u))) rotate(0deg); } }
-@keyframes hero-deal-r { from { transform: translate(calc(-100 * var(--u)), calc(24 * var(--u))) rotate(0deg); } }
+/* The deal, in drawing units (the shared deal-* keyframes above move in px and stay as they are for
+   the done screen). Here the prints start scattered (pushed apart, turned further) and settle into
+   the fan; each end frame is the print's resting transform, so the last frame is the resting layout.
+   Then the month tag arrives on the middle print. Delays 0/60/120ms and the 220ms tag are within
+   the motion rules: no loops, nothing larger than a card, the reduced-motion rule removes it all. */
+@keyframes hero-deal-l { from { transform: translate(calc(40 * var(--u)), calc(26 * var(--u))) rotate(-14deg); } to { transform: translate(0, 0) rotate(-5deg); } }
+@keyframes hero-deal-r { from { transform: translate(calc(-44 * var(--u)), calc(30 * var(--u))) rotate(13deg); } to { transform: translate(0, 0) rotate(4deg); } }
+@keyframes hero-deal-c { from { transform: translateY(calc(14 * var(--u))) rotate(4deg) scale(0.95); } to { transform: translateY(0) rotate(0deg) scale(1); } }
+.hero-fan .fan-deal .fan-print { animation-duration: 480ms; }
 .hero-fan .fan-deal .fan-l { animation-name: hero-deal-l; }
 .hero-fan .fan-deal .fan-r { animation-name: hero-deal-r; }
+.hero-fan .fan-deal .fan-c { animation-name: hero-deal-c; }
+@keyframes tag-in { from { opacity: 0; transform: translateY(calc(3 * var(--u))); } }
+.hero-fan .fan-deal .tag { animation: tag-in 220ms var(--ease-out) 420ms backwards; }
 /* Paper grain behind the prints only (round 6: no shader): a bundled 256px tile at 4%, faded out at
    its edges, so the texture belongs to the prints and never runs across the page. */
 .hero-grain { position: absolute; inset: calc(-24 * var(--u)); z-index: -1; pointer-events: none; -webkit-mask-image: radial-gradient(farthest-side at 50% 50%, #000 35%, transparent 100%); mask-image: radial-gradient(farthest-side at 50% 50%, #000 35%, transparent 100%); }
@@ -650,6 +672,8 @@ progress::-moz-progress-bar { background: var(--accent); border-radius: 999px; }
 .how-line { display: flex; align-items: center; gap: var(--s-2); white-space: nowrap; min-width: 0; }
 .how-line.dir { color: var(--ink); }
 .how-line .icon { color: var(--accent); }
+/* Step 1's file sizes, right-aligned in the line: the 9 KB one is a small preview, not a photo. */
+.how-size { margin-left: auto; padding-left: var(--s-4); color: var(--ink-soft); font-variant-numeric: tabular-nums; }
 .how-line.d1 { padding-left: 24px; }
 .how-line.d2 { padding-left: 48px; }
 .how-line.d3 { padding-left: 72px; }

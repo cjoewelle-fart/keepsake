@@ -54,7 +54,7 @@ Before the fixes: 0 blockers, 3 serious, 7 minor. After the fixes in this branch
 - **Structure:** `lang="en"`. One h1 per screen, and heading levels never skip.
 - **Reflow:** no horizontal scroll at 390 px, at 200% zoom or at 320 px on any screen.
 - **Targets:** all at least 44 px on the phone run after M6. On desktop the smallest are the 36 px pills, above the 24 px of 2.5.8.
-- **Reduced motion:** transitions are 0s under `prefers-reduced-motion: reduce`. There are no animations, and scrolling is instant.
+- **Reduced motion:** there are a few short animations (the start screen's prints settling and their date tag, the scanning ticks drawing, the results ledger arriving, tiles after a year chip). None loops, none is larger than a card, none delays focus or clicks. Under `prefers-reduced-motion: reduce` the global rule removes every animation and transition (each animation uses `backwards` fill, so the resting state shows at once), and scrolling is instant.
 
 ### Contrast of the colour tokens (computed)
 

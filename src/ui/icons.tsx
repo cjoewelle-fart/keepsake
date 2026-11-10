@@ -116,7 +116,7 @@ export const CheckCircleIcon = (p: IconProps) => (
 export function StageIcon({ state }: { state: 'done' | 'current' | 'todo' }) {
   return (
     <Icon size={20} className={`stage-icon stage-${state}`}>
-      {state === 'done' && <><circle cx="12" cy="12" r="9.2" fill="currentColor" /><path d="M7.9 12.2l2.8 2.8 5.4-5.6" stroke="#FFFFFF" /></>}
+      {state === 'done' && <><circle cx="12" cy="12" r="9.2" fill="currentColor" /><path className="stage-tick" d="M7.9 12.2l2.8 2.8 5.4-5.6" stroke="#FFFFFF" pathLength={1} /></>}
       {state === 'current' && <><circle cx="12" cy="12" r="8.8" /><circle cx="12" cy="12" r="3.6" fill="currentColor" stroke="none" /></>}
       {state === 'todo' && <circle cx="12" cy="12" r="8.8" />}
     </Icon>

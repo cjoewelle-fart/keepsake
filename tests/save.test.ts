@@ -71,6 +71,15 @@ describe('the start screen shows the real save naming (round 6)', () => {
     expect(copy.start.how.steps[2].panel).toEqual([]);
   });
 
+  it('step 1 shows a size beside each file (the 9 KB one a small preview), the folder none', () => {
+    const { panel, sizes } = copy.start.how.steps[0];
+    expect(sizes).toHaveLength(panel.length);
+    expect(sizes![0]).toBe('');
+    for (const size of sizes!) expect(size.length).toBeLessThanOrEqual(7);
+    expect(copy.start.how.steps[1].sizes).toBeUndefined();
+    expect(copy.start.how.steps[2].sizes).toBeUndefined();
+  });
+
   it('keeps to the designer\'s limits where they are hard ones', () => {
     expect(copy.start.promise.length).toBeLessThanOrEqual(70);
     for (const { title, panel } of copy.start.how.steps) {

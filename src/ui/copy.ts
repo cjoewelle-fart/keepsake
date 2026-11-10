@@ -441,8 +441,10 @@ export const copy = {
       steps: [
         {
           title: 'Files come back unsorted',
-          body: 'Your recovery program brings back files, but not their names or folders. Photos end up mixed in with app images and copies, with names like f0123456.jpg.',
+          body: 'Your recovery program brings back files, but not their names or folders. Photos end up mixed in with small previews, app images and copies, with names like f0123456.jpg.',
           panel: ['recup_dir.1/', 'f0123456.jpg', 'f0123457.jpg', 'f0124410.jpg'],
+          /** Shown right-aligned beside each line of the panel ('' for none). The 9 KB one is a small preview (7 characters at most). */
+          sizes: ['', '2.4 MB', '9 KB', '2.4 MB'],
         },
         {
           title: 'We sort them by date',

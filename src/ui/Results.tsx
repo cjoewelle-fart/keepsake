@@ -1,4 +1,5 @@
 import { useEffect, useMemo, useRef, useState } from 'react';
+import type { CSSProperties } from 'react';
 import { flushSync } from 'react-dom';
 import { PHOTO_KINDS } from '../engine/sniff';
 import { effectiveGroup, summarize } from '../engine/summary';
@@ -36,6 +37,8 @@ export function Results({ records, files, movedBack, countUp = false, onToggleGr
   const [open, setOpen] = useState<SetAsideGroup | null>(null);
   /** The chosen view of the Kept card: a year, or 'none' for the photos with no date (T77). */
   const [view, setView] = useState<string>();
+  /** A year chip was pressed: from then on the tiles that come in are staggered (never on first load). */
+  const [stagger, setStagger] = useState(false);
 
   const photos = useMemo(
     () => records.filter((r) => effectiveGroup(r, movedBack) === 'keep' && PHOTO_KINDS.has(r.kind)),
@@ -88,7 +91,10 @@ export function Results({ records, files, movedBack, countUp = false, onToggleGr
   });
 
   const jumpToUndated = () => {
-    flushSync(() => setView('none'));
+    flushSync(() => {
+      if (!showNoDate) setStagger(true);
+      setView('none');
+    });
     document.getElementById('no-date-h')?.focus();
   };
 
@@ -98,6 +104,9 @@ export function Results({ records, files, movedBack, countUp = false, onToggleGr
   const firstYear = span.first?.slice(0, 4);
   const lastYear = span.last?.slice(0, 4);
   const r = copy.results;
+  /** The stagger order: a running index over every tile in the Kept view (see .months.stagger). */
+  let k = 0;
+  const order = (): CSSProperties => ({ '--i': k++ } as CSSProperties);
 
   return (
     <main className="page results">
@@ -116,7 +125,7 @@ export function Results({ records, files, movedBack, countUp = false, onToggleGr
         )}
         <p className="lede">{s.keep > 0 ? (allUndated ? r.noDatesLine : r.sortedLine(firstYear, lastYear)) : copy.empty.noKeepersBody}</p>
 
-        <dl className="ledger" aria-label={r.ledgerLabel}>
+        <dl className={`ledger${countUp ? ' ledger-reveal' : ''}`} aria-label={r.ledgerLabel}>
           <div><dt>{r.ledgerChecked}</dt><dd>{n(s.total)}</dd></div>
           <div className={changed ? 'changed' : undefined}><dt>{r.ledgerKept}</dt><dd>{n(s.keep)}</dd></div>
           <div className={`ledger-total${changed ? ' changed' : ''}`}><dt>{r.ledgerAside}</dt><dd>{n(s.setAside)}</dd></div>
@@ -148,7 +157,11 @@ export function Results({ records, files, movedBack, countUp = false, onToggleGr
             {sheet.years.length > 0 && (sheet.years.length > 1 || sheet.undated.count > 0) && (
               <div className="chips" role="group" aria-label={r.jumpLabel}>
                 {sheet.years.map(({ year: y }) => (
-                  <button key={y} type="button" className="chip" aria-pressed={y === chosenYear} aria-controls="kept-view" onClick={() => setView(y)}>{y}</button>
+                  <button key={y} type="button" className="chip" aria-pressed={y === chosenYear} aria-controls="kept-view" onClick={() => {
+                    // Re-pressing the shown year changes nothing, so nothing should move.
+                    if (y !== chosenYear) setStagger(true);
+                    setView(y);
+                  }}>{y}</button>
                 ))}
                 {sheet.undated.count > 0 && (
                   <button type="button" className="chip" aria-pressed={showNoDate} aria-controls="kept-view" onClick={jumpToUndated}>{r.undatedChip(sheet.undated.count)}</button>
@@ -156,7 +169,7 @@ export function Results({ records, files, movedBack, countUp = false, onToggleGr
               </div>
             )}
 
-            <div id="kept-view" className="months">
+            <div id="kept-view" className={`months${stagger ? ' stagger' : ''}`}>
               {!showNoDate && sheet.groups.map((g, gi) => (
                 <div key={g.month} className="month">
                   <h3 className="month-h">
@@ -165,13 +178,13 @@ export function Results({ records, files, movedBack, countUp = false, onToggleGr
                   </h3>
                   <div className="prints">
                     {g.tiles.map((t, ti) => (
-                      <figure key={t.index} className={`print${g.big && ti === 0 ? ' print-big' : ''}`}>
+                      <figure key={t.index} className={`print${g.big && ti === 0 ? ' print-big' : ''}`} style={order()}>
                         <Preview file={files[t.index]} record={t} size="fill" />
                         <figcaption className="tag">{dayMonth(t.takenAt!)}</figcaption>
                       </figure>
                     ))}
                     {gi === sheet.groups.length - 1 && sheet.moreDated > 0 && (
-                      <button type="button" className="print print-more" onClick={onReview}>
+                      <button type="button" className="print print-more" style={order()} onClick={onReview}>
                         <b>+{n(sheet.moreDated)}</b><span>{r.seeEveryMonth}</span>
                       </button>
                     )}
@@ -188,13 +201,13 @@ export function Results({ records, files, movedBack, countUp = false, onToggleGr
                   <p className="sub-sm">{copy.timeline.noDateNote}</p>
                   <div className="prints">
                     {sheet.undated.tiles.map((t) => (
-                      <figure key={t.index} className="print">
+                      <figure key={t.index} className="print" style={order()}>
                         <Preview file={files[t.index]} record={t} size="fill" />
                         <figcaption className="tag tag-n">{r.noDateTag}</figcaption>
                       </figure>
                     ))}
                     {sheet.undated.more > 0 && (
-                      <button type="button" className="print print-more" onClick={onReview}>
+                      <button type="button" className="print print-more" style={order()} onClick={onReview}>
                         <b>+{n(sheet.undated.more)}</b><span>{r.seeThemAll}</span>
                       </button>
                     )}
