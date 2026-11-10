@@ -316,3 +316,7 @@ Commands:
     - "Tab reaches every row (0 of 323)"
 
     A temporary copy with both patterns changed to also accept `, <file>` passed: **0 serious, 0 minor, 0 info, 422 checks**. The copy was then deleted, and the real script is unchanged. The owner of the a11y check should update the 2 patterns.
+
+## Sign-off
+
+**Phase 3 gate passed — Nov 10, 2026, by the owner (in chat).** Signed off on the Nov 9 evidence above (QA rerun on `dc08416`). The review filters merged afterwards (T50/T59, `ba0689e`, fixed in `f0b2b16`) only change what is shown, never what is kept or saved (QA review, Nov 10); no full rerun was done on the later build.
