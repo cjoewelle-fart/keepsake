@@ -223,7 +223,7 @@ You don't need to sort through them yourself.
 PhotoRec's part is done. Now [Name] puts what PhotoRec found in order.
 
 1. Go back to the start of [Name]. You can use the **Sort my recovered files** button at the bottom of this page.
-2. Click **Choose recovery folder**.
+2. Click **Sort my recovered files**.
 3. Choose your `Recovered photos` folder (the one that holds the recup_dir folders).
 
 [Name] finds the photos and videos, sets the rest aside, and sorts your photos into folders by date. It only reads your `Recovered photos` folder. Nothing in it is changed or deleted.

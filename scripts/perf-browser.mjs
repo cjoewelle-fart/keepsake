@@ -209,7 +209,7 @@ async function run(n) {
     }
   })();
 
-  const [chooser] = await Promise.all([page.waitForEvent('filechooser'), page.getByRole('button', { name: 'Choose recovery folder' }).click()]);
+  const [chooser] = await Promise.all([page.waitForEvent('filechooser'), page.getByRole('button', { name: 'Sort my recovered files' }).click()]);
   const t0 = await page.evaluate(() => performance.now());
   const wall0 = Date.now();
   phase = 'scan';
@@ -405,7 +405,7 @@ async function handoff(page, n) {
     }).observe(document, { subtree: true, childList: true, attributes: true, attributeFilter: ['value'] });
   });
   const pick = async () => {
-    const [chooser] = await Promise.all([page.waitForEvent('filechooser'), page.getByRole('button', { name: 'Choose recovery folder' }).click()]);
+    const [chooser] = await Promise.all([page.waitForEvent('filechooser'), page.getByRole('button', { name: 'Sort my recovered files' }).click()]);
     await chooser.setFiles(dir);
   };
   // Blocking between a and b, counting only the part of each block after a. The part before

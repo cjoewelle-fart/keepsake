@@ -16,6 +16,10 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import * as pw from 'playwright';
+import { APP_NAME } from '../src/brand.ts';
+/** The save folder's name (copy.ts ROOT_FOLDER), from the one name setting. */
+const ROOT = `${APP_NAME} photos`;
+const ROOT_RE = ROOT.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 const here = fileURLToPath(new URL('.', import.meta.url));
 const repo = join(here, '..');
@@ -85,7 +89,7 @@ try {
   await page.goto(`${base}/`);
   app.hasPicker = await page.evaluate(() => 'showDirectoryPicker' in window);
 
-  const [chooser] = await Promise.all([page.waitForEvent('filechooser'), page.getByRole('button', { name: 'Choose recovery folder' }).click()]);
+  const [chooser] = await Promise.all([page.waitForEvent('filechooser'), page.getByRole('button', { name: 'Sort my recovered files' }).click()]);
   let t0 = Date.now();
   await chooser.setFiles(rec);
   await page.getByText('Files checked').waitFor({ timeout: 30 * 60_000 });
@@ -142,8 +146,8 @@ try {
   if (dupNames.length) problems.push(`the app gave two downloads the same name: ${[...new Set(dupNames)].join(', ')} (all: ${app.zipNames.join(' | ')})`);
   if (app.saved !== app.selected) problems.push(`receipt says ${app.saved} saved, ${app.selected} were selected`);
   // T89 acceptance: the Done text and the "download again" buttons name the real downloads.
-  for (const n of app.zipNames) if (!app.find.includes(n) && !/\.zip to Upsort/.test(app.find)) problems.push(`Done text doesn't name ${n}: ${app.find}`);
-  for (const m of app.find.matchAll(/Upsort photos[^,.]*?\.zip/g)) if (!app.zipNames.includes(m[0])) problems.push(`Done text names ${m[0]}, which wasn't downloaded`);
+  for (const n of app.zipNames) if (!app.find.includes(n) && !app.find.includes(`.zip to ${APP_NAME}`)) problems.push(`Done text doesn't name ${n}: ${app.find}`);
+  for (const m of app.find.matchAll(new RegExp(`${ROOT_RE}[^,.]*?\\.zip`, 'g'))) if (!app.zipNames.includes(m[0])) problems.push(`Done text names ${m[0]}, which wasn't downloaded`);
   const wantAgain = app.zipNames.map((n) => `Download ${n} again`);
   if (JSON.stringify(app.againButtons) !== JSON.stringify(wantAgain)) problems.push(`download-again buttons ${JSON.stringify(app.againButtons)} != ${JSON.stringify(wantAgain)}`);
 } catch (e) {

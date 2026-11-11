@@ -1,4 +1,5 @@
 import { copy } from './copy';
+import { LogoMark } from './icons';
 
 /**
  * The logo and the step indicator (warmth spec §1). `current` = index into copy.steps (0 = Scan).
@@ -12,11 +13,7 @@ export function Header({ current, done }: { current: number; done?: boolean }) {
   return (
     <header className="topbar">
       <div className="brand">
-        <svg width="28" height="28" viewBox="0 0 28 28" fill="none" aria-hidden="true">
-          <rect x="2" y="2" width="24" height="24" rx="6" fill="#FFFFFF" stroke="#23596B" strokeWidth="1.8" />
-          <path d="M6.5 15.5c2.5-2.2 5-2.2 7.5 0s5 2.2 7.5 0" stroke="#23596B" strokeWidth="1.8" strokeLinecap="round" />
-          <path d="M6.5 21h8" stroke="#8A4B08" strokeWidth="1.8" strokeLinecap="round" />
-        </svg>
+        <LogoMark />
         <span>{copy.appName}</span>
       </div>
       <div className={`stepper${done ? ' stepper-done' : ''}`}>

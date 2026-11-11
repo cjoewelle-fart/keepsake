@@ -90,7 +90,7 @@ try {
     const r = (results[n] = { finished: 0, stuck: 0, bounced: 0, late: 0, examples: [] });
     for (let i = 0; i < runs; i++) {
       await page.goto(APP_URL);
-      const [chooser] = await Promise.all([page.waitForEvent('filechooser'), page.getByRole('button', { name: 'Choose recovery folder' }).click()]);
+      const [chooser] = await Promise.all([page.waitForEvent('filechooser'), page.getByRole('button', { name: 'Sort my recovered files' }).click()]);
       await chooser.setFiles(folders[n]);
       const review = page.getByRole('button', { name: /^Review my/ });
       const reached = await review.waitFor({ timeout: 15_000 }).then(() => true, () => false);

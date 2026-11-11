@@ -4,6 +4,8 @@ import { configDefaults } from 'vitest/config'
 import type { Plugin } from 'vite'
 import { VitePWA } from 'vite-plugin-pwa'
 import { cspMeta as csp, deployFiles } from './vite.deploy.ts'
+import { brandHead, precacheGuard } from './vite.launch.ts'
+import { APP_NAME, APP_SHORT_NAME, DESCRIPTION } from './src/brand.ts'
 
 // `npm run build:test` (vite build --mode testbuild): the production build for usability
 // sessions, in dist-test/. Same privacy lock-down and offline install, but the example-files
@@ -15,23 +17,23 @@ const TEST_BUILD = 'testbuild'
 const ARTIFACT_TEST = 'artifact-test'
 const isArtifact = (mode: string) => mode === 'artifact' || mode === ARTIFACT_TEST
 
-// The app's name in one place (Upsort, decided Nov 10; must match copy.appName and index.html): install name and home-screen label.
-const APP_NAME = 'Upsort'
-const APP_SHORT_NAME = 'Upsort'
+// The app's name, install name and home-screen label come from src/brand.ts (one setting).
+// Test builds keep a short, marked title ("<name> (test)") so sessions can be told apart.
+const TEST_TITLE = `${APP_NAME} (test)`
 const THEME = '#23596B'
 const BACKGROUND = '#ECF1F0'
 
 // The privacy lock-down (CSP) and the hosting headers live in vite.deploy.ts: one policy,
 // sent both as a <meta> tag and as the `_headers` file read by Cloudflare Pages and Netlify.
 
-// Test build only: mark the page title, and refuse to finish if the example-files code
-// (which fetches ./sample-pack.wasm) made it into the bundle.
+// Test build only: check the page title is the marked one (brandHead(TEST_TITLE) writes it), and
+// refuse to finish if the example-files code (which fetches ./sample-pack.wasm) made it into the bundle.
 const testBuild = (): Plugin => ({
   name: 'keepsake-test-build',
   apply: 'build',
   transformIndexHtml: (html) => {
-    if (!html.includes(`<title>${APP_NAME}</title>`)) throw new Error('test build: <title> not found in index.html')
-    return html.replace(`<title>${APP_NAME}</title>`, `<title>${APP_NAME} (test)</title>`)
+    if (!html.includes(`<title>${TEST_TITLE}</title>`)) throw new Error(`test build: <title>${TEST_TITLE}</title> not found in index.html`)
+    return html
   },
   generateBundle(_, bundle) {
     for (const [name, chunk] of Object.entries(bundle)) {
@@ -66,7 +68,7 @@ const offline = () =>
     manifest: {
       name: APP_NAME,
       short_name: APP_SHORT_NAME,
-      description: 'Sort photos recovered by PhotoRec into a clean, dated library. Works entirely on your computer.',
+      description: DESCRIPTION,
       theme_color: THEME,
       background_color: BACKGROUND,
       display: 'standalone',
@@ -80,6 +82,9 @@ const offline = () =>
     },
     workbox: {
       globPatterns: ['**/*.{html,js,css,woff,woff2,wasm,svg,png,webp}'], // public/ files included; the manifest is added by the plugin,
+      // The launch video, its captions and the share image (public/launch/) are never cached
+      // offline; precacheGuard() fails the build if sw.js lists any of them.
+      globIgnores: ['launch/**'],
       maximumFileSizeToCacheInBytes: 8 * 1024 * 1024, // the HEIC decoder worker is ~2 MB
       navigateFallback: 'index.html',
       cleanupOutdatedCaches: true,
@@ -95,10 +100,10 @@ const offline = () =>
 // own network lock, so this build skips the meta CSP. It also has no service worker.
 export default defineConfig(({ mode }) => ({
   base: './',
-  plugins: mode === 'artifact' ? [react()]
-    : mode === ARTIFACT_TEST ? [react(), testBuild()]
-    : mode === TEST_BUILD ? [react(), csp(), offline(), installTags(), testBuild(), deployFiles()]
-    : [react(), csp(), offline(), installTags(), deployFiles()],
+  plugins: mode === 'artifact' ? [brandHead(), react()]
+    : mode === ARTIFACT_TEST ? [brandHead(TEST_TITLE), react(), testBuild()]
+    : mode === TEST_BUILD ? [brandHead(TEST_TITLE), react(), csp(), offline(), installTags(), testBuild(), deployFiles(), precacheGuard()]
+    : [brandHead(), react(), csp(), offline(), installTags(), deployFiles(), precacheGuard()],
   // Test builds never show the example-files button, whatever the environment says.
   define: mode === TEST_BUILD || mode === ARTIFACT_TEST ? { 'import.meta.env.VITE_SAMPLES': JSON.stringify('0') } : {},
   worker: { format: 'es' },

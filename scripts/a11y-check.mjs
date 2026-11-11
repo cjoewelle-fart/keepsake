@@ -12,6 +12,7 @@ import { createRequire } from 'node:module';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { chromium } from 'playwright';
+import { APP_NAME } from '../src/brand.ts';
 
 const args = process.argv.slice(2);
 const opt = (k, d) => { const i = args.indexOf(k); return i >= 0 ? args.splice(i, 2)[1] : d; };
@@ -223,8 +224,8 @@ const h1 = (page, re) => page.getByRole('heading', { level: 1, name: re });
 
 async function scanFolder(page, dir, viaKeyboard = false) {
   const go = viaKeyboard
-    ? async () => { await page.getByRole('button', { name: /Choose (recovery )?folder/ }).first().focus(); await page.keyboard.press('Enter'); }
-    : () => page.getByRole('button', { name: /Choose (recovery )?folder/ }).first().click();
+    ? async () => { await page.getByRole('button', { name: /Sort my recovered files|Choose the folder again/ }).first().focus(); await page.keyboard.press('Enter'); }
+    : () => page.getByRole('button', { name: /Sort my recovered files|Choose the folder again/ }).first().click();
   const [chooser] = await Promise.all([page.waitForEvent('filechooser'), go()]);
   await chooser.setFiles(dir);
 }
@@ -235,8 +236,8 @@ async function scanFolder(page, dir, viaKeyboard = false) {
  * same-page links must lead to a heading on it.
  */
 const INFO = [
-  { link: 'How Upsort keeps your photos private', h1: /^Your privacy$/, screen: 'privacy page' },
-  { link: 'New to PhotoRec? Here’s how to recover your files', h1: /^Get your photos back/, screen: 'PhotoRec guide' },
+  { link: `How ${APP_NAME} keeps your photos private`, h1: /^Your privacy$/, screen: 'privacy page' },
+  { link: 'Read the step-by-step PhotoRec guide', h1: /^Get your photos back/, screen: 'PhotoRec guide' },
 ];
 async function infoPages(page, run, { min = 24, severity = 'minor', criterion = '2.5.8, WCAG 2.2', keyboard = false } = {}) {
   for (const { link, h1: name, screen } of INFO) {
@@ -338,7 +339,7 @@ async function desktop(browser) {
   } else add('info', run, 'scanning', 'scan finished before the scanning screen could be checked');
 
   // A folder with nothing worth keeping.
-  if (!(await page.getByRole('button', { name: 'Choose recovery folder' }).isVisible().catch(() => false))) await page.goto(base);
+  if (!(await page.getByRole('button', { name: 'Sort my recovered files' }).isVisible().catch(() => false))) await page.goto(base);
   await scanFolder(page, junkDir);
   await h1(page, /didn’t find any photos/).waitFor({ timeout: 30_000 });
   await focusOnHeading(page, run, 'results: nothing to keep');
@@ -464,10 +465,10 @@ async function keyboard(browser) {
   await page.keyboard.press('Enter');
   await page.keyboard.press('Tab');
   const nextAfterSkip = await page.evaluate(focusInfo);
-  check(/Choose recovery folder/.test(nextAfterSkip.name), 'minor', run, 'start', `skip link moves past the header (then Tab reaches "${nextAfterSkip.name}")`);
+  check(/Sort my recovered files/.test(nextAfterSkip.name), 'minor', run, 'start', `skip link moves past the header (then Tab reaches "${nextAfterSkip.name}")`);
   await page.locator('main h1').focus();
   const startStops = await sweep(page, run, 'start');
-  check(startStops.some((s) => /Choose recovery folder/.test(s.name)), 'serious', run, 'start', 'Choose recovery folder reachable by Tab');
+  check(startStops.some((s) => /Sort my recovered files/.test(s.name)), 'serious', run, 'start', 'Sort my recovered files reachable by Tab');
   check(INFO.every((i) => startStops.some((s) => s.name === i.link)), 'serious', run, 'start', 'privacy page and PhotoRec guide links reachable by Tab');
   await infoPages(page, run, { keyboard: true });
 

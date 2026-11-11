@@ -35,7 +35,7 @@ try {
     URL.createObjectURL = (b) => { const u = create(b); if (b instanceof File) window.__fileUrls.add(u); return u; };
   });
   await page.goto(`http://localhost:${PORT}/`);
-  const [chooser] = await Promise.all([page.waitForEvent('filechooser'), page.getByRole('button', { name: 'Choose recovery folder' }).click()]);
+  const [chooser] = await Promise.all([page.waitForEvent('filechooser'), page.getByRole('button', { name: 'Sort my recovered files' }).click()]);
   await chooser.setFiles(dir);
   await page.getByText('Files checked').waitFor({ timeout: 120_000 });
   await page.getByRole('button', { name: /^Review my/ }).click();

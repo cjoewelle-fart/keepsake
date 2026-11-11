@@ -12,6 +12,9 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright';
 import { build } from 'vite';
+import { APP_NAME } from '../src/brand.ts';
+/** The save folder's name (copy.ts ROOT_FOLDER), from the one name setting. */
+const ROOT = `${APP_NAME} photos`;
 
 const here = fileURLToPath(new URL('.', import.meta.url));
 const exe = process.argv[2] || process.env.CHROMIUM_PATH;
@@ -29,12 +32,12 @@ try {
     r.fulfill({ status: 200, contentType: js ? 'text/javascript' : 'text/html', body: js ? bundle : '<!doctype html><script src="/k.js"></script>' });
   });
   await page.goto('https://probe.test/');
-  res = await page.evaluate(async () => {
+  res = await page.evaluate(async (ROOT) => {
     const K = window.K;
     const root = await navigator.storage.getDirectory();
     for await (const n of root.keys()) await root.removeEntry(n, { recursive: true });
     const chosen = await root.getDirectoryHandle('chosen', { create: true });
-    let nd = chosen; for (const p of ['Upsort photos', 'No date']) nd = await nd.getDirectoryHandle(p, { create: true });
+    let nd = chosen; for (const p of [ROOT, 'No date']) nd = await nd.getDirectoryHandle(p, { create: true });
     const put = async (dd, name, bytes) => { const fh = await dd.getFileHandle(name, { create: true }); const w = await fh.createWritable(); await w.write(bytes); await w.close(); };
     const x = 'x'.repeat(200);
     // What's there already: the cut name of x…A.jpg, a case variant of the cut é name, and its "(2)".
@@ -58,7 +61,7 @@ try {
     for await (const [n, h] of nd.entries()) if (h.kind === "file") after[n] = Array.from(new Uint8Array(await (await h.getFile()).arrayBuffer()));
     const top = []; for await (const n of chosen.keys()) top.push(n);
     return { end, saved: saved.length, failed: failed.length, total: items.length, theirs, after, top };
-  });
+  }, ROOT);
 } finally {
   await browser.close();
 }
@@ -77,7 +80,7 @@ for (const n of names) {
   ok(!/[. ]$/.test(n) && !/^(con|prn|aux|nul|com[1-9]|lpt[1-9])(\.|$)/i.test(n) && !n.startsWith('.keepsake-partial-'), `unsafe or temp name: ${n}`);
   ok(n === n.normalize('NFC'), `not NFC: ${n}`);
 }
-ok(JSON.stringify(res.top) === JSON.stringify(['Upsort photos']), `chosen folder top level: ${res.top}`);
+ok(JSON.stringify(res.top) === JSON.stringify([ROOT]), `chosen folder top level: ${res.top}`);
 const mine = names.filter((n) => !(n in res.theirs)).map((n) => `${n.length}c ${enc.encode(n).length}b ${n.length > 40 ? `${n.slice(0, 12)}…${n.slice(-16)}` : n}`);
 console.log(mine.sort().join('\n'));
 console.log(JSON.stringify({ end: res.end, saved: res.saved, failed: res.failed, filesInNoDate: names.length, problems }, null, 1));

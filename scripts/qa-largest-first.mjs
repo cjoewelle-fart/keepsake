@@ -42,7 +42,7 @@ try {
   page.on('request', (q) => { if (!/^(http:\/\/localhost:\d+|blob:|data:)/.test(q.url())) problems.push(`outside request ${q.url()}`); });
   await page.addInitScript(() => { for (const k of ['showDirectoryPicker', 'showOpenFilePicker', 'showSaveFilePicker']) { delete window[k]; delete Window.prototype[k]; } });
   await page.goto(`http://localhost:${port}/`);
-  const [chooser] = await Promise.all([page.waitForEvent('filechooser'), page.getByRole('button', { name: 'Choose recovery folder' }).click()]);
+  const [chooser] = await Promise.all([page.waitForEvent('filechooser'), page.getByRole('button', { name: 'Sort my recovered files' }).click()]);
   await chooser.setFiles(rec);
   await page.getByText('Files checked').waitFor({ timeout: 30 * 60_000 });
   await page.getByRole('button', { name: /^Review my/ }).click();

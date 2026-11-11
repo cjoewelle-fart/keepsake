@@ -12,6 +12,7 @@ import { spawn } from 'node:child_process';
 import { existsSync } from 'node:fs';
 import { basename, resolve } from 'node:path';
 import { chromium } from 'playwright';
+import { APP_NAME } from '../src/brand.ts';
 
 const args = process.argv.slice(2);
 const opt = (k, d) => { const i = args.indexOf(k); return i >= 0 ? args.splice(i, 2)[1] : d; };
@@ -109,14 +110,14 @@ async function pilot(browser) {
   // 2. Empty folder, twice (the second pick must be announced too).
   for (const round of [1, 2]) {
     await pick(page, 'Empty');
-    await page.getByRole('button', { name: 'Choose recovery folder' }).click();
+    await page.getByRole('button', { name: 'Sort my recovered files' }).click();
     await wait(page, 800);
     say(2, `pick ${round}: live/focus log`, (await takeLog(page)).map((e) => `${e.k}: ${e.v}`));
     say(2, `pick ${round}: focus now`, await focused(page));
   }
 
   // 3. Info pages.
-  for (const link of ['How Upsort keeps your photos private', 'New to PhotoRec? Here’s how to recover your files']) {
+  for (const link of [`How ${APP_NAME} keeps your photos private`, 'Read the step-by-step PhotoRec guide']) {
     await page.getByRole('button', { name: link }).click();
     await wait(page, 300);
     say(3, `${link}: title`, await page.title());
@@ -134,7 +135,7 @@ async function pilot(browser) {
     await wait(page, 300);
     say(3, 'after Back to start (bottom): title / focus', `${await page.title()} / ${await focused(page)}`);
   }
-  await page.getByRole('button', { name: 'How Upsort keeps your photos private' }).click();
+  await page.getByRole('button', { name: `How ${APP_NAME} keeps your photos private` }).click();
   await wait(page, 200);
   await page.getByRole('button', { name: 'Back to start' }).first().click();
   await wait(page, 300);
@@ -143,7 +144,7 @@ async function pilot(browser) {
 
   // 6. Results.
   await pick(page, 'rec');
-  await page.getByRole('button', { name: 'Choose recovery folder' }).click();
+  await page.getByRole('button', { name: 'Sort my recovered files' }).click();
   await page.getByText('Files checked').waitFor({ timeout: 120_000 });
   await wait(page, 1000);
   say(6, 'title', await page.title());
@@ -251,7 +252,7 @@ async function big(browser) {
   await page.addInitScript(() => { for (const k of ['showDirectoryPicker']) { delete window[k]; delete Window.prototype[k]; } });
   await page.goto(`${base}/`);
   const scanBig = async () => {
-    const [ch] = await Promise.all([page.waitForEvent('filechooser'), page.getByRole('button', { name: 'Choose recovery folder' }).click()]);
+    const [ch] = await Promise.all([page.waitForEvent('filechooser'), page.getByRole('button', { name: 'Sort my recovered files' }).click()]);
     await ch.setFiles(bigDir);
   };
   // 4. Progress announcements over a whole scan.

@@ -12,6 +12,7 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { chromium } from 'playwright';
 import { checkHeicPreview, watchCsp } from './lib/browser-checks.mjs';
+import { APP_NAME } from '../src/brand.ts';
 
 const args = process.argv.slice(2);
 const opt = (k, d) => { const i = args.indexOf(k); return i >= 0 ? args.splice(i, 2)[1] : d; };
@@ -111,18 +112,18 @@ try {
   await context.setOffline(true);
   check(!(await page.evaluate(() => navigator.onLine)), 'browser reports offline');
   await page.reload();
-  await page.getByRole('button', { name: 'Choose recovery folder' }).waitFor({ timeout: 15_000 });
+  await page.getByRole('button', { name: 'Sort my recovered files' }).waitFor({ timeout: 15_000 });
   check(true, `start screen renders offline: "${await page.locator('h1').innerText()}"`);
   const fontsOk = await page.evaluate(async () => { await document.fonts.ready; return [...document.fonts].filter((f) => f.status === 'loaded').length; });
   check(fontsOk > 0, `${fontsOk} bundled font files loaded offline`);
 
   // The privacy page and the PhotoRec guide open offline too (T67); they're part of the app.
-  for (const [link, heading] of [['How Upsort keeps your photos private', 'Your privacy'], ['New to PhotoRec? Here’s how to recover your files', 'Get your photos back']]) {
+  for (const [link, heading] of [[`How ${APP_NAME} keeps your photos private`, 'Your privacy'], ['Read the step-by-step PhotoRec guide', 'Get your photos back']]) {
     await page.getByRole('button', { name: link }).click();
     const opened = await page.getByRole('heading', { level: 1, name: heading }).waitFor({ timeout: 5000 }).then(() => true, () => false);
     check(opened, `"${heading}" page opens offline`);
     await page.getByRole('button', { name: 'Back to start' }).last().click();
-    await page.getByRole('button', { name: 'Choose recovery folder' }).waitFor({ timeout: 5000 });
+    await page.getByRole('button', { name: 'Sort my recovered files' }).waitFor({ timeout: 5000 });
   }
 
   // Every precached file can be fetched with the network off.
@@ -139,7 +140,7 @@ try {
   });
   check(precache.bad.length === 0, `all ${precache.total} precached files load offline${precache.bad.length ? `; missing: ${precache.bad.join(', ')}` : ''}`);
 
-  const [chooser] = await Promise.all([page.waitForEvent('filechooser'), page.getByRole('button', { name: 'Choose recovery folder' }).click()]);
+  const [chooser] = await Promise.all([page.waitForEvent('filechooser'), page.getByRole('button', { name: 'Sort my recovered files' }).click()]);
   const t0 = Date.now();
   await chooser.setFiles(join(folder, 'recovery'));
   await page.getByText('Files checked').waitFor({ timeout: 120_000 });

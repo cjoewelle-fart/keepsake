@@ -4,6 +4,7 @@
 // files: their upstream texts are kept in licenses/ (see the source URLs below).
 // Usage: npm run notices   (re-run after adding or upgrading a runtime dependency)
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
+import { APP_NAME } from '../src/brand.ts';
 
 const pkg = JSON.parse(readFileSync('package.json', 'utf8'));
 const read = (p) => readFileSync(p, 'utf8').replace(/\r\n/g, '\n').trimEnd();
@@ -58,9 +59,9 @@ sections.push([
   read('licenses/zlib-LICENSE'),
 ].join('\n'));
 
-const out = `Upsort: third-party notices
+const out = `${APP_NAME}: third-party notices
 
-Upsort ships the following third-party software in the app. Each is listed with its version,
+${APP_NAME} ships the following third-party software in the app. Each is listed with its version,
 licence and full licence text. Nothing here is fetched at runtime.
 
 ${sections.join('\n\n\n')}

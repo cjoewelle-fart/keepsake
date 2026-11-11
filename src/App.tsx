@@ -23,7 +23,8 @@ import { canUseFolderPicker, inFrame } from './ui/embedded';
 import { NOTE_DELAY_MS, shownNote } from './ui/liveNote';
 import { dropUnusedThumbs } from './ui/thumbs';
 import { dropUnusedHeicPreviews } from './ui/heicPreview';
-import { ArrowRightIcon, BlankPrint, CheckCircleIcon, FolderIcon, FolderOpenIcon, LockIcon, Prints, StageIcon } from './ui/icons';
+import { ArrowRightIcon, BlankPrint, CheckCircleIcon, FolderIcon, FolderOpenIcon, LockIcon, LogoMark, PlayIcon, Prints, StageIcon } from './ui/icons';
+import { launchVideo, type LaunchVideo } from './ui/launchVideo';
 import tileBeach from './assets/hero/6-beach-240.webp';
 import tileRoadtrip from './assets/hero/4-roadtrip-240.webp';
 import tileCandles from './assets/hero/3-candles-240.webp';
@@ -47,8 +48,15 @@ type InfoName = 'privacy' | 'guide';
 
 /** Files the operating system adds to folders; they're not part of the recovery. */
 const isOsClutter = (name: string) => name.startsWith('.') || /^(thumbs\.db|desktop\.ini)$/i.test(name);
-/** The title the page loaded with ("Upsort", or "Upsort (test)" in the test build). */
-const APP_TITLE = (typeof document !== 'undefined' && document.title) || copy.appName;
+/**
+ * The name the tab titles end with: the app's name, or "<name> (test)" in the test builds. The page
+ * loads with its longer launch title (D41); once the app runs, each step's tab says "Sort · <name>".
+ */
+const APP_TITLE = typeof document !== 'undefined' && document.title.endsWith('(test)') ? `${copy.appName} (test)` : copy.appName;
+/** The title the page loaded with: the launch title on the start screen (D41), kept there. */
+const PAGE_TITLE = (typeof document !== 'undefined' && document.title) || copy.appName;
+/** D43: the launch video, or null (production: off until the video exists). */
+const LAUNCH = launchVideo();
 const pathOf = (f: File) => (f as File & { webkitRelativePath?: string }).webkitRelativePath || f.name;
 
 export default function App() {
@@ -201,8 +209,10 @@ export default function App() {
   const info = screen.name === 'info' ? screen.page : undefined;
   // Which step you're on, in the browser tab too (2.4.2).
   useEffect(() => {
-    document.title = copy.pageTitle(info ? copy.info[info].title : done ? copy.save.doneStep : copy.steps[step], APP_TITLE);
-  }, [step, done, info]);
+    // The start screen keeps the page's own launch title (D41); every other screen says where you are.
+    const home = screen.name === 'start';
+    document.title = home ? PAGE_TITLE : copy.pageTitle(info ? copy.info[info].title : done ? copy.save.doneStep : copy.steps[step], APP_TITLE);
+  }, [step, done, info, screen.name]);
 
   return (
     <div className="app">
@@ -332,22 +342,72 @@ function Start({ note, noteKey, onChoose, onSamples, onInfo }: { note?: string; 
           ))}
         </ol>
       </section>
+      {LAUNCH && <WatchVideo video={LAUNCH} />}
       <section className="know" aria-labelledby="faq-h">
         <h2 id="faq-h">{copy.start.faqH}</h2>
         <dl>
-          {copy.start.faq.map(({ q, a }) => (
+          {copy.start.faq.map(({ q, a, guide }) => (
             <div key={q} className="faq-row">
               <dt>{q}</dt>
-              <dd>{a}</dd>
+              <dd>
+                {a}
+                {guide && <button type="button" className="btn btn-link faq-link" onClick={() => onInfo('guide')}>{copy.start.guideLink}</button>}
+              </dd>
             </div>
           ))}
         </dl>
         <ul className="know-links">
           <li><button type="button" className="btn btn-link" onClick={() => onInfo('privacy')}>{copy.info.privacy.link}</button></li>
-          <li><button type="button" className="btn btn-link" onClick={() => onInfo('guide')}>{copy.info.guide.link}</button></li>
         </ul>
       </section>
+      {/* D41: a quiet footer, the logo in the text colour only, the name and the tagline. */}
+      <footer className="start-foot">
+        <LogoMark mono size={24} />
+        <span className="start-foot-name">{copy.appName}</span>
+        <span className="start-foot-line">{copy.start.tagline}</span>
+      </footer>
     </main>
+  );
+}
+
+/**
+ * D43: "Watch <name> sort a recovery folder". Until the button is pressed there is no <video> and
+ * nothing is requested: the poster is the page's own prints. The press inserts the video (with its
+ * captions on) and moves focus to it. If it can't load (offline), a plain line says so.
+ */
+function WatchVideo({ video }: { video: LaunchVideo }) {
+  const [playing, setPlaying] = useState(false);
+  const [failed, setFailed] = useState(false);
+  const videoRef = useRef<HTMLVideoElement>(null);
+  const playRef = useRef<HTMLButtonElement>(null);
+  // Focus follows the press to the video; if it can't load, back to the button (to try again).
+  useEffect(() => { if (playing) videoRef.current?.focus(); }, [playing]);
+  useEffect(() => { if (failed) playRef.current?.focus(); }, [failed]);
+  const live = playing && !failed;
+  return (
+    <section className="watch" aria-labelledby="watch-h">
+      <div className="watch-text">
+        <h2 id="watch-h">{copy.start.video.h}</h2>
+        <p className="sub-sm">{copy.start.video.line}</p>
+      </div>
+      <div className="watch-side">
+        <div className="watch-frame">
+          {live ? (
+            <video ref={videoRef} controls playsInline autoPlay src={video.src} onError={() => { setFailed(true); setPlaying(false); }}>
+              <track kind="captions" srcLang="en" label="English" default src={video.captions} />
+            </video>
+          ) : (
+            <>
+              <span className="watch-poster" aria-hidden="true"><Prints /></span>
+              <button ref={playRef} type="button" className="btn btn-secondary btn-icon watch-play" onClick={() => { setFailed(false); setPlaying(true); }}>
+                <PlayIcon />{copy.start.video.play(video.minutes)}
+              </button>
+            </>
+          )}
+        </div>
+        <p role="status" className="sub-sm watch-note">{failed ? copy.start.video.offline : ''}</p>
+      </div>
+    </section>
   );
 }
 

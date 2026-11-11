@@ -14,6 +14,10 @@ import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright';
+import { APP_NAME } from '../src/brand.ts';
+/** The save folder's name (copy.ts ROOT_FOLDER), from the one name setting. */
+const ROOT = `${APP_NAME} photos`;
+const ROOT_RE = ROOT.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 const repo = join(fileURLToPath(new URL('.', import.meta.url)), '..');
 const args = process.argv.slice(2);
@@ -89,7 +93,7 @@ try {
       const dir = resolve(val);
       scanNo++;
       if (!trees[dir]) trees[dir] = py('tree', dir);
-      const [ch] = await Promise.all([page.waitForEvent('filechooser'), page.getByRole('button', { name: 'Choose recovery folder' }).click()]);
+      const [ch] = await Promise.all([page.waitForEvent('filechooser'), page.getByRole('button', { name: 'Sort my recovered files' }).click()]);
       await ch.setFiles(dir);
       await page.getByText('Files checked').waitFor({ timeout: 30 * 60_000 });
     } else if (what === 'review') {
@@ -117,7 +121,7 @@ try {
       await page.getByText('Files checked').waitFor();
     } else if (what === 'startover') {
       await page.getByRole('button', { name: /Sort a different folder/ }).first().click();
-      await page.getByRole('button', { name: 'Choose recovery folder' }).waitFor();
+      await page.getByRole('button', { name: 'Sort my recovered files' }).waitFor();
     } else if (what === 'done') {
       await h1(/saved\./).waitFor({ timeout: 60 * 60_000 });
       await Promise.all(pending);
@@ -153,14 +157,14 @@ const lastFinished = {};
 for (const d of dones) {
   const mine = downloads.filter((z) => z.visit === d.visit && z.k <= d.downloadsSoFar);
   const mineNames = mine.map((z) => z.name);
-  const shown = new Set([...d.findText.matchAll(/Upsort photos[^,:]*?\.zip/g)].map((m) => m[0]).concat(d.findList));
-  const range = / to Upsort photos part/.test(d.findText);
+  const shown = new Set([...d.findText.matchAll(new RegExp(`${ROOT_RE}[^,:]*?\\.zip`, 'g'))].map((m) => m[0]).concat(d.findList));
+  const range = d.findText.includes(` to ${ROOT} part`);
   for (const n of mineNames) ok(shown.has(n) || range, `visit ${d.visit} Done doesn't name ${n}: ${d.findText} ${d.findList}`);
   for (const n of shown) ok(mineNames.includes(n), `visit ${d.visit} Done names ${n}, not a zip of this save`);
   ok(JSON.stringify(d.again) === JSON.stringify(mineNames.map((n) => `Download ${n} again`)), `visit ${d.visit} again buttons ${JSON.stringify(d.again)}`);
   const unfinished = downloads.filter((z) => z.scan === d.scan && z.visit > (lastFinished[d.scan] ?? 0) && z.visit < d.visit);
   const expectNames = unfinished.map((z) => z.name);
-  const noteNames = d.earlier ? [...d.earlier.matchAll(/Upsort photos[^,]*?\.zip/g)].map((m) => m[0]) : [];
+  const noteNames = d.earlier ? [...d.earlier.matchAll(new RegExp(`${ROOT_RE}[^,]*?\\.zip`, 'g'))].map((m) => m[0]) : [];
   ok(JSON.stringify(noteNames) === JSON.stringify(expectNames), `visit ${d.visit} earlier note names ${JSON.stringify(noteNames)}, want ${JSON.stringify(expectNames)} (${d.earlier})`);
   if (d.earlier) queries.push({ d, now: mine.map((z) => z.file), old: unfinished.map((z) => z.file) });
   lastFinished[d.scan] = d.visit;

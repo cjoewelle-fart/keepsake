@@ -11,6 +11,9 @@ import { join } from 'node:path';
 import { fileURLToPath } from 'node:url';
 import { chromium } from 'playwright';
 import { build } from 'vite';
+import { APP_NAME } from '../../src/brand.ts';
+/** The save folder's name (copy.ts ROOT_FOLDER), from the one name setting. */
+const ROOT = `${APP_NAME} photos`;
 
 const here = fileURLToPath(new URL('.', import.meta.url));
 const repo = join(here, '../..');
@@ -23,7 +26,8 @@ const expect = (ok, what) => { if (!ok) problems.push(what); };
 
 const outDir = mkdtempSync(join(tmpdir(), 'keepsake-qa-opfs-'));
 await build({ configFile: false, logLevel: 'warn', publicDir: false, build: { outDir, emptyOutDir: true, minify: false, lib: { entry: join(here, 'entry.ts'), name: 'K', formats: ['iife'], fileName: () => 'k.js' } } });
-const bundle = readFileSync(join(outDir, 'k.js'), 'utf8') + '\n' + readFileSync(join(here, 'page.js'), 'utf8');
+// page.js runs in the browser and can't import the name setting, so it gets the folder name here.
+const bundle = readFileSync(join(outDir, 'k.js'), 'utf8') + `\nconst ROOT = ${JSON.stringify(ROOT)};\n` + readFileSync(join(here, 'page.js'), 'utf8');
 rmSync(outDir, { recursive: true, force: true });
 
 const browser = await chromium.launch({ executablePath: exe });
@@ -40,14 +44,14 @@ try {
   const B = p.B;
   for (const k of ['same', 'depth1 recup_dir.1', 'depth1 recup_dir.300', 'depth5 a/b/c/d/e', 'empty subfolder']) expect(B[k].withHandle === true, `not refused with handle: ${k}`);
   for (const k of ['parent home (contains rec)', 'sibling rec2', 'Pictures', 'usb']) expect(B[k].withHandle === false, `wrongly refused: ${k}`);
-  expect(B['rec inside Pictures/Upsort photos, chosen=Pictures'].withHandle === true, 'not refused: recovery inside <chosen>/Upsort photos');
-  expect(B['fallback: rec inside Pictures/Upsort photos, chosen=Pictures'].fallback === true, 'fallback not refused: recovery inside <chosen>/Upsort photos');
+  expect(B[`rec inside Pictures/${ROOT}, chosen=Pictures`].withHandle === true, `not refused: recovery inside <chosen>/${ROOT}`);
+  expect(B[`fallback: rec inside Pictures/${ROOT}, chosen=Pictures`].fallback === true, `fallback not refused: recovery inside <chosen>/${ROOT}`);
   const saves = {};
   for (const s of ['normal', 'race-at-move', 'stop-mid-file', 'read-error-mid-file', 'move-unsupported', 'move-fails-after-write', 'move-quota-after-write', 'no-move-race-create', 'no-move-race-create-then-stop']) {
     saves[s] = await page.evaluate((x) => window.runSave(x), s);
     console.log(s, JSON.stringify(saves[s]));
     const after = saves[s].after;
-    expect(after.includes('Upsort photos/2024/06 June/2024-06-28 14.32.jpg:3') && after.includes('Upsort photos/2024/06 June/empty-theirs.jpg:0'), `${s}: a file that was there before changed or went`);
+    expect(after.includes(`${ROOT}/2024/06 June/2024-06-28 14.32.jpg:3`) && after.includes(`${ROOT}/2024/06 June/empty-theirs.jpg:0`), `${s}: a file that was there before changed or went`);
     expect(!after.some((x) => x.includes('.keepsake-partial-')), `${s}: a temporary file was left behind`);
     if (s.startsWith('no-move') || s === 'move-unsupported') expect(saves[s].end === 'unsupported' && saves[s].saved.length === 0, `${s}: without move() the save should end 'unsupported' with nothing written`);
   }
@@ -68,7 +72,7 @@ try {
     window.__root = root; window.__rec = rec;
     window.showDirectoryPicker = async () => rec;
   });
-  await app.getByRole('button', { name: 'Choose recovery folder' }).click();
+  await app.getByRole('button', { name: 'Sort my recovered files' }).click();
   await app.getByText('Files checked').waitFor({ timeout: 60_000 });
   await app.getByRole('button', { name: /^Review my/ }).click();
   await app.getByRole('heading', { level: 1, name: /Choose what to save/ }).waitFor();

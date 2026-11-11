@@ -16,12 +16,17 @@ import sys
 import unicodedata
 import zipfile
 from collections import Counter
+from pathlib import Path
+
+# The product name comes from the one name setting, src/brand.ts.
+APP_NAME = re.search(r"APP_NAME = '([^']+)'", (Path(__file__).resolve().parent.parent / "src" / "brand.ts").read_text()).group(1)
+ROOT = f"{APP_NAME} photos"
 
 MONTHS = ["January", "February", "March", "April", "May", "June", "July", "August", "September", "October", "November", "December"]
 ILLEGAL = re.compile(r'[<>:"\\|?*\x00-\x1f\x7f]')
 RESERVED = re.compile(r"^(con|prn|aux|nul|com[1-9]|lpt[1-9])(\.|$)", re.I)
-DATED = re.compile(r"^Upsort photos/(\d{4})/(\d{2}) ([A-Za-z]+)/(\d{4})-(\d{2})-(\d{2}) (\d{2})\.(\d{2})( \((\d+)\))?(\.[a-z0-9]{1,5})?$")
-NODATE = re.compile(r"^Upsort photos/No date/[^/]+$")
+DATED = re.compile(r"^" + re.escape(ROOT) + r"/(\d{4})/(\d{2}) ([A-Za-z]+)/(\d{4})-(\d{2})-(\d{2}) (\d{2})\.(\d{2})( \((\d+)\))?(\.[a-z0-9]{1,5})?$")
+NODATE = re.compile(r"^" + re.escape(ROOT) + r"/No date/[^/]+$")
 # Windows MAX_PATH is 260 including the folder the zip is extracted into: leave ~100 for that.
 MAX_INNER_PATH = 160
 
@@ -138,8 +143,8 @@ def check(rec, snap_path, zip_dir, app_path, labels_path=None):
         parts = n.split("/")
         if n.startswith("/") or "\\" in n or any(p in ("", ".", "..") for p in parts):
             fails.append(f"unsafe path (traversal/absolute/empty part): {n!r}")
-        if parts[0] != "Upsort photos":
-            fails.append(f"outside Upsort photos/: {n!r}")
+        if parts[0] != ROOT:
+            fails.append(f"outside {ROOT}/: {n!r}")
         for p in parts:
             if ILLEGAL.search(p) or RESERVED.match(p) or p != p.rstrip(" .") or p != p.strip():
                 fails.append(f"name not safe on Windows: {n!r} (part {p!r})")

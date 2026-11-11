@@ -89,6 +89,28 @@ export const CornerUpLeftIcon = (p: IconProps) => (
   </Icon>
 );
 
+/** "Play the video" (D43): an outlined triangle on the icon grid. */
+export const PlayIcon = (p: IconProps) => (
+  <Icon {...p}>
+    <path d="M8 5.5v13l10-6.5z" />
+  </Icon>
+);
+
+/**
+ * The logo mark (the header's, at 28px). `mono`: drawn in the text colour only, with no teal or
+ * orange, for the quiet footer on the start screen (D41). Decorative: the name beside it is text.
+ */
+export function LogoMark({ mono = false, size = 28 }: { mono?: boolean; size?: number }) {
+  const edge = mono ? 'currentColor' : '#23596B';
+  return (
+    <svg width={size} height={size} viewBox="0 0 28 28" fill="none" aria-hidden="true" focusable="false" className={mono ? 'logo-mono' : undefined}>
+      <rect x="2" y="2" width="24" height="24" rx="6" fill={mono ? 'none' : '#FFFFFF'} stroke={edge} strokeWidth="1.8" />
+      <path d="M6.5 15.5c2.5-2.2 5-2.2 7.5 0s5 2.2 7.5 0" stroke={edge} strokeWidth="1.8" strokeLinecap="round" />
+      <path d="M6.5 21h8" stroke={mono ? 'currentColor' : '#8A4B08'} strokeWidth="1.8" strokeLinecap="round" />
+    </svg>
+  );
+}
+
 export const ArrowRightIcon = (p: IconProps) => (
   <Icon {...p}>
     <path d="M4.5 12h15" />

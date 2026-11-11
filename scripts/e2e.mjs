@@ -9,6 +9,10 @@ import { tmpdir } from 'node:os';
 import { join } from 'node:path';
 import { chromium } from 'playwright';
 import { watchCsp } from './lib/browser-checks.mjs';
+import { APP_NAME } from '../src/brand.ts';
+/** The save folder's name (copy.ts ROOT_FOLDER), from the one name setting. */
+const ROOT = `${APP_NAME} photos`;
+const ROOT_RE = ROOT.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 const args = process.argv.slice(2);
 const opt = (k, d) => { const i = args.indexOf(k); return i >= 0 ? args.splice(i, 2)[1] : d; };
@@ -305,17 +309,17 @@ async function checkReceipt(page, label, selected) {
 
 /** Chromium: save into a folder. The picker is replaced by a folder in the origin-private file system (OPFS). */
 async function saveToFolder(page, label, selected) {
-  await page.evaluate(async () => {
+  await page.evaluate(async (ROOT) => {
     const root = await navigator.storage.getDirectory();
     for await (const k of root.keys()) await root.removeEntry(k, { recursive: true });
     const picked = await root.getDirectoryHandle('Pictures', { create: true });
     // An "Upsort photos" folder that's already there: it must be added to, and this file left alone.
-    const old = await picked.getDirectoryHandle('Upsort photos', { create: true });
+    const old = await picked.getDirectoryHandle(ROOT, { create: true });
     const w = await (await old.getFileHandle('keep-me.txt', { create: true })).createWritable();
     await w.write('mine');
     await w.close();
     window.showDirectoryPicker = async () => picked;
-  });
+  }, ROOT);
   await page.screenshot({ path: `${out}/${label}-6-choose.png`, fullPage: true });
   await checkNoSideScroll(page, label, 'choose where to save');
   await page.getByRole('button', { name: 'Choose a folder' }).click();
@@ -331,16 +335,16 @@ async function saveToFolder(page, label, selected) {
     await walk(await (await navigator.storage.getDirectory()).getDirectoryHandle('Pictures'), '');
     return files;
   });
-  const copies = disk.filter((f) => f.path !== 'Upsort photos/keep-me.txt');
-  const keep = disk.find((f) => f.path === 'Upsort photos/keep-me.txt');
+  const copies = disk.filter((f) => f.path !== `${ROOT}/keep-me.txt`);
+  const keep = disk.find((f) => f.path === `${ROOT}/keep-me.txt`);
   console.log(`[${label}] folder: ${copies.length} copies written, e.g. ${copies.slice(0, 3).map((f) => f.path).join(' | ')}`);
   if (copies.length !== saved) problems.push(`[${label}] ${copies.length} files in the folder, receipt says ${saved}`);
-  if (keep?.text !== 'mine') problems.push(`[${label}] the existing file in Upsort photos was changed or removed`);
-  const bad = copies.filter((f) => !/^Upsort photos\/(\d{4}\/\d{2} [A-Z][a-z]+\/\d{4}-\d{2}-\d{2} \d{2}\.\d{2}( \(\d+\))?\.[a-z0-9]+|No date\/[^/]+)$/.test(f.path));
+  if (keep?.text !== 'mine') problems.push(`[${label}] the existing file in ${ROOT} was changed or removed`);
+  const bad = copies.filter((f) => !new RegExp(`^${ROOT_RE}/(\\d{4}/\\d{2} [A-Z][a-z]+/\\d{4}-\\d{2}-\\d{2} \\d{2}\\.\\d{2}( \\(\\d+\\))?\\.[a-z0-9]+|No date/[^/]+)$`).test(f.path));
   if (bad.length) problems.push(`[${label}] badly named copies: ${bad.slice(0, 5).map((f) => f.path).join(', ')}`);
   if (copies.some((f) => f.size === 0)) problems.push(`[${label}] empty copies in the folder`);
   const find = await page.locator('[data-k=find]').innerText();
-  if (!find.includes('Pictures › Upsort photos')) problems.push(`[${label}] done screen doesn't say where the photos are ("${find}")`);
+  if (!find.includes(`Pictures › ${ROOT}`)) problems.push(`[${label}] done screen doesn't say where the photos are ("${find}")`);
   await page.screenshot({ path: `${out}/${label}-7-done.png`, fullPage: true });
   await checkNoSideScroll(page, label, 'done');
 }
@@ -362,7 +366,7 @@ async function saveAsZip(page, label, selected) {
       const test = execFileSync('unzip', ['-t', join(dir, z)]).toString();
       if (!/No errors detected/.test(test)) problems.push(`[${label}] ${z} failed unzip -t`);
       const names = execFileSync('unzip', ['-Z1', join(dir, z)]).toString().trim().split('\n');
-      if (names.some((n) => !n.startsWith('Upsort photos/'))) problems.push(`[${label}] ${z} has files outside Upsort photos/`);
+      if (names.some((n) => !n.startsWith(`${ROOT}/`))) problems.push(`[${label}] ${z} has files outside ${ROOT}/`);
       entries += names.length;
     }
     console.log(`[${label}] zip: ${zips.join(', ')}: ${entries} files, unzip -t OK`);
@@ -411,7 +415,7 @@ try {
     await page.screenshot({ path: `${out}/${label}-1-start.png`, fullPage: true });
     await checkNoSideScroll(page, label, 'start');
 
-    const [chooser] = await Promise.all([page.waitForEvent('filechooser'), page.getByRole('button', { name: 'Choose recovery folder' }).click()]);
+    const [chooser] = await Promise.all([page.waitForEvent('filechooser'), page.getByRole('button', { name: 'Sort my recovered files' }).click()]);
     const t0 = Date.now();
     await chooser.setFiles('fixtures/recovery');
     await page.getByRole('heading', { level: 1, name: /Checking your files|Looking for exact copies/ }).waitFor({ timeout: 10_000 }).catch(() => {});

@@ -43,7 +43,7 @@ export async function checkHeicPreview(context, url, folder) {
   const watch = await watchCsp(context, page, (v) => violations.push(v));
   try {
     await page.goto(url);
-    const [chooser] = await Promise.all([page.waitForEvent('filechooser'), page.getByRole('button', { name: 'Choose recovery folder' }).click()]);
+    const [chooser] = await Promise.all([page.waitForEvent('filechooser'), page.getByRole('button', { name: 'Sort my recovered files' }).click()]);
     await chooser.setFiles(folder);
     // The results screen (the progress screen also says "Files checked"). One try: the scan of
     // a 1-file folder used to fall back to "Checked 1 of 1, 100%" (T100, fixed); a stall here

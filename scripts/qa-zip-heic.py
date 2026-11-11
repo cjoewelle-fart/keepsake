@@ -15,16 +15,22 @@ from tests/heic (scripts/make_heic_samples.py).
 import hashlib
 import json
 import os
+import re
 import shutil
 import sys
 import zipfile
+from pathlib import Path
+
+# The product name comes from the one name setting, src/brand.ts.
+APP_NAME = re.search(r"APP_NAME = '([^']+)'", (Path(__file__).resolve().parent.parent / "src" / "brand.ts").read_text()).group(1)
+ROOT = f"{APP_NAME} photos"
 
 HERE = os.path.dirname(os.path.abspath(__file__))
 REPO = os.path.dirname(HERE)
 REAL = os.path.join(REPO, "tests", "real-phones")
 SYN = os.path.join(REPO, "tests", "heic")
 HEIC_BRANDS = {b"heic", b"heix", b"heim", b"heis", b"hevc", b"hevx", b"mif1", b"msf1", b"MiHE", b"MiHB", b"miaf"}
-D = "Upsort photos"
+D = ROOT
 
 
 def sha(b):

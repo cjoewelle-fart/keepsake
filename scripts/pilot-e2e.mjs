@@ -9,6 +9,9 @@ import { spawn } from 'node:child_process';
 import { existsSync, mkdirSync, readFileSync } from 'node:fs';
 import { basename, resolve } from 'node:path';
 import { chromium } from 'playwright';
+import { APP_NAME } from '../src/brand.ts';
+/** The save folder's name (copy.ts ROOT_FOLDER), from the one name setting. */
+const ROOT = `${APP_NAME} photos`;
 
 const args = process.argv.slice(2);
 const opt = (k, d) => { const i = args.indexOf(k); return i >= 0 ? args.splice(i, 2)[1] : d; };
@@ -89,7 +92,7 @@ async function run(browser) {
   page.on('console', (m) => m.type() === 'error' && errors.push(`console: ${m.text()}`));
   await page.goto(`${base}/`);
   const title = await page.title();
-  check(/Upsort \(test\)$/.test(title), `test build: title "${title}"`);
+  check(title.endsWith(`${APP_NAME} (test)`), `test build: title "${title}"`);
   check((await page.getByRole('button', { name: /example files/i }).count()) === 0, 'test build: no "Try with example files" button');
 
   // T83: the start screen says what it does, keeps the promise in view, and answers three questions.
@@ -104,7 +107,7 @@ async function run(browser) {
       c.querySelectorAll('[aria-hidden=true]').forEach((x) => x.remove());
       return c.textContent.replace(/\s+/g, ' ').trim();
     })),
-    oldNote: await page.getByText(/Upsort runs in your browser|never leave this computer/).count(),
+    oldNote: await page.getByText(new RegExp(`${APP_NAME} runs in your browser|never leave this computer`)).count(),
   });
   const st0 = await startScreen();
   check(st0.h1 === 'Recovered photos, sorted by date.', `Warmth start title: "${st0.h1}"`);
@@ -161,7 +164,7 @@ async function run(browser) {
 
   // G1: scan.
   const t0 = Date.now();
-  await page.getByRole('button', { name: 'Choose recovery folder' }).click();
+  await page.getByRole('button', { name: 'Sort my recovered files' }).click();
   let sawTotal = '';
   for (let i = 0; i < 100 && !sawTotal; i++) {
     const t = await page.locator('main').innerText().catch(() => '');
@@ -566,7 +569,7 @@ async function run(browser) {
   const failed = num(await page.locator('dd[data-k=failed]').innerText());
   check(saved === 44 && failed === 0, `G2 receipt: ${saved} saved, ${failed} couldn't save`);
   const find = await page.locator('[data-k=find]').innerText();
-  check(find.includes('Pictures › Upsort photos'), `G2 done screen says where: "${flat(find)}"`);
+  check(find.includes(`Pictures › ${ROOT}`), `G2 done screen says where: "${flat(find)}"`);
   const [dl] = await Promise.all([page.waitForEvent('download'), page.getByRole('button', { name: 'Save receipt' }).click()]);
   const receipt = readFileSync(await dl.path(), 'utf8');
   check(/Recovery folder\s+Untouched/.test(receipt), `T6 receipt file: "${(receipt.match(/Recovery folder.*/) || ['(missing)'])[0]}"`);
@@ -575,7 +578,7 @@ async function run(browser) {
   check(rRow === 'Your files · None deleted, none sent anywhere', `T76 receipt screen: "${rRow}"`);
   const pics = await listIn(page, 'pictures');
   const months = new Set(pics.map((f) => f.p.split('/').slice(0, 3).join('/')));
-  check(pics.length === 44 && pics.every((f) => f.p.startsWith('Upsort photos/2022/') && f.s > 0), `G2 Pictures holds ${pics.length} files, all under Upsort photos/2022/, none empty`);
+  check(pics.length === 44 && pics.every((f) => f.p.startsWith(`${ROOT}/2022/`) && f.s > 0), `G2 Pictures holds ${pics.length} files, all under ${ROOT}/2022/, none empty`);
   check(months.size === 12, `G2 month folders: ${[...months].map((m) => m.split('/')[2]).join(', ')}`);
   console.log(`e.g. ${pics.slice(0, 3).map((f) => f.p).join(' | ')}`);
 
@@ -604,7 +607,7 @@ async function run(browser) {
   check(recAgain.join('\n') === recBefore.join('\n') && pics2.length === 44, `T83 start over touches nothing on disk: recovery folder ${recAgain.length} files unchanged, Pictures still ${pics2.length}`);
   // A second scan from here works as the first did.
   await page.evaluate(() => { window.showDirectoryPicker = async () => window.__rec; });
-  await page.getByRole('button', { name: 'Choose recovery folder' }).click();
+  await page.getByRole('button', { name: 'Sort my recovered files' }).click();
   await page.getByText('Files checked').waitFor({ timeout: 120_000 });
   const h1b = await h1Text(page);
   check(h1b === 'We found 214 photos and videos.', `T83 second scan after start over: "${h1b}"`);

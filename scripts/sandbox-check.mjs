@@ -12,6 +12,7 @@ import { createServer } from 'node:http';
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import { chromium } from 'playwright';
+import { APP_NAME } from '../src/brand.ts';
 
 const args = process.argv.slice(2);
 const opt = (k, d) => { const i = args.indexOf(k); return i >= 0 ? args.splice(i, 2)[1] : d; };
@@ -23,7 +24,7 @@ if (!pagePath) throw new Error('usage: sandbox-check.mjs <chromiumPath> <keepsak
 const app = `<!doctype html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1">\n${readFileSync(pagePath, 'utf8')}</body></html>`;
 const parent = `<!doctype html><html lang="en"><head><meta charset="utf-8"><title>Viewer</title>
 <style>html,body{margin:0;height:100%}iframe{border:0;width:100%;height:100%}</style></head>
-<body><iframe title="Upsort preview" sandbox="allow-scripts allow-same-origin" src="/app.html"></iframe></body></html>`;
+<body><iframe title="${APP_NAME} preview" sandbox="allow-scripts allow-same-origin" src="/app.html"></iframe></body></html>`;
 
 const server = createServer((req, res) => {
   const body = req.url === '/' ? parent : req.url === '/app.html' ? app : null;
@@ -58,16 +59,16 @@ async function run(browser, name, { framed, removePicker }) {
   await f.getByRole('heading', { level: 1 }).first().waitFor();
   const env = await appFrame.evaluate(() => ({ title: document.title, picker: 'showDirectoryPicker' in window, framed: self !== top }));
   console.log(`--- ${name}: framed=${env.framed}, showDirectoryPicker ${env.picker ? 'present' : 'absent'}, title "${env.title}"`);
-  check(env.title.includes('Upsort (test)'), `${name}: title says "Upsort (test)"`);
+  check(env.title.includes(`${APP_NAME} (test)`), `${name}: title says "${APP_NAME} (test)"`);
   check(await f.getByRole('button', { name: 'Try with example files' }).count() === 0, `${name}: no "Try with example files" button`);
   const note = await f.locator('main .sub-sm').allInnerTexts();
   if (framed) check(note.some((t) => /Upload files to this site/.test(t)), `${name}: start screen explains the browser's "upload" wording`);
 
   // 1. Scan: the click must open the file input (a file chooser), not fail.
   const chooser = page.waitForEvent('filechooser', { timeout: 5000 }).catch(() => null);
-  await f.getByRole('button', { name: 'Choose recovery folder' }).click();
+  await f.getByRole('button', { name: 'Sort my recovered files' }).click();
   const fc = await chooser;
-  check(!!fc, `${name}: "Choose recovery folder" opens the folder-upload dialog (file input)`);
+  check(!!fc, `${name}: "Sort my recovered files" opens the folder-upload dialog (file input)`);
   if (fc) {
     check(await fc.element().evaluate((el) => el.webkitdirectory), `${name}: the dialog takes a whole folder (webkitdirectory)`);
     await fc.setFiles(fixture);

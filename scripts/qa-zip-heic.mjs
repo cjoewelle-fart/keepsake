@@ -134,7 +134,7 @@ try {
   await page.goto(`${base}/`);
   app.hasPicker = await page.evaluate(() => 'showDirectoryPicker' in window);
 
-  const [chooser] = await Promise.all([page.waitForEvent('filechooser'), page.getByRole('button', { name: 'Choose recovery folder' }).click()]);
+  const [chooser] = await Promise.all([page.waitForEvent('filechooser'), page.getByRole('button', { name: 'Sort my recovered files' }).click()]);
   let t0 = Date.now();
   await chooser.setFiles(rec);
   await page.getByText('Files checked').waitFor({ timeout: 20 * 60_000 });

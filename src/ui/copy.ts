@@ -1,5 +1,6 @@
 // All words the user sees live here, so the UX writer can edit them in one place.
 import type { SetAsideGroup } from '../engine/summary';
+import { APP_NAME, TAGLINE } from '../brand';
 
 const nf = new Intl.NumberFormat('en');
 export const n = (x: number) => nf.format(x);
@@ -52,7 +53,8 @@ export const bytes = (x: number) => {
   return u === 0 ? `${n(x)} ${plural(x, 'byte', 'bytes')}` : `${x >= 100 ? Math.round(x) : x.toFixed(1).replace(/\.0$/, '')} ${units[u]}`;
 };
 
-const APP = 'Upsort';
+// The product name lives in src/brand.ts (one setting, so a rename is code-only).
+const APP = APP_NAME;
 // The save folder's name, used for the folder, the zips and every sentence that names it (T94).
 const ROOT_FOLDER = `${APP} photos`;
 /** ROOT_FOLDER for use inside a RegExp. */
@@ -346,7 +348,7 @@ You don’t need to sort through them yourself.
 PhotoRec’s part is done. Now ${APP} puts what PhotoRec found in order.
 
 1. Go back to the start of ${APP}. You can use the **Sort my recovered files** button at the bottom of this page.
-2. Click **Choose recovery folder**.
+2. Click **Sort my recovered files**.
 3. Choose your \`Recovered photos\` folder (the one that holds the recup_dir folders).
 
 ${APP} finds the photos and videos, sets the rest aside, and sorts your photos into folders by date. It only reads your \`Recovered photos\` folder. Nothing in it is changed or deleted.
@@ -420,8 +422,10 @@ export const copy = {
     titleJoin: ' ',
     titleB: 'sorted by date.',
     /** Round 6: How it works now covers the year and month folders, so the lede is short. */
-    body: 'Seeing lots of files with strange names? That’s normal after a recovery. Start with the folder your recovery program made.',
-    choose: 'Choose recovery folder',
+    // D41 (Nov 11): the owner's approved sentence, word for word.
+    body: `${APP} turns the jumble of files a recovery tool gives back into a dated photo library. It’s free, runs in your browser, and nothing is uploaded or deleted.`,
+    /** D41: the same label as the button at the end of the PhotoRec guide. Still opens the folder picker. */
+    choose: 'Sort my recovered files',
     /** Small text under the button, first in the help group. */
     hint: 'Look for the one that holds recup_dir.1, recup_dir.2 and so on.',
     /** Under the button: takes over from the old "Recover" step. Opens the PhotoRec guide. */
@@ -464,11 +468,27 @@ export const copy = {
     },
     /** T83: "Good to know", a short Q&A. Round 6: a quiet section at the bottom of the page. */
     faqH: 'Good to know',
+    // D41 (Nov 11): four questions. The last one ends with a link to the PhotoRec guide (`guideLink`).
     faq: [
-      { q: 'Do you see my photos?', a: `No. ${APP} works inside your browser. Your photos are never sent to us.` },
-      { q: 'Do I need an account?', a: 'No. There’s nothing to sign up for.' },
+      { q: 'Is it free?', a: 'Yes. Sorting and saving your photos is free, and there’s no account to make.' },
+      { q: 'Does it upload my photos?', a: `No. ${APP} runs inside your browser, on your computer. Your photos are never sent to us or anyone else.` },
       { q: 'Will it change my files?', a: 'No. It only reads them. Saving makes new copies, so you’ll need some free space.' },
-    ],
+      { q: 'I haven’t recovered my files yet', a: `Start with PhotoRec, a free recovery program. ${APP} sorts what it finds. It doesn’t recover files itself.`, guide: true },
+    ] as { q: string; a: string; guide?: boolean }[],
+    /** Under the last answer: opens the PhotoRec guide. */
+    guideLink: 'Read the step-by-step PhotoRec guide',
+    /**
+     * D43: the launch video section, shown only when a video is set (src/brand.ts LAUNCH_VIDEO).
+     * Nothing loads until the button is pressed.
+     */
+    video: {
+      h: `Watch ${APP} sort a recovery folder`,
+      line: 'One minute, with captions. It loads only when you press play.',
+      play: (minutes: number) => `Play the video (${minutes} min)`,
+      offline: 'The video needs an internet connection. Everything else here works offline.',
+    },
+    /** D41: the quiet footer under Good to know (logo, name, tagline). */
+    tagline: TAGLINE,
     browserNote: `${APP} works best in Chrome or Edge on a computer. You can still scan your folder in this browser.`,
     stopped: 'Scan stopped. Nothing was changed, and you can start again any time.',
     /** Inside the claude.ai preview the folder is chosen with the browser's upload dialog. */
@@ -982,7 +1002,6 @@ export const copy = {
       md: PRIVACY,
     },
     guide: {
-      link: 'New to PhotoRec? Here’s how to recover your files',
       title: 'PhotoRec guide',
       md: GUIDE,
       /** T83: a primary button after the guide's text, back to the start screen. */
