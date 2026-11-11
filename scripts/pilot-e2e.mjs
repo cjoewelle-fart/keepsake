@@ -121,7 +121,7 @@ async function run(browser) {
   check(steps.names.join('|') === 'Scan|Sort|Choose|Save' && steps.current === 'Scan' && steps.line === 'Step 1 of 4 · Scan' && steps.label === 'Steps' && steps.guide,
     `Warmth stepper: ${steps.names.join(', ')}; current "${steps.current}"; "${steps.line}"; guide line under the button ${steps.guide}`);
   check(st0.promise === 'Your photos stay on your computer. Nothing is uploaded or deleted.', `T83 start promise: "${st0.promise}"`);
-  check(st0.faqH === 'Good to know' && st0.faq.join(' | ') === 'Do you see my photos? | Do I need an account? | Will it change my files?' && st0.oldNote === 0,
+  check(st0.faqH === 'Good to know' && st0.faq.join(' | ') === 'Is it free? | Does it upload my photos? | Will it change my files? | I haven’t recovered my files yet' && st0.oldNote === 0,
     `T83 start Q&A: "${st0.faqH}": ${st0.faq.join(' | ')}; old privacy lines left: ${st0.oldNote}`);
   // Round 6: How it works, three numbered steps (the number is decorative; the list gives the order).
   check(st0.howH === 'How it works' && st0.how.join(' | ') === 'Files come back unsorted | We sort them by date | You choose what to keep',
