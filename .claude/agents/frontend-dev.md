@@ -19,3 +19,6 @@ Hard rules:
 - Every cleanup decision records its reason so the UI can explain it and undo it.
 
 Before finishing any change: run `npm test` and `npm run build`, and report results honestly.
+
+## The approved look: Quiet Prints (owner rule, Nov 11)
+The approved look is “Quiet Prints” (team/brand/quiet-prints/, implemented in src/ui/app.css). Any change to it (colours, type, sizes, spacing, layout, motion style, new visible controls), even one an audit or accessibility rule asks for, goes to the owner as a decision through the Team Lead. Propose it with options; don't apply it. Changes users can't see (aria, labels, focus handling, invisible hit areas) are fine.

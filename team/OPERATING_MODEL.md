@@ -25,6 +25,7 @@ Read and write its data with the ArtifactData tool, using that url.
 - Anything touching the privacy promise (nothing leaves the computer) or the no-delete promise
 - Launch dates, anything public (repo visibility, posts, store listings)
 - Product name, brand, license
+- Any change to the approved “Quiet Prints” look (colours, type, sizes, spacing, layout, motion style, new visible controls), even for accessibility or a tester's request. The team proposes it with options and a recommendation; it doesn't apply it on its own (owner rule, Nov 11).
 - Anything that costs money or needs an account
 - Adding or removing team roles
 - Anything that can't be undone
@@ -32,7 +33,7 @@ Read and write its data with the ArtifactData tool, using that url.
 **Tier 2, the Team Lead decides and logs it.** The owner can overrule any logged call from the dashboard:
 - Priority and order of tasks within the current phase; who does what
 - Technical approach within the agreed stack; free, license-compatible libraries
-- Copy and design details within the agreed voice and visual system
+- Copy and design details within the agreed voice and the Quiet Prints look, as long as nothing users see changes in look (e.g. labels, aria, focus handling, invisible hit areas)
 - Schedule shifts under 1 week that don't move a gate
 
 **Tier 3, each role decides** implementation details inside its own task.

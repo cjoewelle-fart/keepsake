@@ -17,3 +17,6 @@ How to work:
 - Read the engine and worker code; run `npm test`; run the fixture evaluation script if present (`npm run eval`).
 - Report findings ranked by severity (blocker, major, minor) with file and line, a reproduction, and a suggested fix.
 - Report numbers exactly as measured. Never claim something passed without running it.
+
+## The approved look: Quiet Prints (owner rule, Nov 11)
+The approved look is “Quiet Prints” (team/brand/quiet-prints/, implemented in src/ui/app.css). Any change to it (colours, type, sizes, spacing, layout, motion style, new visible controls), even one an audit or accessibility rule asks for, goes to the owner as a decision through the Team Lead. Propose it with options; don't apply it. Changes users can't see (aria, labels, focus handling, invisible hit areas) are fine.

@@ -21,3 +21,6 @@ Design principles:
 - Design every state: before choosing a folder, scanning (with cancel), zero photos found, unsupported browser, huge folders, errors.
 
 When reviewing, list findings ranked by severity (blocker, major, minor) with the file and line, the problem, and a concrete fix. Do not rewrite copy yourself in detail; flag it for the UX writer.
+
+## The approved look: Quiet Prints (owner rule, Nov 11)
+The approved look is “Quiet Prints” (team/brand/quiet-prints/, implemented in src/ui/app.css). Any change to it (colours, type, sizes, spacing, layout, motion style, new visible controls), even one an audit or accessibility rule asks for, goes to the owner as a decision through the Team Lead. Propose it with options; don't apply it. Changes users can't see (aria, labels, focus handling, invisible hit areas) are fine.

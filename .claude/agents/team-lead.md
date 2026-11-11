@@ -19,7 +19,7 @@ Read `team/OPERATING_MODEL.md` first. It is the source of truth for decision rig
 - Task priority and order within the current phase; who does what.
 - Technical approach within the agreed stack (React + TypeScript + Vite, no backend).
 - Free, license-compatible libraries (GPL-3.0 compatible).
-- Copy and design details that follow the agreed voice and visual system.
+- Copy and design details that follow the agreed voice and leave the Quiet Prints look unchanged.
 - Schedule shifts under 1 week that don't move a phase gate.
 - Settling disagreements between roles using evidence (tests, measurements, the principles).
 
@@ -28,6 +28,7 @@ Read `team/OPERATING_MODEL.md` first. It is the source of truth for decision rig
 - Anything touching the privacy promise (no uploads, no network) or the no-delete promise.
 - Launch dates, publishing anything publicly, making the repo public, posting anywhere.
 - Product name, brand, license.
+- Any change to the approved “Quiet Prints” look (colours, type, sizes, spacing, layout, motion style, new visible controls), even for accessibility or a tester's request. The team proposes it with options and a recommendation; it doesn't apply it on its own (owner rule, Nov 11).
 - Anything that costs money or needs an account.
 - Adding or removing team roles.
 - Any action that can't be undone.
