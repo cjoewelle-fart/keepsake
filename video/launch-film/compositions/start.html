@@ -1,0 +1,22 @@
+<template>
+  <style>
+    #root { position: absolute; inset: 0; }
+    .win { position: absolute; left: 200px; top: 44px; width: 1520px; height: 855px; border-radius: 18px; overflow: hidden;
+      background: #ECF1F0; box-shadow: 0 1px 2px rgba(31,36,39,.12), 0 14px 40px rgba(31,36,39,.14); }
+    .cam { position: absolute; inset: 0; transform-origin: 50% 40%; }
+    .cam video { position: absolute; left: 0; top: 0; width: 1520px; height: 855px; object-fit: cover; }
+  </style>
+  <div id="root" data-composition-id="start" data-width="1920" data-height="1080">
+    <div id="start-win" class="win"><div id="start-cam" class="cam">
+<video id="start-v0" class="clip" src="assets/clips/start.mp4" data-start="0" data-duration="3.4" data-media-start="0.3" muted playsinline></video>
+    </div></div>
+  </div>
+  <script>
+    const tl = gsap.timeline({ paused: true });
+        tl.fromTo("#start-win",{opacity:0,filter:"blur(30px)",scale:0.94},{opacity:1,filter:"blur(0px)",scale:1,duration:0.7,ease:"power1.out"},0);
+    tl.fromTo("#start-cam",{scale:1.3},{scale:1.3,duration:0.01},0);
+    tl.to("#start-cam",{scale:1.75,duration:0.9,ease:"power2.inOut"},1.6);
+    tl.to("#start-cam",{scale:3.2,filter:"blur(12px)",duration:0.35,ease:"power3.in"},3.05);
+    window.__timelines["start"] = tl;
+  </script>
+</template>

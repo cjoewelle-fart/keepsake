@@ -20,6 +20,10 @@ Owner rule (Nov 11): anything that would change the approved Quiet Prints look i
 | 7 | UX9, UX10 (hover gating), UX11, UX12 | P3 | No |
 | 8 | UX7, UX8, UX10 (:active states) | P3 | LOOK → you if done |
 
+## Found while recording the launch video (Nov 11)
+
+- **UX13 (P2, no look change):** on a phone (390 px wide), the scanning screen squeezes the reassurance box ("This happens on your computer. Nothing is sent anywhere…") into a narrow column with one or two words per line, next to "Your files are not deleted or changed". It is readable but looks broken. Seen in the phone capture on 7a90772. Fix: stack the two parts on narrow screens.
+
 ## ui-ux-pro-max audit: Accessibility (§1), Touch & Interaction (§2), Forms & Feedback (§8)
 
 Build: main @ 6ac1efc, dist/ served by scripts/serve-dist.mjs (port 4180, with the _headers CSP). Chromium 1243 headless. Fixture: fixtures/recovery (1,407 files: 323 kept, 1,084 set aside).

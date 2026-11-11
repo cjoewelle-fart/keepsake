@@ -33,3 +33,6 @@ dist-artifact-test/
 
 # Agents' temporary worktrees
 .claude/worktrees/
+video/capture/out/
+video/**/renders/
+video/**/.hyperframes/

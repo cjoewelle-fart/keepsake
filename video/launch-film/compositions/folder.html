@@ -1,0 +1,90 @@
+<template>
+  <style>
+    @font-face { font-family: "Bricolage Grotesque"; src: url("assets/fonts/bricolage-grotesque-latin-opsz-normal.woff2") format("woff2"); font-weight: 200 800; }
+    @font-face { font-family: "Atkinson Hyperlegible"; src: url("assets/fonts/atkinson-hyperlegible-latin-400-normal.woff2") format("woff2"); font-weight: 400; }
+    @font-face { font-family: "Atkinson Hyperlegible"; src: url("assets/fonts/atkinson-hyperlegible-latin-700-normal.woff2") format("woff2"); font-weight: 700; }
+    #root { position: absolute; inset: 0; }
+    .card { position: absolute; left: 200px; top: 70px; width: 860px; height: 800px; background: #FFFFFF; border-radius: 18px; overflow: hidden;
+      box-shadow: 0 1px 2px rgba(31,36,39,.12), 0 14px 40px rgba(31,36,39,.14); }
+    .head { position: absolute; left: 0; top: 0; right: 0; height: 92px; padding: 30px 48px; background: #FAFCFB; border-bottom: 1px solid #DCE6E3;
+      font: 700 30px "JetBrains Mono", monospace; color: #1F2427; z-index: 2; }
+    .list { position: absolute; left: 48px; right: 48px; top: 110px; }
+    .row { display: flex; justify-content: space-between; height: 54px; align-items: center; font: 400 30px "JetBrains Mono", monospace; color: #1F2427; border-bottom: 1px solid #EEF3F1; }
+    .row.small { color: #646B6F; }
+    .row .s { color: #545B5F; }
+    .row.small .s { color: #8A4B08; }
+    .count { position: absolute; left: 1160px; top: 300px; width: 600px; }
+    .num { font: 800 230px/0.9 "Bricolage Grotesque", sans-serif; font-variation-settings: "opsz" 96; letter-spacing: -0.035em; color: #23596B; }
+    .word { margin-top: 18px; font: 800 80px/1 "Bricolage Grotesque", sans-serif; font-variation-settings: "opsz" 96; letter-spacing: -0.02em; color: #1F2427; }
+  </style>
+  <div id="root" data-composition-id="folder" data-width="1920" data-height="1080">
+    <div id="folder-card" class="card">
+      <div class="head" data-layout-allow-overlap>recup_dir.1/</div>
+      <div id="folder-list" class="list" data-layout-ignore>
+<div class="row"><span class="n">f0016384.jpg</span><span class="s">342 KB</span></div>
+<div class="row small"><span class="n">f0017088.xml</span><span class="s">3 KB</span></div>
+<div class="row"><span class="n">f0017152.jpg</span><span class="s">236 KB</span></div>
+<div class="row"><span class="n">f0017664.jpg</span><span class="s">292 KB</span></div>
+<div class="row small"><span class="n">f0018304.jpg</span><span class="s">12 KB</span></div>
+<div class="row small"><span class="n">f0018368.jpg</span><span class="s">6 KB</span></div>
+<div class="row small"><span class="n">f0018432.jpg</span><span class="s">11 KB</span></div>
+<div class="row small"><span class="n">f0019392.html</span><span class="s">8 KB</span></div>
+<div class="row"><span class="n">f0019456.jpg</span><span class="s">256 KB</span></div>
+<div class="row"><span class="n">f0019968.sqlite</span><span class="s">36 KB</span></div>
+<div class="row"><span class="n">f0020096.jpg</span><span class="s">263 KB</span></div>
+<div class="row"><span class="n">f0020672.txt</span><span class="s">28 KB</span></div>
+<div class="row small"><span class="n">f0020736.jpg</span><span class="s">7 KB</span></div>
+<div class="row"><span class="n">f0020800.jpg</span><span class="s">385 KB</span></div>
+<div class="row small"><span class="n">f0021632.html</span><span class="s">8 KB</span></div>
+<div class="row"><span class="n">f0021696.sqlite</span><span class="s">60 KB</span></div>
+<div class="row small"><span class="n">f0021824.jpg</span><span class="s">14 KB</span></div>
+<div class="row"><span class="n">f0021888.sqlite</span><span class="s">92 KB</span></div>
+<div class="row small"><span class="n">f0022080.xml</span><span class="s">4 KB</span></div>
+<div class="row"><span class="n">f0022144.jpg</span><span class="s">225 KB</span></div>
+<div class="row small"><span class="n">f0022656.jpg</span><span class="s">5 KB</span></div>
+<div class="row small"><span class="n">f0022720.xml</span><span class="s">3 KB</span></div>
+<div class="row"><span class="n">f0022784.jpg</span><span class="s">246 KB</span></div>
+<div class="row small"><span class="n">f0023296.jpg</span><span class="s">6 KB</span></div>
+<div class="row"><span class="n">f0023360.jpg</span><span class="s">303 KB</span></div>
+<div class="row small"><span class="n">f0024000.jpg</span><span class="s">12 KB</span></div>
+<div class="row small"><span class="n">f0024064.png</span><span class="s">968 bytes</span></div>
+<div class="row small"><span class="n">f0024128.txt</span><span class="s">7 KB</span></div>
+<div class="row"><span class="n">f0024192.jpg</span><span class="s">229 KB</span></div>
+<div class="row small"><span class="n">f0024704.jpg</span><span class="s">5 KB</span></div>
+<div class="row"><span class="n">f0024768.jpg</span><span class="s">445 KB</span></div>
+<div class="row small"><span class="n">f0025664.jpg</span><span class="s">15 KB</span></div>
+<div class="row small"><span class="n">f0025728.xml</span><span class="s">2 KB</span></div>
+<div class="row small"><span class="n">f0025792.png</span><span class="s">1 KB</span></div>
+<div class="row"><span class="n">f0025856.jpg</span><span class="s">273 KB</span></div>
+<div class="row"><span class="n">f0026432.jpg</span><span class="s">229 KB</span></div>
+<div class="row small"><span class="n">f0026944.jpg</span><span class="s">7 KB</span></div>
+<div class="row small"><span class="n">f0027008.jpg</span><span class="s">5 KB</span></div>
+<div class="row small"><span class="n">f0027072.xml</span><span class="s">3 KB</span></div>
+<div class="row small"><span class="n">f0027136.xml</span><span class="s">4 KB</span></div>
+<div class="row"><span class="n">f0027200.jpg</span><span class="s">249 KB</span></div>
+<div class="row small"><span class="n">f0027712.jpg</span><span class="s">8 KB</span></div>
+<div class="row"><span class="n">f0027776.txt</span><span class="s">24 KB</span></div>
+<div class="row"><span class="n">f0027840.jpg</span><span class="s">263 KB</span></div>
+<div class="row small"><span class="n">f0028416.xml</span><span class="s">2 KB</span></div>
+<div class="row"><span class="n">f0028480.sqlite</span><span class="s">60 KB</span></div>
+      </div>
+    </div>
+    <div class="count">
+      <div id="folder-num" class="num">539</div>
+      <div id="folder-word" class="word">files</div>
+    </div>
+  </div>
+  <script>
+    const C = window.CAPTIONS[window.CAPTION_LANG] || window.CAPTIONS.en;
+    document.getElementById("folder-word").textContent = C.filesWord;
+    const tl = gsap.timeline({ paused: true });
+    tl.fromTo("#folder-card", { opacity: 1, y: 0 }, { opacity: 1, y: 0, duration: 0.01 }, 0);
+    // The folder keeps going: the list scrolls at one constant speed for the whole shot.
+    tl.fromTo("#folder-list", { y: 0 }, { y: -1700, duration: 7, ease: "none" }, 0);
+    tl.fromTo("#folder-num", { opacity: 0, filter: "blur(8px)" }, { opacity: 1, filter: "blur(0px)", duration: 0.2, ease: "power4.out" }, 3.4);
+    tl.fromTo("#folder-word", { opacity: 0, filter: "blur(6px)" }, { opacity: 1, filter: "blur(0px)", duration: 0.15, ease: "power4.out" }, 3.55);
+    tl.to("#root", { filter: "blur(30px)", scale: 1.06, duration: 0.5, ease: "power1.in" }, 6.5);
+    tl.to("#root", { opacity: 0, duration: 0.3, ease: "power1.in" }, 6.7);
+    window.__timelines["folder"] = tl;
+  </script>
+</template>

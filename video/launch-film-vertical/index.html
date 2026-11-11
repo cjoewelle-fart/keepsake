@@ -1,0 +1,28 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=1080, height=1920" />
+    <script src="https://cdn.jsdelivr.net/npm/gsap@3.15.0/dist/gsap.min.js"></script>
+    <script src="assets/brand.js"></script>
+    <script src="assets/captions.js"></script>
+    <style>
+      * { margin: 0; padding: 0; box-sizing: border-box; }
+      html, body { margin: 0; width: 1080px; height: 1920px; overflow: hidden; background: #ECF1F0; }
+      #paper { position: absolute; inset: 0; background: #ECF1F0; }
+      #paper-grain { position: absolute; inset: 0; background-image: url(assets/img/grain.png); background-size: 256px; opacity: 0.35; mix-blend-mode: multiply; }
+    </style>
+  </head>
+  <body>
+    <div id="root" data-composition-id="main" data-start="0" data-duration="15" data-width="1080" data-height="1920">
+      <div id="paper" class="clip" data-start="0" data-duration="15" data-track-index="0"><div id="paper-grain"></div></div>
+      <div id="vfolder" data-composition-id="vfolder" data-composition-src="compositions/vfolder.html" data-start="0" data-duration="3" data-track-index="1" data-track-kind="graphics" data-width="1080" data-height="1920"></div>
+      <div id="vscan" data-composition-id="vscan" data-composition-src="compositions/vscan.html" data-start="3" data-duration="2.6" data-track-index="1" data-track-kind="graphics" data-width="1080" data-height="1920"></div>
+      <div id="vresults" data-composition-id="vresults" data-composition-src="compositions/vresults.html" data-start="5.6" data-duration="2.4" data-track-index="1" data-track-kind="graphics" data-width="1080" data-height="1920"></div>
+      <div id="vreview" data-composition-id="vreview" data-composition-src="compositions/vreview.html" data-start="8" data-duration="3" data-track-index="1" data-track-kind="graphics" data-width="1080" data-height="1920"></div>
+      <div id="vend" data-composition-id="vend" data-composition-src="compositions/vend.html" data-start="11" data-duration="4" data-track-index="1" data-track-kind="graphics" data-width="1080" data-height="1920"></div>
+      <div id="vcaps" data-composition-id="vcaps" data-composition-src="compositions/vcaps.html" data-start="0" data-duration="15" data-track-index="2" data-track-kind="captions" data-width="1080" data-height="1920"></div>
+    </div>
+    <script>window.__timelines["main"] = gsap.timeline({ paused: true });</script>
+  </body>
+</html>

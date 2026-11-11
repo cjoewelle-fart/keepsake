@@ -1,0 +1,4325 @@
+{
+ "folder": "Recovered from old phone",
+ "count": 539,
+ "groupNames": {
+  "keep": "Kept, sorted by date",
+  "small": "Small preview copies",
+  "duplicate": "Exact copies",
+  "damaged": "Damaged or incomplete files",
+  "system": "App and system files"
+ },
+ "files": [
+  {
+   "path": "recup_dir.1/f0016384.jpg",
+   "bytes": 350132,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2019
+  },
+  {
+   "path": "recup_dir.1/f0017088.xml",
+   "bytes": 3080,
+   "group": "system",
+   "note": "app settings",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0017152.jpg",
+   "bytes": 241616,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2019
+  },
+  {
+   "path": "recup_dir.1/f0017664.jpg",
+   "bytes": 299419,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2019
+  },
+  {
+   "path": "recup_dir.1/f0018304.jpg",
+   "bytes": 12363,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0018368.jpg",
+   "bytes": 5845,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0018432.jpg",
+   "bytes": 10935,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0019392.html",
+   "bytes": 7685,
+   "group": "system",
+   "note": "web cache",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0019456.jpg",
+   "bytes": 261887,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2019
+  },
+  {
+   "path": "recup_dir.1/f0019968.sqlite",
+   "bytes": 36864,
+   "group": "system",
+   "note": "app database",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0020096.jpg",
+   "bytes": 269490,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2019
+  },
+  {
+   "path": "recup_dir.1/f0020672.txt",
+   "bytes": 28936,
+   "group": "system",
+   "note": "app log",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0020736.jpg",
+   "bytes": 7242,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0020800.jpg",
+   "bytes": 394554,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2019
+  },
+  {
+   "path": "recup_dir.1/f0021632.html",
+   "bytes": 7874,
+   "group": "system",
+   "note": "web cache",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0021696.sqlite",
+   "bytes": 61440,
+   "group": "system",
+   "note": "app database",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0021824.jpg",
+   "bytes": 14783,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0021888.sqlite",
+   "bytes": 94208,
+   "group": "system",
+   "note": "app database",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0022080.xml",
+   "bytes": 4188,
+   "group": "system",
+   "note": "app settings",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0022144.jpg",
+   "bytes": 230766,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2019
+  },
+  {
+   "path": "recup_dir.1/f0022656.jpg",
+   "bytes": 5416,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0022720.xml",
+   "bytes": 3397,
+   "group": "system",
+   "note": "app settings",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0022784.jpg",
+   "bytes": 251457,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2019
+  },
+  {
+   "path": "recup_dir.1/f0023296.jpg",
+   "bytes": 6045,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0023360.jpg",
+   "bytes": 310238,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2019
+  },
+  {
+   "path": "recup_dir.1/f0024000.jpg",
+   "bytes": 11858,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0024064.png",
+   "bytes": 968,
+   "group": "small",
+   "note": "app icon",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0024128.txt",
+   "bytes": 7536,
+   "group": "system",
+   "note": "app log",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0024192.jpg",
+   "bytes": 234324,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2019
+  },
+  {
+   "path": "recup_dir.1/f0024704.jpg",
+   "bytes": 5331,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0024768.jpg",
+   "bytes": 455692,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2019
+  },
+  {
+   "path": "recup_dir.1/f0025664.jpg",
+   "bytes": 15322,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0025728.xml",
+   "bytes": 1755,
+   "group": "system",
+   "note": "app settings",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0025792.png",
+   "bytes": 1308,
+   "group": "small",
+   "note": "app icon",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0025856.jpg",
+   "bytes": 279896,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2019
+  },
+  {
+   "path": "recup_dir.1/f0026432.jpg",
+   "bytes": 234163,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2019
+  },
+  {
+   "path": "recup_dir.1/f0026944.jpg",
+   "bytes": 6661,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0027008.jpg",
+   "bytes": 5174,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0027072.xml",
+   "bytes": 3452,
+   "group": "system",
+   "note": "app settings",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0027136.xml",
+   "bytes": 4080,
+   "group": "system",
+   "note": "app settings",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0027200.jpg",
+   "bytes": 254603,
+   "group": "keep",
+   "note": "camera photo (on the card twice)",
+   "kind": "photo",
+   "year": 2019
+  },
+  {
+   "path": "recup_dir.1/f0027712.jpg",
+   "bytes": 7934,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0027776.txt",
+   "bytes": 24096,
+   "group": "system",
+   "note": "app log",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0027840.jpg",
+   "bytes": 269080,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2019
+  },
+  {
+   "path": "recup_dir.1/f0028416.xml",
+   "bytes": 2071,
+   "group": "system",
+   "note": "app settings",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0028480.sqlite",
+   "bytes": 61440,
+   "group": "system",
+   "note": "app database",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0028608.sqlite",
+   "bytes": 49152,
+   "group": "system",
+   "note": "app database",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0028736.gz",
+   "bytes": 9056,
+   "group": "system",
+   "note": "compressed log",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0028800.png",
+   "bytes": 656,
+   "group": "small",
+   "note": "app icon",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0028864.xml",
+   "bytes": 434,
+   "group": "system",
+   "note": "app settings",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0028928.jpg",
+   "bytes": 258435,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2019
+  },
+  {
+   "path": "recup_dir.1/f0029440.jpg",
+   "bytes": 6761,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0029504.jpg",
+   "bytes": 255334,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2019
+  },
+  {
+   "path": "recup_dir.1/f0030016.jpg",
+   "bytes": 258942,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2019
+  },
+  {
+   "path": "recup_dir.1/f0030528.txt",
+   "bytes": 5247,
+   "group": "system",
+   "note": "app log",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0030592.jpg",
+   "bytes": 7294,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0030656.jpg",
+   "bytes": 7488,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0030720.jpg",
+   "bytes": 399615,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2019
+  },
+  {
+   "path": "recup_dir.1/f0031552.jpg",
+   "bytes": 288246,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2019
+  },
+  {
+   "path": "recup_dir.1/f0032128.jpg",
+   "bytes": 245832,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2019
+  },
+  {
+   "path": "recup_dir.1/f0032640.jpg",
+   "bytes": 237248,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2019
+  },
+  {
+   "path": "recup_dir.1/f0033152.jpg",
+   "bytes": 6029,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0033216.jpg",
+   "bytes": 6156,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0033280.jpg",
+   "bytes": 258466,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2020
+  },
+  {
+   "path": "recup_dir.1/f0033792.jpg",
+   "bytes": 411793,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2020
+  },
+  {
+   "path": "recup_dir.1/f0034624.jpg",
+   "bytes": 254603,
+   "group": "duplicate",
+   "note": "exact copy of a kept photo",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0035136.sqlite",
+   "bytes": 106496,
+   "group": "system",
+   "note": "app database",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0035392.jpg",
+   "bytes": 240344,
+   "group": "keep",
+   "note": "camera photo (on the card twice)",
+   "kind": "photo",
+   "year": 2020
+  },
+  {
+   "path": "recup_dir.1/f0035904.jpg",
+   "bytes": 14224,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0035968.jpg",
+   "bytes": 6063,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0036032.jpg",
+   "bytes": 272803,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2020
+  },
+  {
+   "path": "recup_dir.1/f0036608.jpg",
+   "bytes": 248869,
+   "group": "keep",
+   "note": "camera photo (on the card twice)",
+   "kind": "photo",
+   "year": 2020
+  },
+  {
+   "path": "recup_dir.1/f0037120.jpg",
+   "bytes": 256783,
+   "group": "keep",
+   "note": "camera photo (on the card twice)",
+   "kind": "photo",
+   "year": 2020
+  },
+  {
+   "path": "recup_dir.1/f0037632.jpg",
+   "bytes": 8375,
+   "group": "small",
+   "note": "Messenger preview",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0037696.png",
+   "bytes": 647,
+   "group": "small",
+   "note": "app icon",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0037760.jpg",
+   "bytes": 10393,
+   "group": "small",
+   "note": "Messenger preview",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0037824.xml",
+   "bytes": 4188,
+   "group": "system",
+   "note": "app settings",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0037888.jpg",
+   "bytes": 6363,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0037952.jpg",
+   "bytes": 6259,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0038016.jpg",
+   "bytes": 269139,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2020
+  },
+  {
+   "path": "recup_dir.1/f0038592.jpg",
+   "bytes": 277386,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2020
+  },
+  {
+   "path": "recup_dir.1/f0039168.jpg",
+   "bytes": 383872,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2020
+  },
+  {
+   "path": "recup_dir.1/f0039936.jpg",
+   "bytes": 7362,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0040000.jpg",
+   "bytes": 7102,
+   "group": "small",
+   "note": "Messenger preview",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0040064.jpg",
+   "bytes": 8543,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0040128.jpg",
+   "bytes": 12677,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0040192.jpg",
+   "bytes": 257307,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2020
+  },
+  {
+   "path": "recup_dir.1/f0040704.jpg",
+   "bytes": 7074,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0040768.png",
+   "bytes": 1382,
+   "group": "small",
+   "note": "app icon",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0040832.png",
+   "bytes": 1381,
+   "group": "small",
+   "note": "app icon",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0040896.png",
+   "bytes": 971,
+   "group": "small",
+   "note": "app icon",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0040960.jpg",
+   "bytes": 255735,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2020
+  },
+  {
+   "path": "recup_dir.1/f0041472.jpg",
+   "bytes": 271048,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2020
+  },
+  {
+   "path": "recup_dir.1/f0042048.jpg",
+   "bytes": 6216,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0042112.jpg",
+   "bytes": 13708,
+   "group": "small",
+   "note": "Messenger preview",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0042176.jpg",
+   "bytes": 288111,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2020
+  },
+  {
+   "path": "recup_dir.1/f0042752.jpg",
+   "bytes": 8528,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0042816.jpg",
+   "bytes": 242710,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2020
+  },
+  {
+   "path": "recup_dir.1/f0043328.xml",
+   "bytes": 1647,
+   "group": "system",
+   "note": "app settings",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0043392.jpg",
+   "bytes": 9481,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0043456.jpg",
+   "bytes": 5825,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0043520.html",
+   "bytes": 9197,
+   "group": "system",
+   "note": "web cache",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0043584.jpg",
+   "bytes": 256783,
+   "group": "duplicate",
+   "note": "exact copy of a kept photo",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0044096.jpg",
+   "bytes": 240344,
+   "group": "duplicate",
+   "note": "exact copy of a kept photo",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0044608.jpg",
+   "bytes": 397311,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2020
+  },
+  {
+   "path": "recup_dir.1/f0045440.jpg",
+   "bytes": 242932,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2020
+  },
+  {
+   "path": "recup_dir.1/f0045952.jpg",
+   "bytes": 226538,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2020
+  },
+  {
+   "path": "recup_dir.1/f0046400.jpg",
+   "bytes": 12869,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0046464.png",
+   "bytes": 671,
+   "group": "small",
+   "note": "app icon",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0046528.png",
+   "bytes": 1379,
+   "group": "small",
+   "note": "app icon",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0046592.jpg",
+   "bytes": 6136,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0046656.jpg",
+   "bytes": 252426,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2020
+  },
+  {
+   "path": "recup_dir.1/f0047168.jpg",
+   "bytes": 5292,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0047232.jpg",
+   "bytes": 7143,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0047296.jpg",
+   "bytes": 248869,
+   "group": "duplicate",
+   "note": "exact copy of a kept photo",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0047808.jpg",
+   "bytes": 267616,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2020
+  },
+  {
+   "path": "recup_dir.1/f0048384.jpg",
+   "bytes": 6474,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0048448.mp4",
+   "bytes": 177341,
+   "group": "keep",
+   "note": "phone video",
+   "kind": "video",
+   "year": 2020
+  },
+  {
+   "path": "recup_dir.1/f0048832.txt",
+   "bytes": 7578,
+   "group": "system",
+   "note": "app log",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0048896.txt",
+   "bytes": 28136,
+   "group": "system",
+   "note": "app log",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0048960.jpg",
+   "bytes": 234215,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2020
+  },
+  {
+   "path": "recup_dir.1/f0049472.jpg",
+   "bytes": 256957,
+   "group": "keep",
+   "note": "camera photo (on the card twice)",
+   "kind": "photo",
+   "year": 2020
+  },
+  {
+   "path": "recup_dir.1/f0049984.jpg",
+   "bytes": 5700,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0050048.jpg",
+   "bytes": 6683,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0050112.gz",
+   "bytes": 12725,
+   "group": "system",
+   "note": "compressed log",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0050176.jpg",
+   "bytes": 400192,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2020
+  },
+  {
+   "path": "recup_dir.1/f0051008.jpg",
+   "bytes": 253056,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2020
+  },
+  {
+   "path": "recup_dir.1/f0051520.jpg",
+   "bytes": 256957,
+   "group": "duplicate",
+   "note": "exact copy of a kept photo",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0052032.jpg",
+   "bytes": 15120,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0052096.jpg",
+   "bytes": 6794,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0052160.png",
+   "bytes": 1016,
+   "group": "small",
+   "note": "app icon",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0052224.png",
+   "bytes": 1295,
+   "group": "small",
+   "note": "app icon",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0052288.html",
+   "bytes": 1988,
+   "group": "system",
+   "note": "web cache",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0052352.jpg",
+   "bytes": 247923,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2020
+  },
+  {
+   "path": "recup_dir.1/f0052864.jpg",
+   "bytes": 245216,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2020
+  },
+  {
+   "path": "recup_dir.1/f0053376.jpg",
+   "bytes": 5248,
+   "group": "small",
+   "note": "Messenger preview",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0053440.jpg",
+   "bytes": 6642,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0053504.png",
+   "bytes": 1355,
+   "group": "small",
+   "note": "app icon",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0053568.jpg",
+   "bytes": 445644,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2020
+  },
+  {
+   "path": "recup_dir.1/f0054464.jpg",
+   "bytes": 275016,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2020
+  },
+  {
+   "path": "recup_dir.1/f0055040.jpg",
+   "bytes": 239481,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2020
+  },
+  {
+   "path": "recup_dir.1/f0055552.jpg",
+   "bytes": 14755,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0055616.jpg",
+   "bytes": 7931,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0055680.jpg",
+   "bytes": 6097,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0055744.jpg",
+   "bytes": 86281,
+   "group": "keep",
+   "note": "saved from Messenger, no date",
+   "kind": "photo",
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0055936.xml",
+   "bytes": 3237,
+   "group": "system",
+   "note": "app settings",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0056000.sqlite",
+   "bytes": 118784,
+   "group": "system",
+   "note": "app database",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0056256.jpg",
+   "bytes": 5297,
+   "group": "small",
+   "note": "Messenger preview",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0056320.sqlite",
+   "bytes": 102400,
+   "group": "system",
+   "note": "app database",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0056576.html",
+   "bytes": 6065,
+   "group": "system",
+   "note": "web cache",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0056640.png",
+   "bytes": 1380,
+   "group": "small",
+   "note": "app icon",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0056704.jpg",
+   "bytes": 389550,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2021
+  },
+  {
+   "path": "recup_dir.1/f0057472.jpg",
+   "bytes": 534443,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2021
+  },
+  {
+   "path": "recup_dir.1/f0058560.jpg",
+   "bytes": 382698,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2021
+  },
+  {
+   "path": "recup_dir.1/f0059328.jpg",
+   "bytes": 6832,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0059392.jpg",
+   "bytes": 12149,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0059456.jpg",
+   "bytes": 543419,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2021
+  },
+  {
+   "path": "recup_dir.1/f0060544.jpg",
+   "bytes": 11993,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0060608.jpg",
+   "bytes": 390682,
+   "group": "keep",
+   "note": "camera photo (on the card twice)",
+   "kind": "photo",
+   "year": 2021
+  },
+  {
+   "path": "recup_dir.1/f0061376.jpg",
+   "bytes": 5718,
+   "group": "small",
+   "note": "Messenger preview",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0061440.txt",
+   "bytes": 21364,
+   "group": "system",
+   "note": "app log",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0061504.jpg",
+   "bytes": 6971,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0061568.jpg",
+   "bytes": 70862,
+   "group": "keep",
+   "note": "saved from Messenger, no date",
+   "kind": "photo",
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0061760.jpg",
+   "bytes": 8290,
+   "group": "small",
+   "note": "Messenger preview",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0061824.jpg",
+   "bytes": 549929,
+   "group": "keep",
+   "note": "camera photo (on the card twice)",
+   "kind": "photo",
+   "year": 2021
+  },
+  {
+   "path": "recup_dir.1/f0062912.jpg",
+   "bytes": 12631,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0062976.txt",
+   "bytes": 8219,
+   "group": "system",
+   "note": "app log",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0063040.jpg",
+   "bytes": 385796,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2021
+  },
+  {
+   "path": "recup_dir.1/f0063808.jpg",
+   "bytes": 5278,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0063872.jpg",
+   "bytes": 380273,
+   "group": "keep",
+   "note": "camera photo (on the card twice)",
+   "kind": "photo",
+   "year": 2021
+  },
+  {
+   "path": "recup_dir.1/f0064640.jpg",
+   "bytes": 377109,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2021
+  },
+  {
+   "path": "recup_dir.1/f0065408.jpg",
+   "bytes": 6459,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0065472.jpg",
+   "bytes": 406991,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2021
+  },
+  {
+   "path": "recup_dir.1/f0066304.jpg",
+   "bytes": 412492,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2021
+  },
+  {
+   "path": "recup_dir.1/f0067136.jpg",
+   "bytes": 8036,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0067200.jpg",
+   "bytes": 409407,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2021
+  },
+  {
+   "path": "recup_dir.1/f0068032.jpg",
+   "bytes": 7664,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0068096.jpg",
+   "bytes": 386312,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2021
+  },
+  {
+   "path": "recup_dir.1/f0068864.jpg",
+   "bytes": 91199,
+   "group": "keep",
+   "note": "saved from Messenger, no date",
+   "kind": "photo",
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0069056.jpg",
+   "bytes": 7429,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0069120.jpg",
+   "bytes": 6082,
+   "group": "small",
+   "note": "Messenger preview",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0069184.jpg",
+   "bytes": 6226,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0069248.jpg",
+   "bytes": 439166,
+   "group": "keep",
+   "note": "camera photo (on the card twice)",
+   "kind": "photo",
+   "year": 2021
+  },
+  {
+   "path": "recup_dir.1/f0070144.jpg",
+   "bytes": 381831,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2021
+  },
+  {
+   "path": "recup_dir.1/f0070912.jpg",
+   "bytes": 9369,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0070976.jpg",
+   "bytes": 6483,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0071040.jpg",
+   "bytes": 414532,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2021
+  },
+  {
+   "path": "recup_dir.1/f0071872.xml",
+   "bytes": 3076,
+   "group": "system",
+   "note": "app settings",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0071936.txt",
+   "bytes": 4820,
+   "group": "system",
+   "note": "app log",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0072000.jpg",
+   "bytes": 8976,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0072064.html",
+   "bytes": 2447,
+   "group": "system",
+   "note": "web cache",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0072128.sqlite",
+   "bytes": 69632,
+   "group": "system",
+   "note": "app database",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0072320.jpg",
+   "bytes": 390682,
+   "group": "duplicate",
+   "note": "exact copy of a kept photo",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0073088.jpg",
+   "bytes": 224472,
+   "group": "keep",
+   "note": "saved from Messenger, no date",
+   "kind": "photo",
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0073536.jpg",
+   "bytes": 5175,
+   "group": "small",
+   "note": "Messenger preview",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0073600.jpg",
+   "bytes": 630605,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2021
+  },
+  {
+   "path": "recup_dir.1/f0074880.html",
+   "bytes": 5147,
+   "group": "system",
+   "note": "web cache",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0074944.jpg",
+   "bytes": 439166,
+   "group": "duplicate",
+   "note": "exact copy of a kept photo",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0075840.jpg",
+   "bytes": 14195,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0075904.jpg",
+   "bytes": 366454,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2021
+  },
+  {
+   "path": "recup_dir.1/f0076672.xml",
+   "bytes": 747,
+   "group": "system",
+   "note": "app settings",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0076736.jpg",
+   "bytes": 374969,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2021
+  },
+  {
+   "path": "recup_dir.1/f0077504.xml",
+   "bytes": 1012,
+   "group": "system",
+   "note": "app settings",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0077568.jpg",
+   "bytes": 5927,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0077632.mp4",
+   "bytes": 229492,
+   "group": "keep",
+   "note": "phone video",
+   "kind": "video",
+   "year": 2021
+  },
+  {
+   "path": "recup_dir.1/f0078144.jpg",
+   "bytes": 356645,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2021
+  },
+  {
+   "path": "recup_dir.1/f0078848.jpg",
+   "bytes": 9151,
+   "group": "small",
+   "note": "Messenger preview",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0078912.xml",
+   "bytes": 4033,
+   "group": "system",
+   "note": "app settings",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0078976.jpg",
+   "bytes": 380273,
+   "group": "duplicate",
+   "note": "exact copy of a kept photo",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0079744.jpg",
+   "bytes": 5751,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0079808.jpg",
+   "bytes": 380883,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2021
+  },
+  {
+   "path": "recup_dir.1/f0080576.txt",
+   "bytes": 18513,
+   "group": "system",
+   "note": "app log",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0080640.jpg",
+   "bytes": 301109,
+   "group": "keep",
+   "note": "saved from Messenger, no date",
+   "kind": "photo",
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0081280.xml",
+   "bytes": 2655,
+   "group": "system",
+   "note": "app settings",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0081344.jpg",
+   "bytes": 8862,
+   "group": "small",
+   "note": "Messenger preview",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0081408.jpg",
+   "bytes": 549929,
+   "group": "duplicate",
+   "note": "exact copy of a kept photo",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0082496.png",
+   "bytes": 1358,
+   "group": "small",
+   "note": "app icon",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0082560.mp4",
+   "bytes": 119535,
+   "group": "damaged",
+   "note": "cut-off video",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0082816.jpg",
+   "bytes": 387734,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2021
+  },
+  {
+   "path": "recup_dir.1/f0083584.txt",
+   "bytes": 17707,
+   "group": "system",
+   "note": "app log",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0083648.jpg",
+   "bytes": 560027,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2021
+  },
+  {
+   "path": "recup_dir.1/f0084800.jpg",
+   "bytes": 7139,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0084864.jpg",
+   "bytes": 365652,
+   "group": "keep",
+   "note": "camera photo (on the card twice)",
+   "kind": "photo",
+   "year": 2021
+  },
+  {
+   "path": "recup_dir.1/f0085632.jpg",
+   "bytes": 5953,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0085696.xml",
+   "bytes": 3290,
+   "group": "system",
+   "note": "app settings",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0085760.jpg",
+   "bytes": 583460,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2021
+  },
+  {
+   "path": "recup_dir.1/f0086912.jpg",
+   "bytes": 11048,
+   "group": "small",
+   "note": "Messenger preview",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0086976.jpg",
+   "bytes": 13889,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0087040.jpg",
+   "bytes": 168980,
+   "group": "keep",
+   "note": "saved from Messenger, no date",
+   "kind": "photo",
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0087424.jpg",
+   "bytes": 5419,
+   "group": "small",
+   "note": "Messenger preview",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0087488.jpg",
+   "bytes": 391575,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2021
+  },
+  {
+   "path": "recup_dir.1/f0088256.jpg",
+   "bytes": 438868,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2021
+  },
+  {
+   "path": "recup_dir.1/f0089152.jpg",
+   "bytes": 8769,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0089216.jpg",
+   "bytes": 5820,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0089280.jpg",
+   "bytes": 401236,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2021
+  },
+  {
+   "path": "recup_dir.1/f0090112.jpg",
+   "bytes": 368142,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2021
+  },
+  {
+   "path": "recup_dir.1/f0090880.txt",
+   "bytes": 3342,
+   "group": "system",
+   "note": "app log",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0090944.xml",
+   "bytes": 4241,
+   "group": "system",
+   "note": "app settings",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0091008.jpg",
+   "bytes": 396355,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2021
+  },
+  {
+   "path": "recup_dir.1/f0091840.jpg",
+   "bytes": 5784,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0091904.txt",
+   "bytes": 29011,
+   "group": "system",
+   "note": "app log",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0091968.txt",
+   "bytes": 2570,
+   "group": "system",
+   "note": "app log",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0092032.jpg",
+   "bytes": 7083,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0092096.jpg",
+   "bytes": 378018,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2021
+  },
+  {
+   "path": "recup_dir.1/f0092864.jpg",
+   "bytes": 402902,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2021
+  },
+  {
+   "path": "recup_dir.1/f0093696.jpg",
+   "bytes": 6789,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0093760.jpg",
+   "bytes": 61686,
+   "group": "keep",
+   "note": "saved from Messenger, no date",
+   "kind": "photo",
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0093888.png",
+   "bytes": 946808,
+   "group": "keep",
+   "note": "screenshot, no date",
+   "kind": "photo",
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0095744.jpg",
+   "bytes": 397331,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2022
+  },
+  {
+   "path": "recup_dir.1/f0096576.jpg",
+   "bytes": 11155,
+   "group": "small",
+   "note": "Messenger preview",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0096640.jpg",
+   "bytes": 6966,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0096704.png",
+   "bytes": 672,
+   "group": "small",
+   "note": "app icon",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0096768.jpg",
+   "bytes": 389107,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2022
+  },
+  {
+   "path": "recup_dir.1/f0097536.jpg",
+   "bytes": 6240,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0097600.heic",
+   "bytes": 158791,
+   "group": "keep",
+   "note": "iPhone photo (HEIC)",
+   "kind": "photo",
+   "year": 2022
+  },
+  {
+   "path": "recup_dir.1/f0097920.jpg",
+   "bytes": 394769,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2022
+  },
+  {
+   "path": "recup_dir.1/f0098752.jpg",
+   "bytes": 6258,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0098816.jpg",
+   "bytes": 377797,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2022
+  },
+  {
+   "path": "recup_dir.1/f0099584.jpg",
+   "bytes": 12955,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0099648.jpg",
+   "bytes": 7265,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0099712.jpg",
+   "bytes": 379588,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2022
+  },
+  {
+   "path": "recup_dir.1/f0100480.jpg",
+   "bytes": 5575,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0100544.jpg",
+   "bytes": 5403,
+   "group": "small",
+   "note": "Messenger preview",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0100608.sqlite",
+   "bytes": 24576,
+   "group": "system",
+   "note": "app database",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0100672.jpg",
+   "bytes": 6411,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0100736.png",
+   "bytes": 1292,
+   "group": "small",
+   "note": "app icon",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0100800.jpg",
+   "bytes": 396635,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2022
+  },
+  {
+   "path": "recup_dir.1/f0101632.jpg",
+   "bytes": 409222,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2022
+  },
+  {
+   "path": "recup_dir.1/f0102464.jpg",
+   "bytes": 350428,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2022
+  },
+  {
+   "path": "recup_dir.1/f0103168.jpg",
+   "bytes": 5783,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0103232.jpg",
+   "bytes": 6401,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0103296.jpg",
+   "bytes": 5269,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0103360.xml",
+   "bytes": 381,
+   "group": "system",
+   "note": "app settings",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0103424.jpg",
+   "bytes": 418508,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2022
+  },
+  {
+   "path": "recup_dir.1/f0104256.jpg",
+   "bytes": 132651,
+   "group": "keep",
+   "note": "saved from Messenger, no date",
+   "kind": "photo",
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0104576.jpg",
+   "bytes": 12371,
+   "group": "small",
+   "note": "Messenger preview",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0104640.jpg",
+   "bytes": 397886,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2022
+  },
+  {
+   "path": "recup_dir.1/f0105472.jpg",
+   "bytes": 403958,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2022
+  },
+  {
+   "path": "recup_dir.1/f0106304.xml",
+   "bytes": 3079,
+   "group": "system",
+   "note": "app settings",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0106368.jpg",
+   "bytes": 7032,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0106432.jpg",
+   "bytes": 7968,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0106496.jpg",
+   "bytes": 351942,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2022
+  },
+  {
+   "path": "recup_dir.1/f0107200.xml",
+   "bytes": 4134,
+   "group": "system",
+   "note": "app settings",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0107264.jpg",
+   "bytes": 5198,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0107328.xml",
+   "bytes": 330,
+   "group": "system",
+   "note": "app settings",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0107392.jpg",
+   "bytes": 550675,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2022
+  },
+  {
+   "path": "recup_dir.1/f0108480.jpg",
+   "bytes": 22835,
+   "group": "small",
+   "note": "Messenger preview",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0108544.jpg",
+   "bytes": 365652,
+   "group": "duplicate",
+   "note": "exact copy of a kept photo",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0109312.jpg",
+   "bytes": 426759,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2022
+  },
+  {
+   "path": "recup_dir.1/f0110208.txt",
+   "bytes": 1632,
+   "group": "system",
+   "note": "app log",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0110272.jpg",
+   "bytes": 6622,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0110336.sqlite",
+   "bytes": 73728,
+   "group": "system",
+   "note": "app database",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0110528.xml",
+   "bytes": 3339,
+   "group": "system",
+   "note": "app settings",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0110592.txt",
+   "bytes": 10564,
+   "group": "system",
+   "note": "app log",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0110656.jpg",
+   "bytes": 380784,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2022
+  },
+  {
+   "path": "recup_dir.1/f0111424.jpg",
+   "bytes": 6788,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0111488.jpg",
+   "bytes": 137941,
+   "group": "keep",
+   "note": "saved from Messenger, no date",
+   "kind": "photo",
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0111808.jpg",
+   "bytes": 20521,
+   "group": "small",
+   "note": "Messenger preview",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0111872.jpg",
+   "bytes": 398608,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2022
+  },
+  {
+   "path": "recup_dir.1/f0112704.jpg",
+   "bytes": 410252,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2022
+  },
+  {
+   "path": "recup_dir.1/f0113536.jpg",
+   "bytes": 7457,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0113600.jpg",
+   "bytes": 362160,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2022
+  },
+  {
+   "path": "recup_dir.1/f0114368.png",
+   "bytes": 1295,
+   "group": "small",
+   "note": "app icon",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0114432.jpg",
+   "bytes": 415130,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2022
+  },
+  {
+   "path": "recup_dir.1/f0115264.jpg",
+   "bytes": 469352,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2022
+  },
+  {
+   "path": "recup_dir.1/f0116224.jpg",
+   "bytes": 8373,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0116288.xml",
+   "bytes": 2811,
+   "group": "system",
+   "note": "app settings",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0116352.jpg",
+   "bytes": 376775,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2022
+  },
+  {
+   "path": "recup_dir.1/f0117120.jpg",
+   "bytes": 12314,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0117184.jpg",
+   "bytes": 5616,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0117248.xml",
+   "bytes": 4083,
+   "group": "system",
+   "note": "app settings",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0117312.png",
+   "bytes": 1018,
+   "group": "small",
+   "note": "app icon",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0117376.png",
+   "bytes": 1754854,
+   "group": "keep",
+   "note": "screenshot, no date",
+   "kind": "photo",
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0120832.jpg",
+   "bytes": 104094,
+   "group": "keep",
+   "note": "saved from Messenger, no date (on the card twice)",
+   "kind": "photo",
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0121088.gz",
+   "bytes": 13547,
+   "group": "system",
+   "note": "compressed log",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0121152.txt",
+   "bytes": 17454,
+   "group": "system",
+   "note": "app log",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0121216.jpg",
+   "bytes": 586286,
+   "group": "keep",
+   "note": "camera photo (on the card twice)",
+   "kind": "photo",
+   "year": 2022
+  },
+  {
+   "path": "recup_dir.1/f0122368.jpg",
+   "bytes": 10442,
+   "group": "small",
+   "note": "Messenger preview",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0122432.jpg",
+   "bytes": 358370,
+   "group": "keep",
+   "note": "camera photo (on the card twice)",
+   "kind": "photo",
+   "year": 2022
+  },
+  {
+   "path": "recup_dir.1/f0123136.jpg",
+   "bytes": 11168,
+   "group": "small",
+   "note": "Messenger preview",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0123200.jpg",
+   "bytes": 395797,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2022
+  },
+  {
+   "path": "recup_dir.1/f0124032.png",
+   "bytes": 985,
+   "group": "small",
+   "note": "app icon",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0124096.jpg",
+   "bytes": 449135,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2022
+  },
+  {
+   "path": "recup_dir.1/f0124992.jpg",
+   "bytes": 374675,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2022
+  },
+  {
+   "path": "recup_dir.1/f0125760.jpg",
+   "bytes": 381957,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2022
+  },
+  {
+   "path": "recup_dir.1/f0126528.jpg",
+   "bytes": 7830,
+   "group": "small",
+   "note": "Messenger preview",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0126592.mp4",
+   "bytes": 176862,
+   "group": "keep",
+   "note": "phone video",
+   "kind": "video",
+   "year": 2022
+  },
+  {
+   "path": "recup_dir.1/f0126976.mp4",
+   "bytes": 247168,
+   "group": "keep",
+   "note": "phone video",
+   "kind": "video",
+   "year": 2022
+  },
+  {
+   "path": "recup_dir.1/f0127488.jpg",
+   "bytes": 5738,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0127552.jpg",
+   "bytes": 463395,
+   "group": "keep",
+   "note": "camera photo (on the card twice)",
+   "kind": "photo",
+   "year": 2022
+  },
+  {
+   "path": "recup_dir.1/f0128512.xml",
+   "bytes": 1329,
+   "group": "system",
+   "note": "app settings",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0128576.sqlite",
+   "bytes": 81920,
+   "group": "system",
+   "note": "app database",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0128768.jpg",
+   "bytes": 643114,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2022
+  },
+  {
+   "path": "recup_dir.1/f0130048.jpg",
+   "bytes": 9668,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0130112.jpg",
+   "bytes": 583112,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2022
+  },
+  {
+   "path": "recup_dir.1/f0131264.heic",
+   "bytes": 107084,
+   "group": "keep",
+   "note": "iPhone photo (HEIC)",
+   "kind": "photo",
+   "year": 2022
+  },
+  {
+   "path": "recup_dir.1/f0131520.jpg",
+   "bytes": 14269,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0131584.jpg",
+   "bytes": 404016,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2022
+  },
+  {
+   "path": "recup_dir.1/f0132416.jpg",
+   "bytes": 7763,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0132480.jpg",
+   "bytes": 13307,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0132544.jpg",
+   "bytes": 175761,
+   "group": "keep",
+   "note": "saved from Messenger, no date (on the card twice)",
+   "kind": "photo",
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0132928.xml",
+   "bytes": 1276,
+   "group": "system",
+   "note": "app settings",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0132992.jpg",
+   "bytes": 7637,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0133056.jpg",
+   "bytes": 7965,
+   "group": "small",
+   "note": "Messenger preview",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0133120.jpg",
+   "bytes": 104094,
+   "group": "duplicate",
+   "note": "exact copy of a kept photo",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0133376.jpg",
+   "bytes": 433090,
+   "group": "keep",
+   "note": "camera photo (on the card twice)",
+   "kind": "photo",
+   "year": 2022
+  },
+  {
+   "path": "recup_dir.1/f0134272.jpg",
+   "bytes": 391510,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2022
+  },
+  {
+   "path": "recup_dir.1/f0135040.jpg",
+   "bytes": 6329,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0135104.jpg",
+   "bytes": 9438,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0135680.jpg",
+   "bytes": 175761,
+   "group": "duplicate",
+   "note": "exact copy of a kept photo",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0136064.jpg",
+   "bytes": 385775,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2022
+  },
+  {
+   "path": "recup_dir.1/f0136832.heic",
+   "bytes": 82712,
+   "group": "keep",
+   "note": "iPhone photo (HEIC)",
+   "kind": "photo",
+   "year": 2022
+  },
+  {
+   "path": "recup_dir.1/f0137024.jpg",
+   "bytes": 5370,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0137088.jpg",
+   "bytes": 467997,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2022
+  },
+  {
+   "path": "recup_dir.1/f0138048.jpg",
+   "bytes": 629343,
+   "group": "keep",
+   "note": "camera photo (on the card twice)",
+   "kind": "photo",
+   "year": 2022
+  },
+  {
+   "path": "recup_dir.1/f0139328.jpg",
+   "bytes": 5537,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0139392.jpg",
+   "bytes": 10004,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0139456.jpg",
+   "bytes": 13272,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0139520.jpg",
+   "bytes": 109417,
+   "group": "keep",
+   "note": "saved from Messenger, no date (on the card twice)",
+   "kind": "photo",
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0139776.jpg",
+   "bytes": 10713,
+   "group": "small",
+   "note": "Messenger preview",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0139840.xml",
+   "bytes": 4189,
+   "group": "system",
+   "note": "app settings",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0139904.jpg",
+   "bytes": 586286,
+   "group": "duplicate",
+   "note": "exact copy of a kept photo",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0141056.jpg",
+   "bytes": 439079,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2022
+  },
+  {
+   "path": "recup_dir.1/f0141952.heic",
+   "bytes": 97075,
+   "group": "keep",
+   "note": "iPhone photo (HEIC)",
+   "kind": "photo",
+   "year": 2022
+  },
+  {
+   "path": "recup_dir.1/f0142144.jpg",
+   "bytes": 654972,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2022
+  },
+  {
+   "path": "recup_dir.1/f0143424.jpg",
+   "bytes": 8806,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0143488.jpg",
+   "bytes": 14998,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0143552.jpg",
+   "bytes": 463395,
+   "group": "duplicate",
+   "note": "exact copy of a kept photo",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0144512.jpg",
+   "bytes": 358370,
+   "group": "duplicate",
+   "note": "exact copy of a kept photo",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0145216.jpg",
+   "bytes": 89834,
+   "group": "keep",
+   "note": "saved from Messenger, no date (on the card twice)",
+   "kind": "photo",
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0145408.png",
+   "bytes": 1192879,
+   "group": "keep",
+   "note": "screenshot, no date",
+   "kind": "photo",
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0147776.jpg",
+   "bytes": 10203,
+   "group": "small",
+   "note": "Messenger preview",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0147840.jpg",
+   "bytes": 406203,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2023
+  },
+  {
+   "path": "recup_dir.1/f0148672.jpg",
+   "bytes": 390912,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2023
+  },
+  {
+   "path": "recup_dir.1/f0149440.jpg",
+   "bytes": 395680,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2023
+  },
+  {
+   "path": "recup_dir.1/f0150272.jpg",
+   "bytes": 6705,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0150336.heic",
+   "bytes": 72248,
+   "group": "keep",
+   "note": "iPhone photo (HEIC)",
+   "kind": "photo",
+   "year": 2023
+  },
+  {
+   "path": "recup_dir.1/f0150528.jpg",
+   "bytes": 7449,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0150592.jpg",
+   "bytes": 109417,
+   "group": "duplicate",
+   "note": "exact copy of a kept photo",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0150848.jpg",
+   "bytes": 6634,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0150912.txt",
+   "bytes": 29102,
+   "group": "system",
+   "note": "app log",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0150976.jpg",
+   "bytes": 6677,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0151040.sqlite",
+   "bytes": 45056,
+   "group": "system",
+   "note": "app database",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0151168.jpg",
+   "bytes": 589745,
+   "group": "keep",
+   "note": "camera photo (on the card twice)",
+   "kind": "photo",
+   "year": 2023
+  },
+  {
+   "path": "recup_dir.1/f0152320.jpg",
+   "bytes": 13273,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0152384.jpg",
+   "bytes": 391784,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2023
+  },
+  {
+   "path": "recup_dir.1/f0153152.jpg",
+   "bytes": 498527,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2023
+  },
+  {
+   "path": "recup_dir.1/f0154176.txt",
+   "bytes": 19377,
+   "group": "system",
+   "note": "app log",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0154240.jpg",
+   "bytes": 6729,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0154304.jpg",
+   "bytes": 369748,
+   "group": "keep",
+   "note": "saved from Messenger, no date",
+   "kind": "photo",
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0155072.jpg",
+   "bytes": 395775,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2023
+  },
+  {
+   "path": "recup_dir.1/f0155904.jpg",
+   "bytes": 433090,
+   "group": "duplicate",
+   "note": "exact copy of a kept photo",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0156800.jpg",
+   "bytes": 15751,
+   "group": "small",
+   "note": "Messenger preview",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0156864.xml",
+   "bytes": 3607,
+   "group": "system",
+   "note": "app settings",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0156928.jpg",
+   "bytes": 7073,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0156992.jpg",
+   "bytes": 598358,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2023
+  },
+  {
+   "path": "recup_dir.1/f0158208.jpg",
+   "bytes": 629343,
+   "group": "duplicate",
+   "note": "exact copy of a kept photo",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0159488.heic",
+   "bytes": 86216,
+   "group": "keep",
+   "note": "iPhone photo (HEIC)",
+   "kind": "photo",
+   "year": 2023
+  },
+  {
+   "path": "recup_dir.1/f0159680.jpg",
+   "bytes": 590806,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2023
+  },
+  {
+   "path": "recup_dir.1/f0160896.jpg",
+   "bytes": 389012,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2023
+  },
+  {
+   "path": "recup_dir.1/f0161664.jpg",
+   "bytes": 14576,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0161728.jpg",
+   "bytes": 14008,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0161792.txt",
+   "bytes": 19463,
+   "group": "system",
+   "note": "app log",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0161856.jpg",
+   "bytes": 89834,
+   "group": "duplicate",
+   "note": "exact copy of a kept photo",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0162048.jpg",
+   "bytes": 411039,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2023
+  },
+  {
+   "path": "recup_dir.1/f0162880.jpg",
+   "bytes": 363993,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2023
+  },
+  {
+   "path": "recup_dir.1/f0163648.jpg",
+   "bytes": 4607,
+   "group": "small",
+   "note": "Messenger preview",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0163712.jpg",
+   "bytes": 589745,
+   "group": "duplicate",
+   "note": "exact copy of a kept photo",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0164864.jpg",
+   "bytes": 378665,
+   "group": "keep",
+   "note": "saved from Messenger, no date",
+   "kind": "photo",
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0165632.jpg",
+   "bytes": 5547,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0165696.jpg",
+   "bytes": 17760,
+   "group": "small",
+   "note": "Messenger preview",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0165760.jpg",
+   "bytes": 389934,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2023
+  },
+  {
+   "path": "recup_dir.1/f0166528.jpg",
+   "bytes": 452511,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2023
+  },
+  {
+   "path": "recup_dir.1/f0167424.jpg",
+   "bytes": 10264,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0167488.jpg",
+   "bytes": 554467,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2023
+  },
+  {
+   "path": "recup_dir.1/f0168576.jpg",
+   "bytes": 494906,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2023
+  },
+  {
+   "path": "recup_dir.1/f0169600.jpg",
+   "bytes": 13377,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0169664.sqlite",
+   "bytes": 53248,
+   "group": "system",
+   "note": "app database",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0169792.jpg",
+   "bytes": 407097,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2023
+  },
+  {
+   "path": "recup_dir.1/f0170624.jpg",
+   "bytes": 10910,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0170688.jpg",
+   "bytes": 616949,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2023
+  },
+  {
+   "path": "recup_dir.1/f0171904.jpg",
+   "bytes": 7746,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0171968.jpg",
+   "bytes": 14677,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0172032.jpg",
+   "bytes": 377201,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2023
+  },
+  {
+   "path": "recup_dir.1/f0172800.jpg",
+   "bytes": 393366,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2023
+  },
+  {
+   "path": "recup_dir.1/f0173632.jpg",
+   "bytes": 388354,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2023
+  },
+  {
+   "path": "recup_dir.1/f0174400.png",
+   "bytes": 1645032,
+   "group": "keep",
+   "note": "screenshot, no date",
+   "kind": "photo",
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0177664.jpg",
+   "bytes": 46910,
+   "group": "keep",
+   "note": "saved from Messenger, no date",
+   "kind": "photo",
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0177792.jpg",
+   "bytes": 8224,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0177856.jpg",
+   "bytes": 9291,
+   "group": "small",
+   "note": "Messenger preview",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0177920.xml",
+   "bytes": 695,
+   "group": "system",
+   "note": "app settings",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0177984.jpg",
+   "bytes": 411204,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2023
+  },
+  {
+   "path": "recup_dir.1/f0178816.jpg",
+   "bytes": 417904,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2023
+  },
+  {
+   "path": "recup_dir.1/f0179648.jpg",
+   "bytes": 6334,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0179712.jpg",
+   "bytes": 385724,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2023
+  },
+  {
+   "path": "recup_dir.1/f0180480.jpg",
+   "bytes": 6463,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0180544.txt",
+   "bytes": 4558,
+   "group": "system",
+   "note": "app log",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0180608.mp4",
+   "bytes": 351043,
+   "group": "keep",
+   "note": "phone video",
+   "kind": "video",
+   "year": 2023
+  },
+  {
+   "path": "recup_dir.1/f0181312.xml",
+   "bytes": 1117,
+   "group": "system",
+   "note": "app settings",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0181376.jpg",
+   "bytes": 6230,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0181440.png",
+   "bytes": 690,
+   "group": "small",
+   "note": "app icon",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0181504.xml",
+   "bytes": 2390,
+   "group": "system",
+   "note": "app settings",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0181568.heic",
+   "bytes": 143774,
+   "group": "keep",
+   "note": "iPhone photo (HEIC)",
+   "kind": "photo",
+   "year": 2023
+  },
+  {
+   "path": "recup_dir.1/f0181888.png",
+   "bytes": 1005,
+   "group": "small",
+   "note": "app icon",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0181952.html",
+   "bytes": 6983,
+   "group": "system",
+   "note": "web cache",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0182016.jpg",
+   "bytes": 11121,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0182080.gz",
+   "bytes": 10168,
+   "group": "system",
+   "note": "compressed log",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0182144.mp4",
+   "bytes": 109097,
+   "group": "damaged",
+   "note": "cut-off video",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0182400.xml",
+   "bytes": 1014,
+   "group": "system",
+   "note": "app settings",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0182464.jpg",
+   "bytes": 362705,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2023
+  },
+  {
+   "path": "recup_dir.1/f0183232.jpg",
+   "bytes": 5299,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0183296.gz",
+   "bytes": 14119,
+   "group": "system",
+   "note": "compressed log",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0183360.jpg",
+   "bytes": 354915,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2023
+  },
+  {
+   "path": "recup_dir.1/f0184064.xml",
+   "bytes": 1066,
+   "group": "system",
+   "note": "app settings",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0184128.jpg",
+   "bytes": 413935,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2023
+  },
+  {
+   "path": "recup_dir.1/f0184960.jpg",
+   "bytes": 5089,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0185600.jpg",
+   "bytes": 6488,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0185664.jpg",
+   "bytes": 549488,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2023
+  },
+  {
+   "path": "recup_dir.1/f0186752.jpg",
+   "bytes": 607469,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2023
+  },
+  {
+   "path": "recup_dir.1/f0187968.jpg",
+   "bytes": 528481,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2023
+  },
+  {
+   "path": "recup_dir.1/f0189056.jpg",
+   "bytes": 14007,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0189120.jpg",
+   "bytes": 387930,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2023
+  },
+  {
+   "path": "recup_dir.1/f0189888.jpg",
+   "bytes": 366457,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2023
+  },
+  {
+   "path": "recup_dir.1/f0190656.txt",
+   "bytes": 4919,
+   "group": "system",
+   "note": "app log",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0190720.jpg",
+   "bytes": 5690,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0190784.jpg",
+   "bytes": 5455,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0190848.xml",
+   "bytes": 3283,
+   "group": "system",
+   "note": "app settings",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0190912.jpg",
+   "bytes": 438849,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2023
+  },
+  {
+   "path": "recup_dir.1/f0191808.jpg",
+   "bytes": 555172,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2023
+  },
+  {
+   "path": "recup_dir.1/f0192896.jpg",
+   "bytes": 7354,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0192960.sqlite",
+   "bytes": 49152,
+   "group": "system",
+   "note": "app database",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0193088.jpg",
+   "bytes": 372708,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2024
+  },
+  {
+   "path": "recup_dir.1/f0193856.heic",
+   "bytes": 79956,
+   "group": "keep",
+   "note": "iPhone photo (HEIC)",
+   "kind": "photo",
+   "year": 2024
+  },
+  {
+   "path": "recup_dir.1/f0194048.jpg",
+   "bytes": 625898,
+   "group": "keep",
+   "note": "camera photo (on the card twice)",
+   "kind": "photo",
+   "year": 2024
+  },
+  {
+   "path": "recup_dir.1/f0195328.jpg",
+   "bytes": 440138,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2024
+  },
+  {
+   "path": "recup_dir.1/f0196224.jpg",
+   "bytes": 5352,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0196288.jpg",
+   "bytes": 542893,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2024
+  },
+  {
+   "path": "recup_dir.1/f0197376.jpg",
+   "bytes": 13765,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0197440.jpg",
+   "bytes": 6969,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0197504.xml",
+   "bytes": 4029,
+   "group": "system",
+   "note": "app settings",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0197568.jpg",
+   "bytes": 11309,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0197632.jpg",
+   "bytes": 396757,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2024
+  },
+  {
+   "path": "recup_dir.1/f0198464.xml",
+   "bytes": 3392,
+   "group": "system",
+   "note": "app settings",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0198528.jpg",
+   "bytes": 7950,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0198592.jpg",
+   "bytes": 439400,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2024
+  },
+  {
+   "path": "recup_dir.1/f0199488.jpg",
+   "bytes": 445196,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2024
+  },
+  {
+   "path": "recup_dir.1/f0200384.jpg",
+   "bytes": 11100,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0200448.jpg",
+   "bytes": 9333,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0200512.sqlite",
+   "bytes": 106496,
+   "group": "system",
+   "note": "app database",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0200768.jpg",
+   "bytes": 376074,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2024
+  },
+  {
+   "path": "recup_dir.1/f0201536.jpg",
+   "bytes": 566860,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2024
+  },
+  {
+   "path": "recup_dir.1/f0202688.jpg",
+   "bytes": 367091,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2024
+  },
+  {
+   "path": "recup_dir.1/f0203456.jpg",
+   "bytes": 5463,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0203520.jpg",
+   "bytes": 6091,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0203584.png",
+   "bytes": 969,
+   "group": "small",
+   "note": "app icon",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0203648.jpg",
+   "bytes": 363543,
+   "group": "keep",
+   "note": "camera photo (on the card twice)",
+   "kind": "photo",
+   "year": 2024
+  },
+  {
+   "path": "recup_dir.1/f0204416.jpg",
+   "bytes": 5203,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0204480.jpg",
+   "bytes": 452233,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2024
+  },
+  {
+   "path": "recup_dir.1/f0205376.xml",
+   "bytes": 1754,
+   "group": "system",
+   "note": "app settings",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/f0205440.jpg",
+   "bytes": 7926,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.1/report.xml",
+   "bytes": 225,
+   "group": "system",
+   "note": "PhotoRec's own report",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.2/f0205504.jpg",
+   "bytes": 374706,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2024
+  },
+  {
+   "path": "recup_dir.2/f0206272.png",
+   "bytes": 982,
+   "group": "small",
+   "note": "app icon",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.2/f0206336.jpg",
+   "bytes": 6375,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.2/f0206400.xml",
+   "bytes": 3767,
+   "group": "system",
+   "note": "app settings",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.2/f0206464.jpg",
+   "bytes": 403139,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2024
+  },
+  {
+   "path": "recup_dir.2/f0207296.jpg",
+   "bytes": 5873,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.2/f0207360.jpg",
+   "bytes": 593981,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2024
+  },
+  {
+   "path": "recup_dir.2/f0208576.jpg",
+   "bytes": 13233,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.2/f0208640.jpg",
+   "bytes": 625898,
+   "group": "duplicate",
+   "note": "exact copy of a kept photo",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.2/f0209920.mp4",
+   "bytes": 163633,
+   "group": "keep",
+   "note": "phone video",
+   "kind": "video",
+   "year": 2024
+  },
+  {
+   "path": "recup_dir.2/f0210240.xml",
+   "bytes": 3712,
+   "group": "system",
+   "note": "app settings",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.2/f0210304.txt",
+   "bytes": 2467,
+   "group": "system",
+   "note": "app log",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.2/f0210368.jpg",
+   "bytes": 389051,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2024
+  },
+  {
+   "path": "recup_dir.2/f0211136.jpg",
+   "bytes": 363543,
+   "group": "duplicate",
+   "note": "exact copy of a kept photo",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.2/f0211904.jpg",
+   "bytes": 380404,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2024
+  },
+  {
+   "path": "recup_dir.2/f0212672.jpg",
+   "bytes": 5823,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.2/f0212736.mp4",
+   "bytes": 136479,
+   "group": "damaged",
+   "note": "cut-off video",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.2/f0213056.heic",
+   "bytes": 123384,
+   "group": "keep",
+   "note": "iPhone photo (HEIC)",
+   "kind": "photo",
+   "year": 2024
+  },
+  {
+   "path": "recup_dir.2/f0213312.png",
+   "bytes": 970,
+   "group": "small",
+   "note": "app icon",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.2/f0213376.jpg",
+   "bytes": 428512,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2024
+  },
+  {
+   "path": "recup_dir.2/f0214272.jpg",
+   "bytes": 488226,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2024
+  },
+  {
+   "path": "recup_dir.2/f0215232.jpg",
+   "bytes": 11464,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.2/f0215296.txt",
+   "bytes": 22349,
+   "group": "system",
+   "note": "app log",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.2/f0215360.jpg",
+   "bytes": 12239,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.2/f0215424.jpg",
+   "bytes": 577949,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2024
+  },
+  {
+   "path": "recup_dir.2/f0216576.jpg",
+   "bytes": 601092,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2024
+  },
+  {
+   "path": "recup_dir.2/f0217792.jpg",
+   "bytes": 13274,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.2/f0217856.heic",
+   "bytes": 80466,
+   "group": "keep",
+   "note": "iPhone photo (HEIC)",
+   "kind": "photo",
+   "year": 2024
+  },
+  {
+   "path": "recup_dir.2/f0218048.jpg",
+   "bytes": 630221,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2024
+  },
+  {
+   "path": "recup_dir.2/f0219328.jpg",
+   "bytes": 6968,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.2/f0219392.txt",
+   "bytes": 7308,
+   "group": "system",
+   "note": "app log",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.2/f0219456.jpg",
+   "bytes": 13871,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.2/f0219520.jpg",
+   "bytes": 425814,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2024
+  },
+  {
+   "path": "recup_dir.2/f0220352.jpg",
+   "bytes": 444568,
+   "group": "keep",
+   "note": "camera photo",
+   "kind": "photo",
+   "year": 2024
+  },
+  {
+   "path": "recup_dir.2/f0221248.jpg",
+   "bytes": 10890,
+   "group": "small",
+   "note": "Messenger preview",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.2/f0221312.txt",
+   "bytes": 25744,
+   "group": "system",
+   "note": "app log",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.2/f0221376.jpg",
+   "bytes": 8389,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  },
+  {
+   "path": "recup_dir.2/f0221440.jpg",
+   "bytes": 10389,
+   "group": "small",
+   "note": "gallery thumbnail",
+   "kind": null,
+   "year": null
+  }
+ ]
+}

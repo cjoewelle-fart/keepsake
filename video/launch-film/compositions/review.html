@@ -1,0 +1,23 @@
+<template>
+  <style>
+    #root { position: absolute; inset: 0; }
+    .win { position: absolute; left: 200px; top: 44px; width: 1520px; height: 855px; border-radius: 18px; overflow: hidden;
+      background: #ECF1F0; box-shadow: 0 1px 2px rgba(31,36,39,.12), 0 14px 40px rgba(31,36,39,.14); }
+    .cam { position: absolute; inset: 0; transform-origin: 72% 50%; }
+    .cam video { position: absolute; left: 0; top: 0; width: 1520px; height: 855px; object-fit: cover; }
+  </style>
+  <div id="root" data-composition-id="review" data-width="1920" data-height="1080">
+    <div id="review-win" class="win"><div id="review-cam" class="cam">
+<video id="review-v0" class="clip" src="assets/clips/review.mp4" data-start="0" data-duration="4.6" data-media-start="1.0" data-playback-rate="1.35" muted playsinline></video>
+    </div></div>
+  </div>
+  <script>
+    const tl = gsap.timeline({ paused: true });
+        tl.fromTo("#review-win",{opacity:0,filter:"blur(30px)",scale:0.94},{opacity:1,filter:"blur(0px)",scale:1,duration:0.7,ease:"power1.out"},0);
+    tl.fromTo("#review-cam",{scale:1},{scale:1,duration:0.01},0);
+    tl.to("#review-cam",{scale:1.6,duration:0.8,ease:"power2.inOut"},0.2);
+    tl.to("#review-win",{filter:"blur(30px)",scale:1.06,duration:0.5,ease:"power1.in"},4.1);
+    tl.to("#review-win",{opacity:0,duration:0.3,ease:"power1.in"},4.3);
+    window.__timelines["review"] = tl;
+  </script>
+</template>

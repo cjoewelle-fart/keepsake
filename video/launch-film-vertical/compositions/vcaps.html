@@ -1,0 +1,32 @@
+<template>
+  <style>
+    @font-face { font-family: "Atkinson Hyperlegible"; src: url("assets/fonts/atkinson-hyperlegible-latin-700-normal.woff2") format("woff2"); font-weight: 700; }
+    #root { position: absolute; inset: 0; }
+    .cap { position: absolute; left: 0; right: 0; top: 1215px; text-align: center; overflow: visible; }
+    .cap .t { display: inline-block; max-width: 900px; padding: 18px 30px; background: #fff; border-radius: 14px; color: #1F2427; font: 700 54px/1.22 "Atkinson Hyperlegible", sans-serif;
+      box-shadow: 0 1px 2px rgba(31,36,39,.10), 0 8px 22px rgba(31,36,39,.10); }
+  </style>
+  <div id="root" data-composition-id="vcaps" data-width="1080" data-height="1920">
+    <div id="vc-v1" class="cap clip" data-start="0.1" data-duration="2.8"><span id="vc-v1-t" class="t"></span></div>
+    <div id="vc-v2" class="cap clip" data-start="3.1" data-duration="2.4"><span id="vc-v2-t" class="t"></span></div>
+    <div id="vc-v3" class="cap clip" data-start="5.7" data-duration="2.2"><span id="vc-v3-t" class="t"></span></div>
+    <div id="vc-v4" class="cap clip" data-start="8.1" data-duration="2.8"><span id="vc-v4-t" class="t"></span></div>
+  </div>
+  <script>
+    const C = window.CAPTIONS[window.CAPTION_LANG] || window.CAPTIONS.en;
+    document.getElementById("vc-v1-t").textContent = C.v1.replace("{APP}", window.BRAND.appName);
+    document.getElementById("vc-v2-t").textContent = C.v2.replace("{APP}", window.BRAND.appName);
+    document.getElementById("vc-v3-t").textContent = C.v3.replace("{APP}", window.BRAND.appName);
+    document.getElementById("vc-v4-t").textContent = C.v4.replace("{APP}", window.BRAND.appName);
+    const tl = gsap.timeline({ paused: true });
+    tl.fromTo("#vc-v1-t", { opacity: 0, y: 16, filter: "blur(8px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.3, ease: "power3.out" }, 0.1);
+    tl.to("#vc-v1-t", { opacity: 0, duration: 0.15 }, 2.75);
+    tl.fromTo("#vc-v2-t", { opacity: 0, y: 16, filter: "blur(8px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.3, ease: "power3.out" }, 3.1);
+    tl.to("#vc-v2-t", { opacity: 0, duration: 0.15 }, 5.35);
+    tl.fromTo("#vc-v3-t", { opacity: 0, y: 16, filter: "blur(8px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.3, ease: "power3.out" }, 5.7);
+    tl.to("#vc-v3-t", { opacity: 0, duration: 0.15 }, 7.75);
+    tl.fromTo("#vc-v4-t", { opacity: 0, y: 16, filter: "blur(8px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.3, ease: "power3.out" }, 8.1);
+    tl.to("#vc-v4-t", { opacity: 0, duration: 0.15 }, 10.75);
+    window.__timelines["vcaps"] = tl;
+  </script>
+</template>

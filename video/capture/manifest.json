@@ -1,0 +1,511 @@
+{
+ "source": "Upsort test build (dist-test, repo 7a90772) served by scripts/serve-dist.mjs on :4600; pilot folder \"Recovered from old phone\" (539 files) copied into OPFS and picked via a showDirectoryPicker stand-in (pilot-e2e approach). Save went through the folder (File System Access) path into an OPFS \"Pictures\" folder.",
+ "capture": "CDP Page.startScreencast, jpeg q95, everyNthFrame 1, full-res frames (phone: Chromium launched with --force-device-scale-factor=3, otherwise screencast gave 390x844); frames held by timestamp to constant 30 fps; libx264 crf 16 preset slow yuv420p. reducedMotion no-preference; no cursor drawn (headless).",
+ "sets": {
+  "desktop": {
+   "viewport": {
+    "width": 1920,
+    "height": 1080,
+    "deviceScaleFactor": 1,
+    "isMobile": false,
+    "hasTouch": false
+   },
+   "scan_seconds": 1.86,
+   "progress_texts_seen": [
+    "0 of 539 files",
+    "1 of 539 files",
+    "49 of 539 files",
+    "72 of 539 files",
+    "105 of 539 files",
+    "\u2026",
+    "505 of 539 files"
+   ],
+   "numbers": {
+    "results": {
+     "h1": "We found 214 photos and videos.",
+     "ledger": [
+      {
+       "dt": "Files checked",
+       "dd": "539"
+      },
+      {
+       "dt": "Kept, sorted by date",
+       "dd": "214"
+      },
+      {
+       "dt": "Set aside, kept safe below",
+       "dd": "325"
+      }
+     ],
+     "promise": "None of your files were deleted or sent anywhere. They\u2019re all still in your recovery folder, just as they were.",
+     "setAsideLine": "We set aside 325 files that look like leftovers from the recovery.",
+     "groups": [
+      "Small preview copies 204 Show",
+      "Exact copies 22 Show",
+      "MP4 MP4 MP4 Damaged or incomplete files 3 Show",
+      "TXT XML HTML App and system files 96 Show"
+     ],
+     "yearChips": [
+      "2024",
+      "2023",
+      "2022",
+      "2021",
+      "2020",
+      "2019",
+      "No date \u00b7 20"
+     ]
+    },
+    "review_selected": "214",
+    "review_filter_chips": [
+     "All 214 files",
+     "Photos 208 files",
+     "Videos 6 files",
+     "Not selected 0 files",
+     "Screenshots 4 files",
+     "From chat apps 16 files"
+    ],
+    "done": {
+     "h1": "Your 214 photos and videos are saved.",
+     "saved": "214 photos and videos",
+     "failed": "0",
+     "find": "To see them, open Pictures \u203a Upsort photos in File Explorer (Windows) or Finder (Mac)."
+    },
+    "files_written_to_Pictures": 214,
+    "year_folders_written": 6,
+    "month_folders_written": 68,
+    "no_date_folder": true
+   },
+   "console_errors": [],
+   "requests_to_other_origins": []
+  },
+  "phone": {
+   "viewport": {
+    "width": 390,
+    "height": 844,
+    "deviceScaleFactor": 3,
+    "isMobile": true,
+    "hasTouch": true
+   },
+   "scan_seconds": 1.59,
+   "progress_texts_seen": [
+    "0 of 539 files",
+    "1 of 539 files",
+    "18 of 539 files",
+    "81 of 539 files",
+    "135 of 539 files",
+    "\u2026",
+    "491 of 539 files"
+   ],
+   "numbers": {
+    "results": {
+     "h1": "We found 214 photos and videos.",
+     "ledger": [
+      {
+       "dt": "Files checked",
+       "dd": "539"
+      },
+      {
+       "dt": "Kept, sorted by date",
+       "dd": "214"
+      },
+      {
+       "dt": "Set aside, kept safe below",
+       "dd": "325"
+      }
+     ],
+     "promise": "None of your files were deleted or sent anywhere. They\u2019re all still in your recovery folder, just as they were.",
+     "setAsideLine": "We set aside 325 files that look like leftovers from the recovery.",
+     "groups": [
+      "Small preview copies 204 Show",
+      "Exact copies 22 Show",
+      "Damaged or incomplete files 3 Show",
+      "App and system files 96 Show"
+     ],
+     "yearChips": [
+      "2024",
+      "2023",
+      "2022",
+      "2021",
+      "2020",
+      "2019",
+      "No date \u00b7 20"
+     ]
+    },
+    "review_selected": "214",
+    "review_filter_chips": [
+     "All 214 files",
+     "Photos 208 files",
+     "Videos 6 files",
+     "Not selected 0 files",
+     "Screenshots 4 files",
+     "From chat apps 16 files"
+    ],
+    "done": {
+     "h1": "Your 214 photos and videos are saved.",
+     "saved": "214 photos and videos",
+     "failed": "0",
+     "find": "To see them, open Pictures \u203a Upsort photos in File Explorer (Windows) or Finder (Mac)."
+    },
+    "files_written_to_Pictures": 214,
+    "year_folders_written": 6,
+    "month_folders_written": 68,
+    "no_date_folder": true
+   },
+   "console_errors": [],
+   "requests_to_other_origins": []
+  }
+ },
+ "items": [
+  {
+   "type": "clip",
+   "set": "desktop",
+   "shot": "1 start (extra)",
+   "name": "start-entrance",
+   "path": "/tmp/claude-0/-home-claude-keepsake/06e719f0-d76f-5714-bb32-8e9ffd2d5356/scratchpad/video/captures/desktop/start-entrance.mp4",
+   "codec": "h264",
+   "pix_fmt": "yuv420p",
+   "resolution": "1920x1080",
+   "fps": 30.0,
+   "duration_s": 4.07,
+   "frames": 122.0,
+   "on_screen": "Page load of the start screen with its own entrance motion (hero photo fan deals in), then rest. First ~0.5 s is the blank page before first paint; trim it."
+  },
+  {
+   "type": "clip",
+   "set": "desktop",
+   "shot": "1 start",
+   "name": "start",
+   "path": "/tmp/claude-0/-home-claude-keepsake/06e719f0-d76f-5714-bb32-8e9ffd2d5356/scratchpad/video/captures/desktop/start.mp4",
+   "codec": "h264",
+   "pix_fmt": "yuv420p",
+   "resolution": "1920x1080",
+   "fps": 30.0,
+   "duration_s": 4.0,
+   "frames": 120.0,
+   "on_screen": "Start screen at rest after the entrance: \"Recovered photos, sorted by date.\", hero photo fan, \"Sort my recovered files\" button, privacy line, stepper Scan/Sort/Choose/Save."
+  },
+  {
+   "type": "clip",
+   "set": "desktop",
+   "shot": "2 scan",
+   "name": "scan",
+   "path": "/tmp/claude-0/-home-claude-keepsake/06e719f0-d76f-5714-bb32-8e9ffd2d5356/scratchpad/video/captures/desktop/scan.mp4",
+   "codec": "h264",
+   "pix_fmt": "yuv420p",
+   "resolution": "1920x1080",
+   "fps": 30.0,
+   "duration_s": 4.6,
+   "frames": 138.0,
+   "on_screen": "Press \"Sort my recovered files\" -> \"Checking your files...\" with progress bar \"Checked N of 539 files\" and the three stage ticks -> results screen with the 214 count-up; ~1.5 s hold."
+  },
+  {
+   "type": "clip",
+   "set": "desktop",
+   "shot": "3 results",
+   "name": "results",
+   "path": "/tmp/claude-0/-home-claude-keepsake/06e719f0-d76f-5714-bb32-8e9ffd2d5356/scratchpad/video/captures/desktop/results.mp4",
+   "codec": "h264",
+   "pix_fmt": "yuv420p",
+   "resolution": "1920x1080",
+   "fps": 30.0,
+   "duration_s": 4.0,
+   "frames": 120.0,
+   "on_screen": "Results settled: \"We found 214 photos and videos.\"; ledger Files checked 539 / Kept, sorted by date 214 / Set aside, kept safe below 325; \"None of your files were deleted or sent anywhere.\" note; Review button."
+  },
+  {
+   "type": "clip",
+   "set": "desktop",
+   "shot": "4 setaside",
+   "name": "setaside",
+   "path": "/tmp/claude-0/-home-claude-keepsake/06e719f0-d76f-5714-bb32-8e9ffd2d5356/scratchpad/video/captures/desktop/setaside.mp4",
+   "codec": "h264",
+   "pix_fmt": "yuv420p",
+   "resolution": "1920x1080",
+   "fps": 30.0,
+   "duration_s": 6.87,
+   "frames": 206.0,
+   "on_screen": "Opens \"Small preview copies 204\", its explanation and \"Keep these files\", then \"See all 204 files\" list (real names, e.g. recup_dir.2/f0221440.jpg Photo 10.4 KB) under \"These files stay in your recovery folder. Nothing has been deleted.\""
+  },
+  {
+   "type": "clip",
+   "set": "desktop",
+   "shot": "5 review",
+   "name": "review",
+   "path": "/tmp/claude-0/-home-claude-keepsake/06e719f0-d76f-5714-bb32-8e9ffd2d5356/scratchpad/video/captures/desktop/review.mp4",
+   "codec": "h264",
+   "pix_fmt": "yuv420p",
+   "resolution": "1920x1080",
+   "fps": 30.0,
+   "duration_s": 8.5,
+   "frames": 255.0,
+   "on_screen": "\"Choose what to save\" timeline, eased scroll (~6.5 s) from December 2024 down through the months of 2024 (desktop to ~April 2024, phone to ~February 2024); 214 of 214 selected."
+  },
+  {
+   "type": "clip",
+   "set": "desktop",
+   "shot": "6 save",
+   "name": "save",
+   "path": "/tmp/claude-0/-home-claude-keepsake/06e719f0-d76f-5714-bb32-8e9ffd2d5356/scratchpad/video/captures/desktop/save.mp4",
+   "codec": "h264",
+   "pix_fmt": "yuv420p",
+   "resolution": "1920x1080",
+   "fps": 30.0,
+   "duration_s": 9.43,
+   "frames": 282.0,
+   "on_screen": "Press \"Save my 214 photos and videos\" -> \"Where should we save your 214 photos and videos?\" (Save to a folder, How your folder will look) ~2.5 s -> Choose a folder (Pictures, via the picker stand-in) -> \"Your 214 photos and videos are saved.\" with tick drawing; ~1.5 s hold. Longer than 8 s: two screens; trim as needed."
+  },
+  {
+   "type": "clip",
+   "set": "desktop",
+   "shot": "6 done",
+   "name": "done",
+   "path": "/tmp/claude-0/-home-claude-keepsake/06e719f0-d76f-5714-bb32-8e9ffd2d5356/scratchpad/video/captures/desktop/done.mp4",
+   "codec": "h264",
+   "pix_fmt": "yuv420p",
+   "resolution": "1920x1080",
+   "fps": 30.0,
+   "duration_s": 4.0,
+   "frames": 120.0,
+   "on_screen": "Done screen settled: \"Your 214 photos and videos are saved.\", 183 days 2019-2024 plus 20 no date, \"sorted into a folder for each year and month\", Pictures > Upsort photos; desktop also shows the receipt (Saved 214, Couldn't save 0, Sorted into 6 years, 68 months, plus No date (20), Recovery folder Untouched)."
+  },
+  {
+   "type": "still",
+   "set": "desktop",
+   "shot": "start",
+   "path": "/tmp/claude-0/-home-claude-keepsake/06e719f0-d76f-5714-bb32-8e9ffd2d5356/scratchpad/video/captures/desktop/1-start.png",
+   "resolution": "1920x1080"
+  },
+  {
+   "type": "still",
+   "set": "desktop",
+   "shot": "results",
+   "path": "/tmp/claude-0/-home-claude-keepsake/06e719f0-d76f-5714-bb32-8e9ffd2d5356/scratchpad/video/captures/desktop/3-results.png",
+   "resolution": "1920x1080"
+  },
+  {
+   "type": "still",
+   "set": "desktop",
+   "shot": "results (full page)",
+   "path": "/tmp/claude-0/-home-claude-keepsake/06e719f0-d76f-5714-bb32-8e9ffd2d5356/scratchpad/video/captures/desktop/3-results-full.png",
+   "resolution": "1920x1458"
+  },
+  {
+   "type": "still",
+   "set": "desktop",
+   "shot": "setaside",
+   "path": "/tmp/claude-0/-home-claude-keepsake/06e719f0-d76f-5714-bb32-8e9ffd2d5356/scratchpad/video/captures/desktop/4-setaside.png",
+   "resolution": "1920x1080"
+  },
+  {
+   "type": "still",
+   "set": "desktop",
+   "shot": "review (end of scroll)",
+   "path": "/tmp/claude-0/-home-claude-keepsake/06e719f0-d76f-5714-bb32-8e9ffd2d5356/scratchpad/video/captures/desktop/5-review.png",
+   "resolution": "1920x1080"
+  },
+  {
+   "type": "still",
+   "set": "desktop",
+   "shot": "review (top)",
+   "path": "/tmp/claude-0/-home-claude-keepsake/06e719f0-d76f-5714-bb32-8e9ffd2d5356/scratchpad/video/captures/desktop/5-review-top.png",
+   "resolution": "1920x1080"
+  },
+  {
+   "type": "still",
+   "set": "desktop",
+   "shot": "save (choose a folder screen)",
+   "path": "/tmp/claude-0/-home-claude-keepsake/06e719f0-d76f-5714-bb32-8e9ffd2d5356/scratchpad/video/captures/desktop/6-save-choose.png",
+   "resolution": "1920x1080"
+  },
+  {
+   "type": "still",
+   "set": "desktop",
+   "shot": "done",
+   "path": "/tmp/claude-0/-home-claude-keepsake/06e719f0-d76f-5714-bb32-8e9ffd2d5356/scratchpad/video/captures/desktop/6-done.png",
+   "resolution": "1920x1080"
+  },
+  {
+   "type": "still",
+   "set": "desktop",
+   "shot": "done (full page)",
+   "path": "/tmp/claude-0/-home-claude-keepsake/06e719f0-d76f-5714-bb32-8e9ffd2d5356/scratchpad/video/captures/desktop/6-done-full.png",
+   "resolution": "1920x1080"
+  },
+  {
+   "type": "clip",
+   "set": "phone",
+   "shot": "1 start (extra)",
+   "name": "start-entrance",
+   "path": "/tmp/claude-0/-home-claude-keepsake/06e719f0-d76f-5714-bb32-8e9ffd2d5356/scratchpad/video/captures/phone/start-entrance.mp4",
+   "codec": "h264",
+   "pix_fmt": "yuv420p",
+   "resolution": "1170x2532",
+   "fps": 30.0,
+   "duration_s": 4.07,
+   "frames": 122.0,
+   "on_screen": "Page load of the start screen with its own entrance motion (hero photo fan deals in), then rest. First ~0.5 s is the blank page before first paint; trim it."
+  },
+  {
+   "type": "clip",
+   "set": "phone",
+   "shot": "1 start",
+   "name": "start",
+   "path": "/tmp/claude-0/-home-claude-keepsake/06e719f0-d76f-5714-bb32-8e9ffd2d5356/scratchpad/video/captures/phone/start.mp4",
+   "codec": "h264",
+   "pix_fmt": "yuv420p",
+   "resolution": "1170x2532",
+   "fps": 30.0,
+   "duration_s": 4.0,
+   "frames": 120.0,
+   "on_screen": "Start screen at rest after the entrance: \"Recovered photos, sorted by date.\", hero photo fan, \"Sort my recovered files\" button, privacy line, stepper Scan/Sort/Choose/Save."
+  },
+  {
+   "type": "clip",
+   "set": "phone",
+   "shot": "2 scan",
+   "name": "scan",
+   "path": "/tmp/claude-0/-home-claude-keepsake/06e719f0-d76f-5714-bb32-8e9ffd2d5356/scratchpad/video/captures/phone/scan.mp4",
+   "codec": "h264",
+   "pix_fmt": "yuv420p",
+   "resolution": "1170x2532",
+   "fps": 30.0,
+   "duration_s": 4.27,
+   "frames": 128.0,
+   "on_screen": "Press \"Sort my recovered files\" -> \"Checking your files...\" with progress bar \"Checked N of 539 files\" and the three stage ticks -> results screen with the 214 count-up; ~1.5 s hold."
+  },
+  {
+   "type": "clip",
+   "set": "phone",
+   "shot": "3 results",
+   "name": "results",
+   "path": "/tmp/claude-0/-home-claude-keepsake/06e719f0-d76f-5714-bb32-8e9ffd2d5356/scratchpad/video/captures/phone/results.mp4",
+   "codec": "h264",
+   "pix_fmt": "yuv420p",
+   "resolution": "1170x2532",
+   "fps": 30.0,
+   "duration_s": 4.0,
+   "frames": 120.0,
+   "on_screen": "Results settled: \"We found 214 photos and videos.\"; ledger Files checked 539 / Kept, sorted by date 214 / Set aside, kept safe below 325; \"None of your files were deleted or sent anywhere.\" note; Review button."
+  },
+  {
+   "type": "clip",
+   "set": "phone",
+   "shot": "4 setaside",
+   "name": "setaside",
+   "path": "/tmp/claude-0/-home-claude-keepsake/06e719f0-d76f-5714-bb32-8e9ffd2d5356/scratchpad/video/captures/phone/setaside.mp4",
+   "codec": "h264",
+   "pix_fmt": "yuv420p",
+   "resolution": "1170x2532",
+   "fps": 30.0,
+   "duration_s": 6.93,
+   "frames": 207.0,
+   "on_screen": "Opens \"Small preview copies 204\", its explanation and \"Keep these files\", then \"See all 204 files\" list (real names, e.g. recup_dir.2/f0221440.jpg Photo 10.4 KB) under \"These files stay in your recovery folder. Nothing has been deleted.\""
+  },
+  {
+   "type": "clip",
+   "set": "phone",
+   "shot": "5 review",
+   "name": "review",
+   "path": "/tmp/claude-0/-home-claude-keepsake/06e719f0-d76f-5714-bb32-8e9ffd2d5356/scratchpad/video/captures/phone/review.mp4",
+   "codec": "h264",
+   "pix_fmt": "yuv420p",
+   "resolution": "1170x2532",
+   "fps": 30.0,
+   "duration_s": 8.5,
+   "frames": 255.0,
+   "on_screen": "\"Choose what to save\" timeline, eased scroll (~6.5 s) from December 2024 down through the months of 2024 (desktop to ~April 2024, phone to ~February 2024); 214 of 214 selected."
+  },
+  {
+   "type": "clip",
+   "set": "phone",
+   "shot": "6 save",
+   "name": "save",
+   "path": "/tmp/claude-0/-home-claude-keepsake/06e719f0-d76f-5714-bb32-8e9ffd2d5356/scratchpad/video/captures/phone/save.mp4",
+   "codec": "h264",
+   "pix_fmt": "yuv420p",
+   "resolution": "1170x2532",
+   "fps": 30.0,
+   "duration_s": 11.6,
+   "frames": 348.0,
+   "on_screen": "Press \"Save my 214 photos and videos\" -> \"Where should we save your 214 photos and videos?\" (Save to a folder, How your folder will look) ~2.5 s -> Choose a folder (Pictures, via the picker stand-in) -> \"Your 214 photos and videos are saved.\" with tick drawing; ~1.5 s hold. Longer than 8 s: two screens; trim as needed."
+  },
+  {
+   "type": "clip",
+   "set": "phone",
+   "shot": "6 done",
+   "name": "done",
+   "path": "/tmp/claude-0/-home-claude-keepsake/06e719f0-d76f-5714-bb32-8e9ffd2d5356/scratchpad/video/captures/phone/done.mp4",
+   "codec": "h264",
+   "pix_fmt": "yuv420p",
+   "resolution": "1170x2532",
+   "fps": 30.0,
+   "duration_s": 4.0,
+   "frames": 120.0,
+   "on_screen": "Done screen settled: \"Your 214 photos and videos are saved.\", 183 days 2019-2024 plus 20 no date, \"sorted into a folder for each year and month\", Pictures > Upsort photos; desktop also shows the receipt (Saved 214, Couldn't save 0, Sorted into 6 years, 68 months, plus No date (20), Recovery folder Untouched)."
+  },
+  {
+   "type": "still",
+   "set": "phone",
+   "shot": "start",
+   "path": "/tmp/claude-0/-home-claude-keepsake/06e719f0-d76f-5714-bb32-8e9ffd2d5356/scratchpad/video/captures/phone/1-start.png",
+   "resolution": "1170x2532"
+  },
+  {
+   "type": "still",
+   "set": "phone",
+   "shot": "results",
+   "path": "/tmp/claude-0/-home-claude-keepsake/06e719f0-d76f-5714-bb32-8e9ffd2d5356/scratchpad/video/captures/phone/3-results.png",
+   "resolution": "1170x2532"
+  },
+  {
+   "type": "still",
+   "set": "phone",
+   "shot": "results (full page)",
+   "path": "/tmp/claude-0/-home-claude-keepsake/06e719f0-d76f-5714-bb32-8e9ffd2d5356/scratchpad/video/captures/phone/3-results-full.png",
+   "resolution": "1170x7254"
+  },
+  {
+   "type": "still",
+   "set": "phone",
+   "shot": "setaside",
+   "path": "/tmp/claude-0/-home-claude-keepsake/06e719f0-d76f-5714-bb32-8e9ffd2d5356/scratchpad/video/captures/phone/4-setaside.png",
+   "resolution": "1170x2532"
+  },
+  {
+   "type": "still",
+   "set": "phone",
+   "shot": "review (end of scroll)",
+   "path": "/tmp/claude-0/-home-claude-keepsake/06e719f0-d76f-5714-bb32-8e9ffd2d5356/scratchpad/video/captures/phone/5-review.png",
+   "resolution": "1170x2532"
+  },
+  {
+   "type": "still",
+   "set": "phone",
+   "shot": "review (top)",
+   "path": "/tmp/claude-0/-home-claude-keepsake/06e719f0-d76f-5714-bb32-8e9ffd2d5356/scratchpad/video/captures/phone/5-review-top.png",
+   "resolution": "1170x2532"
+  },
+  {
+   "type": "still",
+   "set": "phone",
+   "shot": "save (choose a folder screen)",
+   "path": "/tmp/claude-0/-home-claude-keepsake/06e719f0-d76f-5714-bb32-8e9ffd2d5356/scratchpad/video/captures/phone/6-save-choose.png",
+   "resolution": "1170x2532"
+  },
+  {
+   "type": "still",
+   "set": "phone",
+   "shot": "done",
+   "path": "/tmp/claude-0/-home-claude-keepsake/06e719f0-d76f-5714-bb32-8e9ffd2d5356/scratchpad/video/captures/phone/6-done.png",
+   "resolution": "1170x2532"
+  },
+  {
+   "type": "still",
+   "set": "phone",
+   "shot": "done (full page)",
+   "path": "/tmp/claude-0/-home-claude-keepsake/06e719f0-d76f-5714-bb32-8e9ffd2d5356/scratchpad/video/captures/phone/6-done-full.png",
+   "resolution": "1170x4734"
+  }
+ ],
+ "pilot_files": "/tmp/claude-0/-home-claude-keepsake/06e719f0-d76f-5714-bb32-8e9ffd2d5356/scratchpad/video/captures/pilot-files.json"
+}
