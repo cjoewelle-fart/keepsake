@@ -7,7 +7,7 @@
 - **Name:** decided Nov 10 by the owner: Upsort. Every "Keepsake" here was swapped for it (T94).
 - **Scope:** this is for the launch page and store listings only. The app's start screen now reads "Recovered photos, sorted by date." (owner request, Nov 10), in line with the primary line below.
 - **Words:** we say "recovery program" to match the app. The owner's sentence says "recovery tool", and we keep that as written.
-- **Not yet public.** Publishing any of this is the owner's call. The privacy and no-delete lines are waiting for the owner's OK (D35).
+- **Not yet public.** Publishing any of this is the owner's call. The privacy and no-delete lines were approved as drafted by the owner on Nov 10 (D35).
 
 ---
 

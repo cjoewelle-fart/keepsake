@@ -320,3 +320,13 @@ Commands:
 ## Sign-off
 
 **Phase 3 gate passed — Nov 10, 2026, by the owner (in chat).** Signed off on the Nov 9 evidence above (QA rerun on `dc08416`). The review filters merged afterwards (T50/T59, `ba0689e`, fixed in `f0b2b16`) only change what is shown, never what is kept or saved (QA review, Nov 10); no full rerun was done on the later build.
+
+## Phase 4 pre-check (Nov 11, QA, `6fca722`)
+
+Early warning only, not the formal gate run (T96 runs on the release build). Chromium, 2 CPUs, 7 GB RAM.
+
+- **Build:** `npm run build` OK, 30 precached files.
+- **Scan speed (target: 40,000 files under 5 minutes): pass.** `scripts/make_perf_folder.py` → 40,000 files, 5.33 GB (900 full-size 12 MP JPEGs). `node scripts/perf-browser.mjs <chromium> <dir>/recovery --runs 3`: 36.0 s, 35.5 s, 36.5 s (median 36 s; Oct 19 was 51 s). Peak memory 1.24–1.26 GB. No outside requests; folder unchanged (name, size, mtime).
+  - **Gap:** no HEIC in this folder (`pillow_heif` not installed). Install it before T96 so the 250 HEICs are in the mix.
+- **Freeze after picking (T52): pass.** `--handoff --runs 3`: Chromium's own folder listing takes 4.0–4.9 s before the app gets the files (the app can't change that); after that, longest freeze 170–191 ms (pass line 250 ms), first progress 0.26–0.28 s, Stop answers in 0.49–0.71 s. Worst case is close to ~200 ms on a busy 2-CPU machine; watch it.
+- **Privacy and offline: pass.** `npm run offline-check`: zero outside requests, no CSP violations, every offline request answered by the service worker, a HEIC decoded offline. `npm run e2e` twice: no console errors, no requests left the computer. `fixtures/recovery` hashed before and after (2,818 entries: content, size, mtime, permissions): identical.
