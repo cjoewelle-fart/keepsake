@@ -1,0 +1,41 @@
+<template>
+  <style>
+    @font-face { font-family: "Bricolage Grotesque"; src: url("assets/fonts/bricolage-grotesque-latin-opsz-normal.woff2") format("woff2"); font-weight: 200 800; }
+    @font-face { font-family: "Atkinson Hyperlegible"; src: url("assets/fonts/atkinson-hyperlegible-latin-400-normal.woff2") format("woff2"); font-weight: 400; }
+    @font-face { font-family: "Atkinson Hyperlegible"; src: url("assets/fonts/atkinson-hyperlegible-latin-700-normal.woff2") format("woff2"); font-weight: 700; }
+    #root { position: absolute; inset: 0; }
+    .stage { position: absolute; inset: 0; }
+    .part { position: absolute; border-radius: 16px; box-shadow: 0 1px 2px rgba(31,36,39,.12), 0 14px 40px rgba(31,36,39,.14); display: block; }
+    .vwrap { position: absolute; overflow: hidden; border-radius: 16px; box-shadow: 0 1px 2px rgba(31,36,39,.12), 0 14px 40px rgba(31,36,39,.14); background: #ECF1F0; }
+    .vwrap video { position: absolute; }
+    .plate { position: absolute; border-radius: 36px; }
+    #choose-pa { left: 120px; top: 90px; width: 1680px; height: 780px; background: #DDEAEA; }
+    #choose-pb { left: 330px; top: 150px; width: 1260px; height: 660px; background: rgba(255,255,255,.55); }
+    
+    #ch-btn { left: 640px; top: 330px; width: 640px; height: 128px; border-radius: 64px; transform-origin: 50% 50%; }
+    #ch-priv { left: 490px; top: 520px; width: 940px; height: 52px; border-radius: 0; box-shadow: none; }
+  </style>
+  <div id="root" data-composition-id="choose" data-width="1920" data-height="1080">
+    <div id="choose-stage" class="stage">
+      <div id="choose-pa" class="plate"></div><div id="choose-pb" class="plate"></div>
+      <img id="ch-btn" class="part" src="assets/parts/P1-start-sort-button.png" alt="" /><img id="ch-priv" class="part" src="assets/parts/P3-start-privacy-line.png" alt="" />
+    </div>
+  </div>
+  <script>
+    const DUR = 4.5;
+    const tl = gsap.timeline({ paused: true });
+    tl.fromTo("#choose-stage", { opacity: 1, filter: "blur(0px)", scale: 1 }, { opacity: 1, filter: "blur(0px)", scale: 1, duration: 0.01 }, 0);
+    tl.fromTo("#choose-pa", { x: 0, y: 1100, rotation: 0 }, { x: 0, y: 0, rotation: 0, duration: 0.8, ease: "expo.out" }, 0);
+    tl.fromTo("#choose-pb", { x: 0, y: -900, rotation: 0 }, { x: 0, y: 0, rotation: 0, duration: 0.9, ease: "expo.out" }, 0.08);
+    tl.to("#choose-pa", { x: -24, duration: DUR - 0.8, ease: "none" }, 0.8);
+    tl.to("#choose-pb", { x: 30, y: -10, duration: DUR - 1.0, ease: "none" }, 1.0);
+    tl.fromTo("#ch-btn", { opacity: 0, scale: 0.7, filter: "blur(14px)" }, { opacity: 1, scale: 1, filter: "blur(0px)", duration: 0.7, ease: "expo.out" }, 0.35);
+    tl.fromTo("#ch-priv", { opacity: 0, filter: "blur(8px)" }, { opacity: 1, filter: "blur(0px)", duration: 0.4, ease: "power3.out" }, 0.9);
+    tl.to("#ch-btn", { scale: 0.94, duration: 0.12, ease: "power2.in" }, 2.3);
+    tl.to("#ch-btn", { scale: 1, duration: 0.3, ease: "back.out(2)" }, 2.42);
+    tl.to("#ch-priv", { opacity: 0, duration: 0.2 }, 3.6);
+    tl.to("#ch-btn", { scale: 7, opacity: 0, filter: "blur(10px)", duration: 0.5, ease: "power3.in" }, 3.95);
+    
+    window.__timelines["choose"] = tl;
+  </script>
+</template>

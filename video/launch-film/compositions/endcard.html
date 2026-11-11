@@ -20,7 +20,7 @@
     .url { font: 700 46px/1.2 "Atkinson Hyperlegible", sans-serif; color: #23596B; }
   </style>
   <div id="root" data-composition-id="endcard" data-width="1920" data-height="1080">
-    <div id="end-a" class="clip" data-start="0" data-duration="4.6">
+    <div id="end-a" class="clip" data-start="0" data-duration="3.6">
       <div class="prints">
         <div id="end-p1" class="print"><img src="assets/img/6-beach-480.webp" alt="" /></div>
         <div id="end-p2" class="print"><img src="assets/img/3-candles-480.webp" alt="" /></div>
@@ -28,7 +28,7 @@
       </div>
       <div class="promise"><div id="end-l1"></div><div id="end-l2" class="b"></div></div>
     </div>
-    <div id="end-b" class="clip" data-start="4.6" data-duration="4.6">
+    <div id="end-b" class="clip" data-start="3.6" data-duration="2.9">
       <div class="lock">
         <div class="mark-row">
           <svg id="end-mark" width="170" height="170" viewBox="0 0 28 28" fill="none" aria-hidden="true">
@@ -55,17 +55,17 @@
     const tl = gsap.timeline({ paused: true });
     // Prints are dealt onto the paper, one after another (the app's own hero fan).
     [["#end-p1", -7, -60], ["#end-p2", 0, 0], ["#end-p3", 6, 60]].forEach(([s, r, x], i) => {
-      tl.fromTo(s, { opacity: 0, y: 90, rotation: r * 2, x: x }, { opacity: 1, y: i === 1 ? -10 : 10, rotation: r, x: 0, duration: 0.9, ease: "expo.out" }, 0.2 + i * 0.14);
+      tl.fromTo(s, { opacity: 0, y: 90, rotation: r * 2, x: x }, { opacity: 1, y: i === 1 ? -10 : 10, rotation: r, x: 0, duration: 0.9, ease: "expo.out" }, 0.1 + i * 0.12);
     });
-    tl.fromTo("#end-l1", { opacity: 0, filter: "blur(18px)", y: 28 }, { opacity: 1, filter: "blur(0px)", y: 0, duration: 0.8, ease: "power3.out" }, 0.9);
-    tl.fromTo("#end-l2", { opacity: 0, filter: "blur(18px)", y: 28 }, { opacity: 1, filter: "blur(0px)", y: 0, duration: 0.8, ease: "power3.out" }, 1.6);
-    tl.to("#end-a", { filter: "blur(30px)", scale: 1.06, duration: 0.5, ease: "power1.in" }, 4.1);
+    tl.fromTo("#end-l1", { opacity: 0, filter: "blur(18px)", y: 28 }, { opacity: 1, filter: "blur(0px)", y: 0, duration: 0.8, ease: "power3.out" }, 0.6);
+    tl.fromTo("#end-l2", { opacity: 0, filter: "blur(18px)", y: 28 }, { opacity: 1, filter: "blur(0px)", y: 0, duration: 0.8, ease: "power3.out" }, 1.1);
+    tl.to("#end-a", { filter: "blur(30px)", scale: 1.06, duration: 0.5, ease: "power1.in" }, 3.1);
     // Lockup: the mark lands, then the name, the tagline and the address.
-    tl.fromTo("#end-mark", { opacity: 0, scale: 0.6 }, { opacity: 1, scale: 1, duration: 0.7, ease: "back.out(1.4)" }, 4.7);
-    tl.fromTo("#end-name", { opacity: 0, filter: "blur(10px)", x: -30 }, { opacity: 1, filter: "blur(0px)", x: 0, duration: 0.6, ease: "expo.out" }, 4.95);
-    tl.fromTo("#end-tag", { opacity: 0, filter: "blur(8px)" }, { opacity: 1, filter: "blur(0px)", duration: 0.5, ease: "power3.out" }, 5.5);
-    tl.fromTo("#end-free", { opacity: 0, filter: "blur(8px)" }, { opacity: 1, filter: "blur(0px)", duration: 0.5, ease: "power3.out" }, 5.8);
-    tl.fromTo("#end-url", { opacity: 0, filter: "blur(8px)" }, { opacity: 1, filter: "blur(0px)", duration: 0.5, ease: "power3.out" }, 6.1);
+    tl.fromTo("#end-mark", { opacity: 0, scale: 0.6 }, { opacity: 1, scale: 1, duration: 0.7, ease: "back.out(1.4)" }, 3.7);
+    tl.fromTo("#end-name", { opacity: 0, filter: "blur(10px)", x: -30 }, { opacity: 1, filter: "blur(0px)", x: 0, duration: 0.6, ease: "expo.out" }, 3.95);
+    tl.fromTo("#end-tag", { opacity: 0, filter: "blur(8px)" }, { opacity: 1, filter: "blur(0px)", duration: 0.5, ease: "power3.out" }, 4.2);
+    tl.fromTo("#end-free", { opacity: 0, filter: "blur(8px)" }, { opacity: 1, filter: "blur(0px)", duration: 0.5, ease: "power3.out" }, 4.35);
+    tl.fromTo("#end-url", { opacity: 0, filter: "blur(8px)" }, { opacity: 1, filter: "blur(0px)", duration: 0.5, ease: "power3.out" }, 4.5);
     window.__timelines["endcard"] = tl;
   </script>
 </template>

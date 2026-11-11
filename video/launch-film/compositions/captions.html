@@ -7,14 +7,13 @@
       font: 700 46px/1.25 "Atkinson Hyperlegible", sans-serif; box-shadow: 0 1px 2px rgba(31,36,39,.10), 0 8px 22px rgba(31,36,39,.10); }
   </style>
   <div id="root" data-composition-id="captions" data-width="1920" data-height="1080">
-    <div id="cap-c1" class="cap clip" data-start="0.4" data-duration="3.2"><span id="cap-c1-t" class="t"></span></div>
-    <div id="cap-c2" class="cap clip" data-start="3.8" data-duration="3.0"><span id="cap-c2-t" class="t"></span></div>
-    <div id="cap-c3" class="cap clip" data-start="7.4" data-duration="2.8"><span id="cap-c3-t" class="t"></span></div>
-    <div id="cap-c4" class="cap clip" data-start="10.5" data-duration="2.9"><span id="cap-c4-t" class="t"></span></div>
-    <div id="cap-c5" class="cap clip" data-start="13.8" data-duration="3.4"><span id="cap-c5-t" class="t"></span></div>
-    <div id="cap-c6" class="cap clip" data-start="17.6" data-duration="3.6"><span id="cap-c6-t" class="t"></span></div>
-    <div id="cap-c7" class="cap clip" data-start="21.6" data-duration="4.0"><span id="cap-c7-t" class="t"></span></div>
-    <div id="cap-c8" class="cap clip" data-start="26.2" data-duration="4.2"><span id="cap-c8-t" class="t"></span></div>
+    <div id="cap-c1" class="cap clip" data-start="0.3" data-duration="2.9"><span id="cap-c1-t" class="t"></span></div>
+    <div id="cap-c2" class="cap clip" data-start="3.4" data-duration="2.9"><span id="cap-c2-t" class="t"></span></div>
+    <div id="cap-c3" class="cap clip" data-start="6.8" data-duration="3.6"><span id="cap-c3-t" class="t"></span></div>
+    <div id="cap-c4" class="cap clip" data-start="11.3" data-duration="3.9"><span id="cap-c4-t" class="t"></span></div>
+    <div id="cap-c5" class="cap clip" data-start="15.8" data-duration="4.9"><span id="cap-c5-t" class="t"></span></div>
+    <div id="cap-c6" class="cap clip" data-start="21.4" data-duration="6.2"><span id="cap-c6-t" class="t"></span></div>
+    <div id="cap-c7" class="cap clip" data-start="28.3" data-duration="4.9"><span id="cap-c7-t" class="t"></span></div>
   </div>
   <script>
     const C = window.CAPTIONS[window.CAPTION_LANG] || window.CAPTIONS.en;
@@ -26,24 +25,21 @@
     document.getElementById("cap-c5-t").textContent = C.c5.replace("{APP}", APP);
     document.getElementById("cap-c6-t").textContent = C.c6.replace("{APP}", APP);
     document.getElementById("cap-c7-t").textContent = C.c7.replace("{APP}", APP);
-    document.getElementById("cap-c8-t").textContent = C.c8.replace("{APP}", APP);
     const tl = gsap.timeline({ paused: true });
-    tl.fromTo("#cap-c1-t", { opacity: 0, y: 18, filter: "blur(8px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.35, ease: "power3.out" }, 0.4);
-    tl.to("#cap-c1-t", { opacity: 0, filter: "blur(6px)", duration: 0.2, ease: "power2.in" }, 3.4);
-    tl.fromTo("#cap-c2-t", { opacity: 0, y: 18, filter: "blur(8px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.35, ease: "power3.out" }, 3.8);
-    tl.to("#cap-c2-t", { opacity: 0, filter: "blur(6px)", duration: 0.2, ease: "power2.in" }, 6.6);
-    tl.fromTo("#cap-c3-t", { opacity: 0, y: 18, filter: "blur(8px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.35, ease: "power3.out" }, 7.4);
-    tl.to("#cap-c3-t", { opacity: 0, filter: "blur(6px)", duration: 0.2, ease: "power2.in" }, 10.0);
-    tl.fromTo("#cap-c4-t", { opacity: 0, y: 18, filter: "blur(8px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.35, ease: "power3.out" }, 10.5);
-    tl.to("#cap-c4-t", { opacity: 0, filter: "blur(6px)", duration: 0.2, ease: "power2.in" }, 13.2);
-    tl.fromTo("#cap-c5-t", { opacity: 0, y: 18, filter: "blur(8px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.35, ease: "power3.out" }, 13.8);
-    tl.to("#cap-c5-t", { opacity: 0, filter: "blur(6px)", duration: 0.2, ease: "power2.in" }, 17.0);
-    tl.fromTo("#cap-c6-t", { opacity: 0, y: 18, filter: "blur(8px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.35, ease: "power3.out" }, 17.6);
-    tl.to("#cap-c6-t", { opacity: 0, filter: "blur(6px)", duration: 0.2, ease: "power2.in" }, 21.0);
-    tl.fromTo("#cap-c7-t", { opacity: 0, y: 18, filter: "blur(8px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.35, ease: "power3.out" }, 21.6);
-    tl.to("#cap-c7-t", { opacity: 0, filter: "blur(6px)", duration: 0.2, ease: "power2.in" }, 25.4);
-    tl.fromTo("#cap-c8-t", { opacity: 0, y: 18, filter: "blur(8px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.35, ease: "power3.out" }, 26.2);
-    tl.to("#cap-c8-t", { opacity: 0, filter: "blur(6px)", duration: 0.2, ease: "power2.in" }, 30.2);
+    tl.fromTo("#cap-c1-t", { opacity: 0, y: 18, filter: "blur(8px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.35, ease: "power3.out" }, 0.3);
+    tl.to("#cap-c1-t", { opacity: 0, filter: "blur(6px)", duration: 0.2, ease: "power2.in" }, 3.0);
+    tl.fromTo("#cap-c2-t", { opacity: 0, y: 18, filter: "blur(8px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.35, ease: "power3.out" }, 3.4);
+    tl.to("#cap-c2-t", { opacity: 0, filter: "blur(6px)", duration: 0.2, ease: "power2.in" }, 6.1);
+    tl.fromTo("#cap-c3-t", { opacity: 0, y: 18, filter: "blur(8px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.35, ease: "power3.out" }, 6.8);
+    tl.to("#cap-c3-t", { opacity: 0, filter: "blur(6px)", duration: 0.2, ease: "power2.in" }, 10.2);
+    tl.fromTo("#cap-c4-t", { opacity: 0, y: 18, filter: "blur(8px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.35, ease: "power3.out" }, 11.3);
+    tl.to("#cap-c4-t", { opacity: 0, filter: "blur(6px)", duration: 0.2, ease: "power2.in" }, 15.0);
+    tl.fromTo("#cap-c5-t", { opacity: 0, y: 18, filter: "blur(8px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.35, ease: "power3.out" }, 15.8);
+    tl.to("#cap-c5-t", { opacity: 0, filter: "blur(6px)", duration: 0.2, ease: "power2.in" }, 20.5);
+    tl.fromTo("#cap-c6-t", { opacity: 0, y: 18, filter: "blur(8px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.35, ease: "power3.out" }, 21.4);
+    tl.to("#cap-c6-t", { opacity: 0, filter: "blur(6px)", duration: 0.2, ease: "power2.in" }, 27.4);
+    tl.fromTo("#cap-c7-t", { opacity: 0, y: 18, filter: "blur(8px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.35, ease: "power3.out" }, 28.3);
+    tl.to("#cap-c7-t", { opacity: 0, filter: "blur(6px)", duration: 0.2, ease: "power2.in" }, 33.0);
     window.__timelines["captions"] = tl;
   </script>
 </template>
