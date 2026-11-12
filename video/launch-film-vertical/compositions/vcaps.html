@@ -2,31 +2,29 @@
   <style>
     @font-face { font-family: "Atkinson Hyperlegible"; src: url("assets/fonts/atkinson-hyperlegible-latin-700-normal.woff2") format("woff2"); font-weight: 700; }
     #root { position: absolute; inset: 0; }
-    .cap { position: absolute; left: 0; right: 0; top: 1215px; text-align: center; overflow: visible; }
-    .cap .t { display: inline-block; max-width: 900px; padding: 18px 30px; background: #fff; border-radius: 14px; color: #1F2427; font: 700 54px/1.22 "Atkinson Hyperlegible", sans-serif;
-      box-shadow: 0 1px 2px rgba(31,36,39,.10), 0 8px 22px rgba(31,36,39,.10); }
+    .cap { position: absolute; left: 90px; right: 90px; top: 1190px; overflow: visible; }
+    .cap .rule { display: block; width: 56px; height: 5px; border-radius: 3px; background: #23596B; margin-bottom: 18px; }
+    .cap .t { font: 700 58px/1.22 "Atkinson Hyperlegible", sans-serif; color: #1F2427; letter-spacing: -0.005em; }
+    .cap .w { display: inline-block; white-space: pre; }
   </style>
   <div id="root" data-composition-id="vcaps" data-width="1080" data-height="1920">
-    <div id="vc-v1" class="cap clip" data-start="0.1" data-duration="2.8"><span id="vc-v1-t" class="t"></span></div>
-    <div id="vc-v2" class="cap clip" data-start="3.1" data-duration="2.4"><span id="vc-v2-t" class="t"></span></div>
-    <div id="vc-v3" class="cap clip" data-start="5.7" data-duration="2.2"><span id="vc-v3-t" class="t"></span></div>
-    <div id="vc-v4" class="cap clip" data-start="8.1" data-duration="2.8"><span id="vc-v4-t" class="t"></span></div>
+    <div id="vcaps-v1" class="cap clip" data-start="0.2" data-duration="2.4"><span class="rule"></span><div id="vcaps-v1-t" class="t"></div></div>
+    <div id="vcaps-v2" class="cap clip" data-start="3.0" data-duration="3.0"><span class="rule"></span><div id="vcaps-v2-t" class="t"></div></div>
+    <div id="vcaps-v3" class="cap clip" data-start="6.4" data-duration="2.3"><span class="rule"></span><div id="vcaps-v3-t" class="t"></div></div>
+    <div id="vcaps-v4" class="cap clip" data-start="9.0" data-duration="2.3"><span class="rule"></span><div id="vcaps-v4-t" class="t"></div></div>
   </div>
   <script>
     const C = window.CAPTIONS[window.CAPTION_LANG] || window.CAPTIONS.en;
-    document.getElementById("vc-v1-t").textContent = C.v1.replace("{APP}", window.BRAND.appName);
-    document.getElementById("vc-v2-t").textContent = C.v2.replace("{APP}", window.BRAND.appName);
-    document.getElementById("vc-v3-t").textContent = C.v3.replace("{APP}", window.BRAND.appName);
-    document.getElementById("vc-v4-t").textContent = C.v4.replace("{APP}", window.BRAND.appName);
+    const APP = window.BRAND.appName;
     const tl = gsap.timeline({ paused: true });
-    tl.fromTo("#vc-v1-t", { opacity: 0, y: 16, filter: "blur(8px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.3, ease: "power3.out" }, 0.1);
-    tl.to("#vc-v1-t", { opacity: 0, duration: 0.15 }, 2.75);
-    tl.fromTo("#vc-v2-t", { opacity: 0, y: 16, filter: "blur(8px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.3, ease: "power3.out" }, 3.1);
-    tl.to("#vc-v2-t", { opacity: 0, duration: 0.15 }, 5.35);
-    tl.fromTo("#vc-v3-t", { opacity: 0, y: 16, filter: "blur(8px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.3, ease: "power3.out" }, 5.7);
-    tl.to("#vc-v3-t", { opacity: 0, duration: 0.15 }, 7.75);
-    tl.fromTo("#vc-v4-t", { opacity: 0, y: 16, filter: "blur(8px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.3, ease: "power3.out" }, 8.1);
-    tl.to("#vc-v4-t", { opacity: 0, duration: 0.15 }, 10.75);
+    [["v1", 0.2, 2.4], ["v2", 3.0, 3.0], ["v3", 6.4, 2.3], ["v4", 9.0, 2.3]].forEach(([k, s, d]) => {
+      const box = document.getElementById("vcaps-" + k + "-t");
+      const words = C[k].replace("{APP}", APP).split(" ");
+      words.forEach((w, i) => { if (i) box.appendChild(document.createTextNode(" ")); const sp = document.createElement("span"); sp.className = "w"; sp.textContent = w; box.appendChild(sp); });
+      tl.fromTo("#vcaps-" + k + " .rule", { scaleX: 0, transformOrigin: "0 50%" }, { scaleX: 1, duration: 0.35, ease: "power3.out" }, s);
+      tl.fromTo(box.querySelectorAll(".w"), { opacity: 0, filter: "blur(6px)" }, { opacity: 1, filter: "blur(0px)", duration: 0.16, ease: "power4.out", stagger: 0.06 }, s + 0.05);
+      tl.to("#vcaps-" + k, { opacity: 0, filter: "blur(6px)", duration: 0.2, ease: "power2.in" }, Math.round((s + d - 0.2) * 100) / 100);
+    });
     window.__timelines["vcaps"] = tl;
   </script>
 </template>

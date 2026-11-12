@@ -1,0 +1,37 @@
+<template>
+  <style>
+    @font-face { font-family: "Bricolage Grotesque"; src: url("assets/fonts/bricolage-grotesque-latin-opsz-normal.woff2") format("woff2"); font-weight: 200 800; }
+    @font-face { font-family: "Atkinson Hyperlegible"; src: url("assets/fonts/atkinson-hyperlegible-latin-400-normal.woff2") format("woff2"); font-weight: 400; }
+    @font-face { font-family: "Atkinson Hyperlegible"; src: url("assets/fonts/atkinson-hyperlegible-latin-700-normal.woff2") format("woff2"); font-weight: 700; }
+    #root { position: absolute; inset: 0; }
+    .stage { position: absolute; inset: 0; }
+    .abs { position: absolute; }
+    .disp { font-family: "Bricolage Grotesque", sans-serif; font-variation-settings: "opsz" 96; font-weight: 800; letter-spacing: -0.03em; color: #1F2427; }
+    .body { font-family: "Atkinson Hyperlegible", sans-serif; color: #1F2427; }
+    
+    .yr { left: 92px; font-size: 64px; line-height: 1; color: #23596B; }
+    .prow { left: 92px; display: flex; gap: 18px; }
+    .prow img { width: 230px; height: 200px; object-fit: cover; border-radius: 12px; display: block; }
+  </style>
+  <div id="root" data-composition-id="vdate" data-width="1080" data-height="1920">
+    <div id="vdate-stage" class="stage">
+      <div id="vd-y0" class="abs yr disp" style="top:250px">2024</div><div id="vd-r0" class="abs prow" style="top:320px"><img src="assets/photos/2024-0.jpg" alt="" /><img src="assets/photos/2024-1.jpg" alt="" /><img src="assets/photos/2024-2.jpg" alt="" /><img src="assets/photos/2024-3.jpg" alt="" /><img src="assets/photos/2024-4.jpg" alt="" /><img src="assets/photos/2024-5.jpg" alt="" /></div><div id="vd-y1" class="abs yr disp" style="top:550px">2022</div><div id="vd-r1" class="abs prow" style="top:620px"><img src="assets/photos/2022-0.jpg" alt="" /><img src="assets/photos/2022-1.jpg" alt="" /><img src="assets/photos/2022-2.jpg" alt="" /><img src="assets/photos/2022-3.jpg" alt="" /><img src="assets/photos/2022-4.jpg" alt="" /><img src="assets/photos/2022-5.jpg" alt="" /></div><div id="vd-y2" class="abs yr disp" style="top:850px">2019</div><div id="vd-r2" class="abs prow" style="top:920px"><img src="assets/photos/2019-0.jpg" alt="" /><img src="assets/photos/2019-1.jpg" alt="" /><img src="assets/photos/2019-2.jpg" alt="" /><img src="assets/photos/2019-3.jpg" alt="" /><img src="assets/photos/2019-4.jpg" alt="" /><img src="assets/photos/2019-5.jpg" alt="" /></div>
+    </div>
+  </div>
+  <script>
+    const B = window.BRAND, C = window.CAPTIONS[window.CAPTION_LANG] || window.CAPTIONS.en;
+    const tl = gsap.timeline({ paused: true });
+    tl.fromTo("#vdate-stage", { opacity: 1, filter: "blur(0px)" }, { opacity: 1, filter: "blur(0px)", duration: 0.01 }, 0);
+    tl.fromTo("#vd-r0", { x: 0 }, { x: -160, duration: 2.6, ease: "none" }, 0);
+    tl.fromTo("#vd-r0 img", { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.5, ease: "expo.out", stagger: 0.05 }, 0.1);
+    tl.fromTo("#vd-y0", { opacity: 0, x: -20 }, { opacity: 1, x: 0, duration: 0.45, ease: "expo.out" }, 0.05);
+    tl.fromTo("#vd-r1", { x: -160 }, { x: 0, duration: 2.6, ease: "none" }, 0);
+    tl.fromTo("#vd-r1 img", { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.5, ease: "expo.out", stagger: 0.05 }, 0.35);
+    tl.fromTo("#vd-y1", { opacity: 0, x: -20 }, { opacity: 1, x: 0, duration: 0.45, ease: "expo.out" }, 0.3);
+    tl.fromTo("#vd-r2", { x: 0 }, { x: -160, duration: 2.6, ease: "none" }, 0);
+    tl.fromTo("#vd-r2 img", { opacity: 0, y: 30 }, { opacity: 1, y: 0, duration: 0.5, ease: "expo.out", stagger: 0.05 }, 0.6);
+    tl.fromTo("#vd-y2", { opacity: 0, x: -20 }, { opacity: 1, x: 0, duration: 0.45, ease: "expo.out" }, 0.55);
+    tl.to("#vdate-stage", { filter: "blur(18px)", opacity: 0, duration: 0.4, ease: "power2.in" }, 2.25);
+    window.__timelines["vdate"] = tl;
+  </script>
+</template>

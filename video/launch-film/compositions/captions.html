@@ -2,44 +2,32 @@
   <style>
     @font-face { font-family: "Atkinson Hyperlegible"; src: url("assets/fonts/atkinson-hyperlegible-latin-700-normal.woff2") format("woff2"); font-weight: 700; }
     #root { position: absolute; inset: 0; }
-    .cap { position: absolute; left: 0; right: 0; bottom: 64px; text-align: center; overflow: visible; }
-    .cap .t { display: inline-block; max-width: 1500px; padding: 16px 30px; background: #FFFFFF; border-radius: 14px; color: #1F2427;
-      font: 700 46px/1.25 "Atkinson Hyperlegible", sans-serif; box-shadow: 0 1px 2px rgba(31,36,39,.10), 0 8px 22px rgba(31,36,39,.10); }
+    .cap { position: absolute; left: 160px; right: 160px; bottom: 74px; overflow: visible; }
+    .cap .rule { display: block; width: 56px; height: 5px; border-radius: 3px; background: #23596B; margin-bottom: 18px; }
+    .cap .t { font: 700 50px/1.22 "Atkinson Hyperlegible", sans-serif; color: #1F2427; letter-spacing: -0.005em; }
+    .cap .w { display: inline-block; white-space: pre; }
   </style>
   <div id="root" data-composition-id="captions" data-width="1920" data-height="1080">
-    <div id="cap-c1" class="cap clip" data-start="0.3" data-duration="2.9"><span id="cap-c1-t" class="t"></span></div>
-    <div id="cap-c2" class="cap clip" data-start="3.4" data-duration="2.9"><span id="cap-c2-t" class="t"></span></div>
-    <div id="cap-c3" class="cap clip" data-start="6.8" data-duration="3.6"><span id="cap-c3-t" class="t"></span></div>
-    <div id="cap-c4" class="cap clip" data-start="11.3" data-duration="3.9"><span id="cap-c4-t" class="t"></span></div>
-    <div id="cap-c5" class="cap clip" data-start="15.8" data-duration="4.9"><span id="cap-c5-t" class="t"></span></div>
-    <div id="cap-c6" class="cap clip" data-start="21.4" data-duration="6.2"><span id="cap-c6-t" class="t"></span></div>
-    <div id="cap-c7" class="cap clip" data-start="28.3" data-duration="4.9"><span id="cap-c7-t" class="t"></span></div>
+    <div id="captions-c1" class="cap clip" data-start="0.4" data-duration="2.8"><span class="rule"></span><div id="captions-c1-t" class="t"></div></div>
+    <div id="captions-c2" class="cap clip" data-start="3.4" data-duration="2.8"><span class="rule"></span><div id="captions-c2-t" class="t"></div></div>
+    <div id="captions-c3" class="cap clip" data-start="6.8" data-duration="3.4"><span class="rule"></span><div id="captions-c3-t" class="t"></div></div>
+    <div id="captions-c4" class="cap clip" data-start="10.9" data-duration="4.2"><span class="rule"></span><div id="captions-c4-t" class="t"></div></div>
+    <div id="captions-c5" class="cap clip" data-start="15.9" data-duration="4.8"><span class="rule"></span><div id="captions-c5-t" class="t"></div></div>
+    <div id="captions-c6" class="cap clip" data-start="21.4" data-duration="6.2"><span class="rule"></span><div id="captions-c6-t" class="t"></div></div>
+    <div id="captions-c7" class="cap clip" data-start="28.4" data-duration="4.8"><span class="rule"></span><div id="captions-c7-t" class="t"></div></div>
   </div>
   <script>
     const C = window.CAPTIONS[window.CAPTION_LANG] || window.CAPTIONS.en;
     const APP = window.BRAND.appName;
-    document.getElementById("cap-c1-t").textContent = C.c1.replace("{APP}", APP);
-    document.getElementById("cap-c2-t").textContent = C.c2.replace("{APP}", APP);
-    document.getElementById("cap-c3-t").textContent = C.c3.replace("{APP}", APP);
-    document.getElementById("cap-c4-t").textContent = C.c4.replace("{APP}", APP);
-    document.getElementById("cap-c5-t").textContent = C.c5.replace("{APP}", APP);
-    document.getElementById("cap-c6-t").textContent = C.c6.replace("{APP}", APP);
-    document.getElementById("cap-c7-t").textContent = C.c7.replace("{APP}", APP);
     const tl = gsap.timeline({ paused: true });
-    tl.fromTo("#cap-c1-t", { opacity: 0, y: 18, filter: "blur(8px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.35, ease: "power3.out" }, 0.3);
-    tl.to("#cap-c1-t", { opacity: 0, filter: "blur(6px)", duration: 0.2, ease: "power2.in" }, 3.0);
-    tl.fromTo("#cap-c2-t", { opacity: 0, y: 18, filter: "blur(8px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.35, ease: "power3.out" }, 3.4);
-    tl.to("#cap-c2-t", { opacity: 0, filter: "blur(6px)", duration: 0.2, ease: "power2.in" }, 6.1);
-    tl.fromTo("#cap-c3-t", { opacity: 0, y: 18, filter: "blur(8px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.35, ease: "power3.out" }, 6.8);
-    tl.to("#cap-c3-t", { opacity: 0, filter: "blur(6px)", duration: 0.2, ease: "power2.in" }, 10.2);
-    tl.fromTo("#cap-c4-t", { opacity: 0, y: 18, filter: "blur(8px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.35, ease: "power3.out" }, 11.3);
-    tl.to("#cap-c4-t", { opacity: 0, filter: "blur(6px)", duration: 0.2, ease: "power2.in" }, 15.0);
-    tl.fromTo("#cap-c5-t", { opacity: 0, y: 18, filter: "blur(8px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.35, ease: "power3.out" }, 15.8);
-    tl.to("#cap-c5-t", { opacity: 0, filter: "blur(6px)", duration: 0.2, ease: "power2.in" }, 20.5);
-    tl.fromTo("#cap-c6-t", { opacity: 0, y: 18, filter: "blur(8px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.35, ease: "power3.out" }, 21.4);
-    tl.to("#cap-c6-t", { opacity: 0, filter: "blur(6px)", duration: 0.2, ease: "power2.in" }, 27.4);
-    tl.fromTo("#cap-c7-t", { opacity: 0, y: 18, filter: "blur(8px)" }, { opacity: 1, y: 0, filter: "blur(0px)", duration: 0.35, ease: "power3.out" }, 28.3);
-    tl.to("#cap-c7-t", { opacity: 0, filter: "blur(6px)", duration: 0.2, ease: "power2.in" }, 33.0);
+    [["c1", 0.4, 2.8], ["c2", 3.4, 2.8], ["c3", 6.8, 3.4], ["c4", 10.9, 4.2], ["c5", 15.9, 4.8], ["c6", 21.4, 6.2], ["c7", 28.4, 4.8]].forEach(([k, s, d]) => {
+      const box = document.getElementById("captions-" + k + "-t");
+      const words = C[k].replace("{APP}", APP).split(" ");
+      words.forEach((w, i) => { if (i) box.appendChild(document.createTextNode(" ")); const sp = document.createElement("span"); sp.className = "w"; sp.textContent = w; box.appendChild(sp); });
+      tl.fromTo("#captions-" + k + " .rule", { scaleX: 0, transformOrigin: "0 50%" }, { scaleX: 1, duration: 0.35, ease: "power3.out" }, s);
+      tl.fromTo(box.querySelectorAll(".w"), { opacity: 0, filter: "blur(6px)" }, { opacity: 1, filter: "blur(0px)", duration: 0.16, ease: "power4.out", stagger: 0.06 }, s + 0.05);
+      tl.to("#captions-" + k, { opacity: 0, filter: "blur(6px)", duration: 0.2, ease: "power2.in" }, Math.round((s + d - 0.2) * 100) / 100);
+    });
     window.__timelines["captions"] = tl;
   </script>
 </template>

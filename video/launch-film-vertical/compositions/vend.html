@@ -4,58 +4,67 @@
     @font-face { font-family: "Atkinson Hyperlegible"; src: url("assets/fonts/atkinson-hyperlegible-latin-400-normal.woff2") format("woff2"); font-weight: 400; }
     @font-face { font-family: "Atkinson Hyperlegible"; src: url("assets/fonts/atkinson-hyperlegible-latin-700-normal.woff2") format("woff2"); font-weight: 700; }
     #root { position: absolute; inset: 0; }
-    .print { position: absolute; top: 260px; width: 290px; height: 350px; background: #fff; padding: 14px 14px 44px; border-radius: 6px; box-shadow: 0 2px 4px rgba(31,36,39,.14), 0 14px 32px rgba(31,36,39,.14); }
+    .stage { position: absolute; inset: 0; }
+    .abs { position: absolute; }
+    .disp { font-family: "Bricolage Grotesque", sans-serif; font-variation-settings: "opsz" 96; font-weight: 800; letter-spacing: -0.03em; color: #1F2427; }
+    .body { font-family: "Atkinson Hyperlegible", sans-serif; color: #1F2427; }
+    
+    .print { top: 300px; width: 290px; height: 350px; background: #fff; padding: 14px 14px 46px; border-radius: 6px;
+      box-shadow: 0 2px 4px rgba(31,36,39,.12), 0 14px 32px rgba(31,36,39,.12); }
     .print img { width: 100%; height: 100%; object-fit: cover; display: block; }
-    #ve-p1 { left: 120px; } #ve-p2 { left: 395px; z-index: 2; } #ve-p3 { left: 670px; }
-    .promise { position: absolute; left: 70px; right: 70px; top: 700px; text-align: center; font: 800 78px/1.08 "Bricolage Grotesque", sans-serif; font-variation-settings: "opsz" 96; letter-spacing: -0.03em; color: #1F2427; }
+    #ve-p1 { z-index: 2; }
+    .promise { left: 60px; right: 60px; top: 760px; text-align: center; font-size: 78px; line-height: 1.06; }
     .promise .b { color: #23596B; }
-    .lock { position: absolute; left: 0; right: 0; top: 480px; display: flex; flex-direction: column; align-items: center; gap: 28px; }
-    .name { font: 800 150px/1 "Bricolage Grotesque", sans-serif; font-variation-settings: "opsz" 96; letter-spacing: -0.035em; color: #1F2427; }
+    .lock { left: 0; right: 0; top: 480px; display: flex; flex-direction: column; align-items: center; gap: 26px; }
+    .mark-row { display: flex; align-items: center; gap: 34px; flex-direction: column; }
+    .name { font-size: 150px; line-height: 1; letter-spacing: -0.035em; }
     .tag { font: 700 54px/1.2 "Atkinson Hyperlegible", sans-serif; color: #1F2427; }
     .free { font: 400 42px/1.2 "Atkinson Hyperlegible", sans-serif; color: #545B5F; }
-    .url { font: 700 48px/1.2 "Atkinson Hyperlegible", sans-serif; color: #23596B; }
+    .url { font: 700 46px/1.2 "Atkinson Hyperlegible", sans-serif; color: #23596B; }
   </style>
   <div id="root" data-composition-id="vend" data-width="1080" data-height="1920">
-    <div id="ve-a" class="clip" data-start="0" data-duration="2.2">
-      <div id="ve-p1" class="print"><img src="assets/img/6-beach-480.webp" alt="" /></div>
-      <div id="ve-p2" class="print"><img src="assets/img/3-candles-480.webp" alt="" /></div>
-      <div id="ve-p3" class="print"><img src="assets/img/4-roadtrip-480.webp" alt="" /></div>
-      <div class="promise"><div id="ve-l1"></div><div id="ve-l2" class="b"></div></div>
-    </div>
-    <div id="ve-b" class="clip" data-start="2.2" data-duration="1.8">
-      <div class="lock">
-        <svg id="ve-mark" width="170" height="170" viewBox="0 0 28 28" fill="none" aria-hidden="true">
-          <rect x="2" y="2" width="24" height="24" rx="6" fill="#FFFFFF" stroke="#23596B" stroke-width="1.8" />
-          <path d="M6.5 15.5c2.5-2.2 5-2.2 7.5 0s5 2.2 7.5 0" stroke="#23596B" stroke-width="1.8" stroke-linecap="round" />
-          <path d="M6.5 21h8" stroke="#8A4B08" stroke-width="1.8" stroke-linecap="round" />
-        </svg>
-        <div id="ve-name" class="name"></div>
-        <div id="ve-tag" class="tag"></div>
-        <div id="ve-free" class="free"></div>
-        <div id="ve-url" class="url"></div>
+    <div id="vend-stage" class="stage">
+      <div id="ve-a" class="clip" data-start="0" data-duration="1.9">
+        <div id="ve-p0" class="abs print" style="left:120px"><img src="assets/img/6-beach-480.webp" alt="" /></div><div id="ve-p1" class="abs print" style="left:395px"><img src="assets/img/3-candles-480.webp" alt="" /></div><div id="ve-p2" class="abs print" style="left:670px"><img src="assets/img/4-roadtrip-480.webp" alt="" /></div>
+        <div class="abs promise disp"><div id="ve-l1"></div><div id="ve-l2" class="b"></div></div>
+      </div>
+      <div id="ve-b" class="clip" data-start="1.9" data-duration="1.7">
+        <div class="abs lock">
+          <div class="mark-row">
+            <svg id="ve-mark" width="170" height="170" viewBox="0 0 28 28" fill="none" aria-hidden="true">
+              <rect x="2" y="2" width="24" height="24" rx="6" fill="#FFFFFF" stroke="#23596B" stroke-width="1.8" />
+              <path d="M6.5 15.5c2.5-2.2 5-2.2 7.5 0s5 2.2 7.5 0" stroke="#23596B" stroke-width="1.8" stroke-linecap="round" />
+              <path d="M6.5 21h8" stroke="#8A4B08" stroke-width="1.8" stroke-linecap="round" />
+            </svg>
+            <div id="ve-name" class="name disp"></div>
+          </div>
+          <div id="ve-tag" class="tag"></div><div id="ve-free" class="free"></div><div id="ve-url" class="url"></div>
+        </div>
       </div>
     </div>
   </div>
   <script>
     const B = window.BRAND, C = window.CAPTIONS[window.CAPTION_LANG] || window.CAPTIONS.en;
+    const tl = gsap.timeline({ paused: true });
+    tl.fromTo("#vend-stage", { opacity: 1, filter: "blur(0px)" }, { opacity: 1, filter: "blur(0px)", duration: 0.01 }, 0);
     document.getElementById("ve-l1").textContent = C.promiseA;
     document.getElementById("ve-l2").textContent = C.promiseB;
     document.getElementById("ve-name").textContent = B.appName;
     document.getElementById("ve-tag").textContent = B.tagline;
     document.getElementById("ve-free").textContent = B.freeLine;
     document.getElementById("ve-url").textContent = B.siteUrl || "";
-    const tl = gsap.timeline({ paused: true });
-    [["#ve-p1", -7], ["#ve-p2", 0], ["#ve-p3", 6]].forEach(([s, r], i) => {
-      tl.fromTo(s, { opacity: 0, y: 80, rotation: r * 2 }, { opacity: 1, y: i === 1 ? -10 : 10, rotation: r, duration: 0.7, ease: "expo.out" }, 0.05 + i * 0.1);
+    [["#ve-p0", -7], ["#ve-p1", 0], ["#ve-p2", 6]].forEach(([s, r], i) => {
+      tl.fromTo(s, { opacity: 0, y: 90, rotation: r * 2 }, { opacity: 1, y: i === 1 ? -10 : 10, rotation: r, duration: 0.8, ease: "expo.out" }, 0.05 + i * 0.12);
     });
-    tl.fromTo("#ve-l1", { opacity: 0, filter: "blur(16px)" }, { opacity: 1, filter: "blur(0px)", duration: 0.5, ease: "power3.out" }, 0.4);
-    tl.fromTo("#ve-l2", { opacity: 0, filter: "blur(16px)" }, { opacity: 1, filter: "blur(0px)", duration: 0.5, ease: "power3.out" }, 0.8);
-    tl.to("#ve-a", { filter: "blur(30px)", opacity: 0, duration: 0.3, ease: "power1.in" }, 1.9);
-    tl.fromTo("#ve-mark", { opacity: 0, scale: 0.6 }, { opacity: 1, scale: 1, duration: 0.5, ease: "back.out(1.4)" }, 2.25);
-    tl.fromTo("#ve-name", { opacity: 0, filter: "blur(10px)" }, { opacity: 1, filter: "blur(0px)", duration: 0.4, ease: "expo.out" }, 2.4);
-    tl.fromTo("#ve-tag", { opacity: 0 }, { opacity: 1, duration: 0.35 }, 2.7);
-    tl.fromTo("#ve-free", { opacity: 0 }, { opacity: 1, duration: 0.35 }, 2.85);
-    tl.fromTo("#ve-url", { opacity: 0 }, { opacity: 1, duration: 0.35 }, 3.0);
+    tl.fromTo("#ve-l1", { opacity: 0, filter: "blur(16px)", y: 24 }, { opacity: 1, filter: "blur(0px)", y: 0, duration: 0.6, ease: "power3.out" }, 0.45);
+    tl.fromTo("#ve-l2", { opacity: 0, filter: "blur(16px)", y: 24 }, { opacity: 1, filter: "blur(0px)", y: 0, duration: 0.6, ease: "power3.out" }, 0.9);
+    tl.to("#ve-a", { filter: "blur(24px)", opacity: 0, duration: 0.35, ease: "power2.in" }, 1.5499999999999998);
+    tl.fromTo("#ve-mark", { opacity: 0, scale: 0.6 }, { opacity: 1, scale: 1, duration: 0.6, ease: "back.out(1.4)" }, 1.95);
+    tl.fromTo("#ve-name", { opacity: 0, filter: "blur(10px)" }, { opacity: 1, filter: "blur(0px)", duration: 0.5, ease: "expo.out" }, 2.15);
+    tl.fromTo("#ve-tag", { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.45, ease: "power3.out" }, 2.45);
+    tl.fromTo("#ve-free", { opacity: 0, y: 12 }, { opacity: 1, y: 0, duration: 0.45, ease: "power3.out" }, 2.5999999999999996);
+    tl.fromTo("#ve-url", { opacity: 0 }, { opacity: 1, duration: 0.45 }, 2.75);
+    
     window.__timelines["vend"] = tl;
   </script>
 </template>

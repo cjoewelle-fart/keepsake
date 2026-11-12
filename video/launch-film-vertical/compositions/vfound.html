@@ -1,0 +1,40 @@
+<template>
+  <style>
+    @font-face { font-family: "Bricolage Grotesque"; src: url("assets/fonts/bricolage-grotesque-latin-opsz-normal.woff2") format("woff2"); font-weight: 200 800; }
+    @font-face { font-family: "Atkinson Hyperlegible"; src: url("assets/fonts/atkinson-hyperlegible-latin-400-normal.woff2") format("woff2"); font-weight: 400; }
+    @font-face { font-family: "Atkinson Hyperlegible"; src: url("assets/fonts/atkinson-hyperlegible-latin-700-normal.woff2") format("woff2"); font-weight: 700; }
+    #root { position: absolute; inset: 0; }
+    .stage { position: absolute; inset: 0; }
+    .abs { position: absolute; }
+    .disp { font-family: "Bricolage Grotesque", sans-serif; font-variation-settings: "opsz" 96; font-weight: 800; letter-spacing: -0.03em; color: #1F2427; }
+    .body { font-family: "Atkinson Hyperlegible", sans-serif; color: #1F2427; }
+    
+    #vf-a { left: 106px; top: 240px; font-size: 84px; line-height: 1; }
+    #vf-n { left: 98px; top: 330px; font-size: 230px; line-height: 1; color: #23596B; font-variant-numeric: tabular-nums; }
+    #vf-b { left: 106px; top: 560px; font-size: 76px; line-height: 1; }
+    .lrow { left: 110px; width: 860px; height: 96px; display: flex; justify-content: space-between; align-items: center; border-top: 1.5px solid #CBD8D4;
+      font: 400 40px "Atkinson Hyperlegible", sans-serif; color: #1F2427; }
+    .lrow b { font-weight: 700; font-variant-numeric: tabular-nums; }
+  </style>
+  <div id="root" data-composition-id="vfound" data-width="1080" data-height="1920">
+    <div id="vfound-stage" class="stage">
+      <div id="vf-a" class="abs disp">We found</div><div id="vf-n" class="abs disp">0</div><div id="vf-b" class="abs disp">photos and videos.</div><div id="vf-r0" class="abs lrow" style="top:720px"><span>Files checked</span><b id="vf-n0">0</b></div><div id="vf-r1" class="abs lrow" style="top:816px"><span>Kept, sorted by date</span><b id="vf-n1">0</b></div><div id="vf-r2" class="abs lrow" style="top:912px"><span>Set aside, kept safe below</span><b id="vf-n2">0</b></div>
+    </div>
+  </div>
+  <script>
+    const B = window.BRAND, C = window.CAPTIONS[window.CAPTION_LANG] || window.CAPTIONS.en;
+    const tl = gsap.timeline({ paused: true });
+    tl.fromTo("#vfound-stage", { opacity: 1, filter: "blur(0px)" }, { opacity: 1, filter: "blur(0px)", duration: 0.01 }, 0);
+    tl.fromTo("#vf-a", { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.45, ease: "expo.out" }, 0.05);
+    (() => { const o = { v: 0 }; const el = document.querySelector("#vf-n"); el.textContent = "0"; tl.to(o, { v: 214, duration: 1.3, ease: "power2.out", onUpdate: () => { el.textContent = Math.round(o.v).toLocaleString("en-US"); } }, 0.15); })();
+    tl.fromTo("#vf-b", { opacity: 0, y: 20 }, { opacity: 1, y: 0, duration: 0.45, ease: "expo.out" }, 0.3);
+    tl.fromTo("#vf-r0", { opacity: 0, x: 60 }, { opacity: 1, x: 0, duration: 0.5, ease: "expo.out" }, 0.5);
+    (() => { const o = { v: 0 }; const el = document.querySelector("#vf-n0"); el.textContent = "0"; tl.to(o, { v: 539, duration: 1.2, ease: "power2.out", onUpdate: () => { el.textContent = Math.round(o.v).toLocaleString("en-US"); } }, 0.6); })();
+    tl.fromTo("#vf-r1", { opacity: 0, x: 60 }, { opacity: 1, x: 0, duration: 0.5, ease: "expo.out" }, 0.65);
+    (() => { const o = { v: 0 }; const el = document.querySelector("#vf-n1"); el.textContent = "0"; tl.to(o, { v: 214, duration: 1.2, ease: "power2.out", onUpdate: () => { el.textContent = Math.round(o.v).toLocaleString("en-US"); } }, 0.75); })();
+    tl.fromTo("#vf-r2", { opacity: 0, x: 60 }, { opacity: 1, x: 0, duration: 0.5, ease: "expo.out" }, 0.8);
+    (() => { const o = { v: 0 }; const el = document.querySelector("#vf-n2"); el.textContent = "0"; tl.to(o, { v: 325, duration: 1.2, ease: "power2.out", onUpdate: () => { el.textContent = Math.round(o.v).toLocaleString("en-US"); } }, 0.8999999999999999); })();
+    tl.to("#vfound-stage", { filter: "blur(18px)", opacity: 0, duration: 0.4, ease: "power2.in" }, 2.25);
+    window.__timelines["vfound"] = tl;
+  </script>
+</template>

@@ -5,36 +5,35 @@
     @font-face { font-family: "Atkinson Hyperlegible"; src: url("assets/fonts/atkinson-hyperlegible-latin-700-normal.woff2") format("woff2"); font-weight: 700; }
     #root { position: absolute; inset: 0; }
     .stage { position: absolute; inset: 0; }
-    .part { position: absolute; border-radius: 16px; box-shadow: 0 1px 2px rgba(31,36,39,.12), 0 14px 40px rgba(31,36,39,.14); display: block; }
-    .vwrap { position: absolute; overflow: hidden; border-radius: 16px; box-shadow: 0 1px 2px rgba(31,36,39,.12), 0 14px 40px rgba(31,36,39,.14); background: #ECF1F0; }
-    .vwrap video { position: absolute; }
-    .plate { position: absolute; border-radius: 36px; }
-    #choose-pa { left: 120px; top: 90px; width: 1680px; height: 780px; background: #DDEAEA; }
-    #choose-pb { left: 330px; top: 150px; width: 1260px; height: 660px; background: rgba(255,255,255,.55); }
-    
-    #ch-btn { left: 640px; top: 330px; width: 640px; height: 128px; border-radius: 64px; transform-origin: 50% 50%; }
-    #ch-priv { left: 490px; top: 520px; width: 940px; height: 52px; border-radius: 0; box-shadow: none; }
+    .abs { position: absolute; }
+    .disp { font-family: "Bricolage Grotesque", sans-serif; font-variation-settings: "opsz" 96; font-weight: 800; letter-spacing: -0.03em; color: #1F2427; }
+    .body { font-family: "Atkinson Hyperlegible", sans-serif; color: #1F2427; }
+    .btn { position: absolute; display: flex; align-items: center; justify-content: center; gap: 33px; height: 115px;
+      padding: 0 62px; border-radius: 999px; background: #C2410C; color: #fff; font: 700 43px/1 "Atkinson Hyperlegible", sans-serif; white-space: nowrap; transform-origin: 50% 50%; }
+    .btn .lbl { display: flex; align-items: center; gap: 28px; }
+    #ch-btn { left: 960px; top: 470px; width: 820px; }
+    #ch-priv { left: 0; right: 0; top: 610px; display: flex; justify-content: center; align-items: center; gap: 14px; font: 400 32px "Atkinson Hyperlegible", sans-serif; color: #1D4D5D; }
   </style>
   <div id="root" data-composition-id="choose" data-width="1920" data-height="1080">
     <div id="choose-stage" class="stage">
-      <div id="choose-pa" class="plate"></div><div id="choose-pb" class="plate"></div>
-      <img id="ch-btn" class="part" src="assets/parts/P1-start-sort-button.png" alt="" /><img id="ch-priv" class="part" src="assets/parts/P3-start-privacy-line.png" alt="" />
+      <div id="ch-btn" class="btn"><span id="ch-lbl" class="lbl"><svg width="50" height="50" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" ><path d="M4 19.5h14.2a1.6 1.6 0 0 0 1.55-1.2l1.7-6.3A1.2 1.2 0 0 0 20.3 10.5H8.3a1.6 1.6 0 0 0-1.55 1.2L4 19.5z" /><path d="M4 19.5A1.5 1.5 0 0 1 2.5 18V6A1.5 1.5 0 0 1 4 4.5h4.4l2 2.2h6.1A1.5 1.5 0 0 1 18 8.2v2.3" /></svg><span>Sort my recovered files</span></span></div>
+      <div id="ch-priv" class="abs"><svg width="34" height="34" viewBox="0 0 24 24" fill="none" stroke="#23596B" stroke-width="1.8" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true" ><rect x="4.5" y="10.5" width="15" height="10" rx="2.6" /><path d="M8 10.5V7.8a4 4 0 0 1 8 0v2.7" /><path d="M12 14.6v2" /></svg><span>Your photos stay on your computer.</span></div>
     </div>
   </div>
   <script>
-    const DUR = 4.5;
+    const B = window.BRAND, C = window.CAPTIONS[window.CAPTION_LANG] || window.CAPTIONS.en;
     const tl = gsap.timeline({ paused: true });
-    tl.fromTo("#choose-stage", { opacity: 1, filter: "blur(0px)", scale: 1 }, { opacity: 1, filter: "blur(0px)", scale: 1, duration: 0.01 }, 0);
-    tl.fromTo("#choose-pa", { x: 0, y: 1100, rotation: 0 }, { x: 0, y: 0, rotation: 0, duration: 0.8, ease: "expo.out" }, 0);
-    tl.fromTo("#choose-pb", { x: 0, y: -900, rotation: 0 }, { x: 0, y: 0, rotation: 0, duration: 0.9, ease: "expo.out" }, 0.08);
-    tl.to("#choose-pa", { x: -24, duration: DUR - 0.8, ease: "none" }, 0.8);
-    tl.to("#choose-pb", { x: 30, y: -10, duration: DUR - 1.0, ease: "none" }, 1.0);
-    tl.fromTo("#ch-btn", { opacity: 0, scale: 0.7, filter: "blur(14px)" }, { opacity: 1, scale: 1, filter: "blur(0px)", duration: 0.7, ease: "expo.out" }, 0.35);
-    tl.fromTo("#ch-priv", { opacity: 0, filter: "blur(8px)" }, { opacity: 1, filter: "blur(0px)", duration: 0.4, ease: "power3.out" }, 0.9);
-    tl.to("#ch-btn", { scale: 0.94, duration: 0.12, ease: "power2.in" }, 2.3);
-    tl.to("#ch-btn", { scale: 1, duration: 0.3, ease: "back.out(2)" }, 2.42);
-    tl.to("#ch-priv", { opacity: 0, duration: 0.2 }, 3.6);
-    tl.to("#ch-btn", { scale: 7, opacity: 0, filter: "blur(10px)", duration: 0.5, ease: "power3.in" }, 3.95);
+    tl.fromTo("#choose-stage", { opacity: 1, filter: "blur(0px)" }, { opacity: 1, filter: "blur(0px)", duration: 0.01 }, 0);
+    tl.fromTo("#ch-btn", { xPercent: -50, yPercent: -50, opacity: 0, scale: 0.86, filter: "blur(12px)" }, { xPercent: -50, yPercent: -50, opacity: 1, scale: 1, filter: "blur(0px)", duration: 0.7, ease: "expo.out" }, 0.15);
+    tl.fromTo("#ch-priv", { opacity: 0, y: 16 }, { opacity: 1, y: 0, duration: 0.5, ease: "power3.out" }, 0.55);
+    // The click: the button goes down and darkens, then springs back.
+    tl.to("#ch-btn", { scale: 0.955, backgroundColor: "#9A3412", duration: 0.11, ease: "power2.in" }, 1.75);
+    tl.to("#ch-btn", { scale: 1, duration: 0.35, ease: "back.out(2.2)" }, 1.86);
+    // Then it becomes the progress bar: the label leaves, the pill thins into the bar's track.
+    tl.to("#ch-lbl", { opacity: 0, filter: "blur(6px)", duration: 0.18, ease: "power2.in" }, 2.25);
+    tl.to("#ch-priv", { opacity: 0, y: 12, duration: 0.25, ease: "power2.in" }, 2.2);
+    tl.to("#ch-btn", { width: 1200, height: 14, padding: 0, y: 57, duration: 0.7, ease: "power3.inOut" }, 2.4);
+    tl.to("#ch-btn", { backgroundColor: "#CBD8D4", duration: 0.3, ease: "power2.out" }, 2.4);
     
     window.__timelines["choose"] = tl;
   </script>

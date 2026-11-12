@@ -7,21 +7,20 @@
     <script src="assets/brand.js"></script>
     <script src="assets/captions.js"></script>
     <style>
-      :root { --ground: #ECF1F0; --ink: #1F2427; --muted: #545B5F; --accent: #23596B; }
       * { margin: 0; padding: 0; box-sizing: border-box; }
-      html, body { margin: 0; width: 1920px; height: 1080px; overflow: hidden; background: var(--ground); }
-      #paper { position: absolute; inset: 0; background: var(--ground); }
+      html, body { margin: 0; width: 1920px; height: 1080px; overflow: hidden; background: #ECF1F0; }
+      #paper { position: absolute; inset: 0; background: #ECF1F0; }
       #paper-grain { position: absolute; inset: 0; background-image: url(assets/img/grain.png); background-size: 256px; opacity: 0.35; mix-blend-mode: multiply; }
     </style>
   </head>
   <body>
     <div id="root" data-composition-id="main" data-start="0" data-duration="40" data-width="1920" data-height="1080">
       <div id="paper" class="clip" data-start="0" data-duration="40" data-track-index="0"><div id="paper-grain"></div></div>
-      <div id="folder" data-composition-id="folder" data-composition-src="compositions/folder.html" data-start="0" data-duration="6.5" data-track-index="1" data-track-kind="graphics" data-width="1920" data-height="1080"></div>
-      <div id="choose" data-composition-id="choose" data-composition-src="compositions/choose.html" data-start="6.5" data-duration="4.5" data-track-index="1" data-track-kind="graphics" data-width="1920" data-height="1080"></div>
-      <div id="scan" data-composition-id="scan" data-composition-src="compositions/scan.html" data-start="11" data-duration="4.5" data-track-index="1" data-track-kind="graphics" data-width="1920" data-height="1080"></div>
+      <div id="hook" data-composition-id="hook" data-composition-src="compositions/hook.html" data-start="0" data-duration="6.5" data-track-index="1" data-track-kind="graphics" data-width="1920" data-height="1080"></div>
+      <div id="choose" data-composition-id="choose" data-composition-src="compositions/choose.html" data-start="6.5" data-duration="4.0" data-track-index="1" data-track-kind="graphics" data-width="1920" data-height="1080"></div>
+      <div id="scan" data-composition-id="scan" data-composition-src="compositions/scan.html" data-start="10.5" data-duration="5.0" data-track-index="1" data-track-kind="graphics" data-width="1920" data-height="1080"></div>
       <div id="setaside" data-composition-id="setaside" data-composition-src="compositions/setaside.html" data-start="15.5" data-duration="5.5" data-track-index="1" data-track-kind="graphics" data-width="1920" data-height="1080"></div>
-      <div id="bydate" data-composition-id="bydate" data-composition-src="compositions/bydate.html" data-start="21" data-duration="7" data-track-index="1" data-track-kind="graphics" data-width="1920" data-height="1080"></div>
+      <div id="bydate" data-composition-id="bydate" data-composition-src="compositions/bydate.html" data-start="21" data-duration="7.0" data-track-index="1" data-track-kind="graphics" data-width="1920" data-height="1080"></div>
       <div id="save" data-composition-id="save" data-composition-src="compositions/save.html" data-start="28" data-duration="5.5" data-track-index="1" data-track-kind="graphics" data-width="1920" data-height="1080"></div>
       <div id="endcard" data-composition-id="endcard" data-composition-src="compositions/endcard.html" data-start="33.5" data-duration="6.5" data-track-index="1" data-track-kind="graphics" data-width="1920" data-height="1080"></div>
       <div id="captions" data-composition-id="captions" data-composition-src="compositions/captions.html" data-start="0" data-duration="40" data-track-index="2" data-track-kind="captions" data-width="1920" data-height="1080"></div>
