@@ -92,6 +92,9 @@ const offline = () =>
       globIgnores: ['launch/**'],
       maximumFileSizeToCacheInBytes: 8 * 1024 * 1024, // the HEIC decoder worker is ~2 MB
       navigateFallback: 'index.html',
+      // The open-source notices (THIRD_PARTY_NOTICES.txt, linked from the privacy page) are a plain
+      // file, not precached: opening it must reach the file, not get the app's page instead (D48).
+      navigateFallbackDenylist: [/\.txt$/],
       cleanupOutdatedCaches: true,
       skipWaiting: true,
       clientsClaim: true,

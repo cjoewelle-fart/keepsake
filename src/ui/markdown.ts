@@ -2,14 +2,23 @@
 // writing them the way the drafts are written. Pure: text in, a tree out; InfoPage.tsx draws it
 // with React elements (no HTML strings). The syntax it knows is listed at copy.info.
 //
-// Links may only point at a heading on the same page ("#…"): anything else stays plain text, so
-// a page can never make the browser go to, or fetch from, another address.
+// Links may point at a heading on the same page ("#…"), at one of the app's own files listed in
+// FILE_LINKS (same address as the app), or at the code repository (REPO_URL in src/brand.ts, once
+// it's set, D48). Anything else stays plain text, so a page can never send the browser anywhere
+// else. Links are only followed when pressed; nothing is fetched to show the page.
+import { REPO_URL } from '../brand';
+
+/** The app's own files a page may link to (served next to index.html, never precached). */
+export const FILE_LINKS: readonly string[] = ['THIRD_PARTY_NOTICES.txt'];
+/** Addresses outside the app a page may link to: only the code repository, once it's public. */
+export const OUTSIDE_LINKS: readonly string[] = /^https:\/\/\S+$/.test(REPO_URL) ? [REPO_URL] : [];
 
 export type Inline =
   | { t: 'text'; v: string }
   | { t: 'b'; c: Inline[] }
   | { t: 'code'; v: string }
-  | { t: 'link'; href: string; c: Inline[] };
+  /** `away`: not a heading on this page (an app file or the repository): opens in a new tab. */
+  | { t: 'link'; href: string; c: Inline[]; away?: true };
 
 export type Block =
   | { t: 'h'; level: 1 | 2 | 3; id: string; c: Inline[] }
@@ -33,7 +42,8 @@ export function inline(s: string): Inline[] {
     if (m[1] !== undefined) out.push({ t: 'b', c: inline(m[1]) });
     else if (m[2] !== undefined) out.push({ t: 'code', v: m[2] });
     else if (m[4].startsWith('#') && m[4].length > 1) out.push({ t: 'link', href: m[4], c: inline(m[3]) });
-    else out.push({ t: 'text', v: m[3] }); // not a same-page link: its words only
+    else if (FILE_LINKS.includes(m[4]) || OUTSIDE_LINKS.includes(m[4])) out.push({ t: 'link', href: m[4], c: inline(m[3]), away: true });
+    else out.push({ t: 'text', v: m[3] }); // not an allowed link: its words only
     at = m.index + m[0].length;
   }
   if (at < s.length) out.push({ t: 'text', v: s.slice(at) });
@@ -110,11 +120,11 @@ function list(lines: string[], i: number, out: Block[]): number {
   return i;
 }
 
-/** Every same-page link target, and every heading id, for checking a page's links all lead somewhere. */
+/** Every same-page link target (not app files or the repository), and every heading id, for checking a page's links all lead somewhere. */
 export function anchors(doc: Block[]): { links: string[]; ids: string[] } {
   const links: string[] = [];
   const ids: string[] = [];
-  const walkInline = (c: Inline[]) => c.forEach((x) => { if (x.t === 'link') links.push(x.href.slice(1)); if (x.t === 'b' || x.t === 'link') walkInline(x.c); });
+  const walkInline = (c: Inline[]) => c.forEach((x) => { if (x.t === 'link' && !x.away) links.push(x.href.slice(1)); if (x.t === 'b' || x.t === 'link') walkInline(x.c); });
   const walk = (bs: Block[]) => bs.forEach((b) => {
     if (b.t === 'h') { ids.push(b.id); walkInline(b.c); }
     else if (b.t === 'p') b.lines.forEach(walkInline);

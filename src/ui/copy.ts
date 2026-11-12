@@ -1,6 +1,6 @@
 // All words the user sees live here, so the UX writer can edit them in one place.
 import type { SetAsideGroup } from '../engine/summary';
-import { APP_NAME, TAGLINE } from '../brand';
+import { APP_NAME, REPO_URL, TAGLINE } from '../brand';
 
 const nf = new Intl.NumberFormat('en');
 export const n = (x: number) => nf.format(x);
@@ -61,7 +61,11 @@ const ROOT_FOLDER = `${APP} photos`;
 const ROOT_FOLDER_RE = ROOT_FOLDER.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
 
 // The privacy page and PhotoRec guide texts (copy.info), in the small Markdown described there.
-const PRIVACY = `# Your privacy
+/**
+ * D48: "Nothing is hidden" and its "See the code" link appear only once the repository is public
+ * (`repoUrl` = REPO_URL in src/brand.ts, empty until then). The open-source notices link is always there.
+ */
+export const privacyMd = (repoUrl: string) => `# Your privacy
 
 **Your photos never leave this computer, and ${APP} never changes or deletes your files.**
 
@@ -77,6 +81,9 @@ Photos on the start screen are from Unsplash, by Chris Flexen, averie woodard an
 
 iPhone photos (HEIC files) are turned into previews on your computer too. The part that does this comes with ${APP}. Nothing is fetched from anywhere else.
 
+Parts of ${APP}, like this one, are free software made by others. Their licences are listed in the notices.
+[Open-source notices](THIRD_PARTY_NOTICES.txt)
+
 Some browsers show a message like “Upload files to this site?” when you choose a folder. That is the browser’s own wording. The files are only read on this computer. They are not sent anywhere.
 
 ## None of your files are deleted
@@ -89,7 +96,12 @@ When you save your photos, ${APP} makes new copies in a folder you choose. It ne
 
 If saving stops partway, ${APP} removes the one empty file it had just started for that copy. It never removes anything that was there before, any copy it finished, or anything in your recovery folder.
 
-## How to check for yourself
+${repoUrl ? `## Nothing is hidden
+
+${APP} is free and open source. That means anyone can read the instructions the app is made from, check what it does, and point out problems.
+[See the code](${repoUrl})
+
+` : ''}## How to check for yourself
 
 You don’t have to take our word for it. Here’s how to check.
 
@@ -124,6 +136,7 @@ No. Your photos are read on your computer and never sent to us. We have no way t
 **Do I need an account?**
 No. There’s nothing to sign up for and no email to give.
 `;
+const PRIVACY = privacyMd(REPO_URL);
 
 const GUIDE = `# Get your photos back from a memory card with PhotoRec
 
@@ -484,7 +497,6 @@ export const copy = {
      */
     video: {
       h: `Watch ${APP} sort a recovery folder`,
-      line: 'Forty seconds, with captions. It loads only when you press play.',
       play: (seconds: number) => `Play the video (${Math.round(seconds)} sec)`,
       playName: (seconds: number) => `Play the video, ${runTimeWords(seconds)}`,
       offline: 'The video needs an internet connection. Everything else here works offline.',

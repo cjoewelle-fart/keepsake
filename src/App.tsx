@@ -400,7 +400,6 @@ function WatchVideo({ video }: { video: LaunchVideo }) {
     <section className="watch" aria-labelledby="watch-h">
       <div className="watch-text">
         <h2 id="watch-h">{copy.start.video.h}</h2>
-        <p className="sub-sm">{copy.start.video.line}</p>
       </div>
       <div className="watch-side">
         <div className="watch-frame">

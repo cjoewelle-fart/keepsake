@@ -37,7 +37,7 @@ None of these change the Quiet Prints look at default settings.
 - **UX10 (gating only):** every :hover rule is inside `@media (hover: hover)`, so hover styles no longer stick after a tap. No new :active styles.
 - **UX11:** tiles and rows without a preview add "No preview" to their accessible name. Nothing visible changes.
 - **UX12:** the month picker has `cursor: pointer`.
-- **UX13: not applied, waiting on you (D46).** Stacking the reassurance box on phones changes the look at 390 px, so under your Quiet Prints rule it is your call. The one-line CSS fix is ready.
+- **UX13: applied, D46.** On phones (640 px and narrower), the scanning and saving reassurance box stacks: the text first, then "Your files are not deleted or changed".
 
 ## Found while recording the launch video (Nov 11)
 

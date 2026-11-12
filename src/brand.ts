@@ -20,6 +20,13 @@ export const TAGLINE = 'Made for recovered files.'
 export const SITE_URL: string = ''
 
 /**
+ * The public code repository (e.g. 'https://github.com/<owner>/<repo>'). Empty until the repo is
+ * public: while it's empty, the privacy page leaves out "Nothing is hidden" and its "See the code"
+ * link (D48). When set, it must be an https:// address.
+ */
+export const REPO_URL: string = ''
+
+/**
  * The launch video on the start screen (D43, on since Nov 12). null = the "Watch" section isn't shown.
  * Paths are relative to the page and live under public/launch/, which the offline cache skips.
  * `seconds` is the film's length, shown on the Play button. A build can swap in a stand-in with

@@ -14,7 +14,10 @@ function Words({ c }: { c: Inline[] }): ReactNode {
     x.t === 'text' ? <Fragment key={i}>{x.v}</Fragment>
       : x.t === 'code' ? <code key={i}>{x.v}</code>
         : x.t === 'b' ? <strong key={i}><Words c={x.c} /></strong>
-          : <a key={i} href={`#${ID}${x.href.slice(1)}`}><Words c={x.c} /></a>,
+          : x.away
+            // An app file or the repository: a new tab, so the page (and anything chosen) stays put.
+            ? <a key={i} href={x.href} target="_blank" rel="noopener noreferrer"><Words c={x.c} /></a>
+            : <a key={i} href={`#${ID}${x.href.slice(1)}`}><Words c={x.c} /></a>,
   );
 }
 

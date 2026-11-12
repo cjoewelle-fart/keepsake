@@ -77,10 +77,9 @@ describe('launch video (D43)', () => {
     expect(launchVideo({ VITE_LAUNCH_VIDEO: 'a.webm', VITE_LAUNCH_CAPTIONS: 'a.vtt', VITE_LAUNCH_SECONDS: '75' })?.seconds).toBe(75);
     expect(launchVideo({ VITE_LAUNCH_VIDEO: 'a.webm', VITE_LAUNCH_CAPTIONS: 'a.vtt', VITE_LAUNCH_SECONDS: 'x' })?.seconds).toBe(40);
   });
-  it('says its real length: 40 sec on the button, 40 seconds in its name and the line', () => {
+  it('says its real length: 40 sec on the button, 40 seconds in its name; no line under the heading (owner, Nov 12)', () => {
     expect(copy.start.video.play(40)).toBe('Play the video (40 sec)');
     expect(copy.start.video.playName(40)).toBe('Play the video, 40 seconds');
-    expect(copy.start.video.line).toMatch(/^Forty seconds, with captions\./);
-    expect(copy.start.video.line).not.toMatch(/minute/i);
+    expect('line' in copy.start.video).toBe(false);
   });
 });

@@ -47,8 +47,8 @@ describe('app.css', () => {
     expect(all.find((r) => r.selector === '.tl-month-select select')?.body).toMatch(/cursor:\s*pointer/);
   });
 
-  // UX13 (stack the reassurance box on phones) waits for the owner: it changes the look at 390 px (D46).
-  it.skip('UX13: the reassurance box stacks on phones', () => {
+  // UX13 (stack the reassurance box on phones): owner approved, D46.
+  it('UX13: the reassurance box stacks on phones', () => {
     const phone = all.find((r) => r.selector === '.safe-box' && r.media.some((m) => /max-width:\s*640px/.test(m)));
     expect(phone?.body).toMatch(/flex-direction:\s*column/);
   });
