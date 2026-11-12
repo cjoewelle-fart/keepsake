@@ -323,6 +323,12 @@ progress::-moz-progress-bar { background: var(--accent); border-radius: 999px; }
 @media (min-width: 960px) and (min-height: 720px) {
   .envelope { position: sticky; top: 24px; }
 }
+/* UX1: on review, short windows (720-799px) also show the bottom bar (.tl-footer), and a sticky envelope
+   would keep Select all / Unselect all under it at every scroll position. There it scrolls with the
+   page instead, so the bar's scroll-padding can bring them clear. From 800px it sticks as before. */
+@media (min-width: 960px) and (min-height: 720px) and (max-height: 799.98px) {
+  .timeline .envelope { position: static; }
+}
 
 /* Review timeline, "Choose what to save" (T24). Source: team/brand/quiet-prints/TL-*.dc.html.
    Text sizes follow the 2026-10-19 type hierarchy; final polish waits for the T20 revision. */
@@ -334,6 +340,8 @@ progress::-moz-progress-bar { background: var(--accent); border-radius: 999px; }
 .tl-tools { display: flex; flex-direction: column; gap: 10px; padding: 12px 0; background: var(--bg); z-index: 2; }
 .tl-tools-row { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px; }
 .tl-filter { display: flex; flex-wrap: wrap; gap: 4px; padding: 4px; border-radius: 999px; background: var(--surface); }
+/* UX6 (D40): 8px between chips on touch screens; a mouse keeps the 4px. */
+@media (pointer: coarse) { .tl-filter { gap: 8px; } }
 /* T50/T59: each filter chip carries its count, a little quieter than its name. */
 .chip-n { font-variant-numeric: tabular-nums; opacity: 0.8; }
 .tl-show { display: flex; flex-direction: column; gap: 12px; margin: -28px 0 -12px; }
@@ -358,6 +366,10 @@ progress::-moz-progress-bar { background: var(--accent); border-radius: 999px; }
 /* D24: the tile itself opens the viewer; the checkbox (.chk) sits on top in its corner. */
 .tile-open { display: block; width: 100%; height: 100%; padding: 0; border: 0; background: transparent; cursor: zoom-in; border-radius: inherit; }
 .tile-open:focus-visible { outline-offset: -3px; }
+/* UX2 (D40): a white inner edge inside the teal ring, so focus reads on dark and teal photos alike.
+   Drawn on a layer above the picture (an inset box-shadow on the button would sit under the image).
+   Focus only; the tile looks the same otherwise. */
+.tile-open:focus-visible::after { content: ''; position: absolute; inset: 3px; border-radius: 9px; box-shadow: inset 0 0 0 2px #FFFFFF; pointer-events: none; }
 .tile-open-pic { display: block; width: 100%; height: 100%; }
 .gf-open > span[aria-hidden] { display: block; }
 .tl-tile .tag { pointer-events: none; }
@@ -733,7 +745,7 @@ progress::-moz-progress-bar { background: var(--accent); border-radius: 999px; }
 .know dt { font-size: 16px; font-weight: 700; }
 .know dd { margin: 0; font-size: var(--text-small); color: var(--muted); }   /* about 6.2:1 on --bg */
 /* The quiet links to the privacy page and the PhotoRec guide (T67). */
-.know-links { grid-area: links; list-style: none; margin: var(--s-4) 0 0; padding: 0; display: flex; flex-direction: column; }
+.know-links { grid-area: links; list-style: none; margin: var(--s-4) 0 0; padding: 0; display: flex; flex-direction: column; gap: 8px; } /* UX6 (D40): 8px between the links */
 .know-links .btn-link { text-align: left; font-size: var(--text-small); }
 @media (max-width: 959px) {
   .know { grid-template-columns: 1fr; grid-template-areas: 'h' 'list' 'links'; grid-template-rows: none; }

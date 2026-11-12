@@ -25,6 +25,7 @@ import { dropUnusedThumbs } from './ui/thumbs';
 import { dropUnusedHeicPreviews } from './ui/heicPreview';
 import { ArrowRightIcon, BlankPrint, CheckCircleIcon, FolderIcon, FolderOpenIcon, LockIcon, LogoMark, PlayIcon, Prints, StageIcon } from './ui/icons';
 import { launchVideo, type LaunchVideo } from './ui/launchVideo';
+import { addLeaveGuard, needsLeaveGuard } from './ui/leaveGuard';
 import tileBeach from './assets/hero/6-beach-240.webp';
 import tileRoadtrip from './assets/hero/4-roadtrip-240.webp';
 import tileCandles from './assets/hero/3-candles-240.webp';
@@ -77,11 +78,22 @@ export default function App() {
   const runRef = useRef({ id: 0, stopped: false });
   const headingRef = useRef<HTMLHeadingElement>(null);
   const [saveDone, setSaveDone] = useState(false);
+  // UX5: a save is running (from the Save step), for the leave guard below.
+  const [saving, setSaving] = useState(false);
   // Counts start-screen notes, so each one gets its own key.
   const noteCount = useRef(0);
   const startWithNote = (note: string) => setScreen({ name: 'start', note, noteKey: ++noteCount.current });
 
   useEffect(() => () => workerRef.current?.raw.terminate(), []);
+  // UX5: reloading or closing the tab asks first (the browser's own prompt) while a save runs, or
+  // while the review choices differ from the default. Only listening while there's a scan to lose:
+  // start over clears the records and removes it. The selection is mutated in place, so whether
+  // choices were made is read when the page is about to close.
+  const hasScan = records.length > 0;
+  useEffect(() => {
+    if (!hasScan && !saving) return;
+    return addLeaveGuard(window, () => needsLeaveGuard({ saving, choicesMade: selection.changed(), saved: saveDone }));
+  }, [hasScan, saving, saveDone, selection]);
   // Move keyboard and screen-reader focus to the new screen's heading.
   useEffect(() => {
     if (screen.name === 'info') window.scrollTo(0, 0);
@@ -251,7 +263,7 @@ export default function App() {
           />
         )}
         {screen.name === 'save' && (
-          <Save records={records} files={files} scanId={scanId} ids={screen.ids} recoveryRoot={recoveryRoot} onBack={() => setScreen({ name: 'review' })} onDone={setSaveDone} onStartOver={startOver} />
+          <Save records={records} files={files} scanId={scanId} ids={screen.ids} recoveryRoot={recoveryRoot} onBack={() => setScreen({ name: 'review' })} onDone={setSaveDone} onSaving={setSaving} onStartOver={startOver} />
         )}
         {screen.name === 'error' && (
           <main className="page narrow">

@@ -686,6 +686,53 @@ async function forced(browser) {
   await page.context().close();
 }
 
+/**
+ * UX1: wide but short windows (1280x720, where the bottom bar shows; 1280x800, where the envelope
+ * sticks). "Select all" and "Unselect all" must not be under the bottom bar after keyboard focus, nor
+ * at any scroll position where the envelope is stuck to the top (where page scrolling can't move them).
+ * Before the page is scrolled, the envelope sits lower in the page and the buttons can start under the
+ * bar until it scrolls; that is reported as info.
+ */
+async function shortReview(browser, height) {
+  const run = `short${height}`;
+  const page = await newPage(browser, run, { viewport: { width: 1280, height } });
+  await scanFolder(page, fixture);
+  await page.getByText('Files checked').waitFor({ timeout: 120_000 });
+  await page.getByRole('button', { name: /^Review my/ }).click();
+  await h1(page, /Choose what to save/).waitFor();
+  await page.waitForTimeout(500);
+  // What's drawn at the button's centre: the button itself (or something inside it), or what covers it.
+  const hit = (name) => page.evaluate((name) => {
+    const b = [...document.querySelectorAll('.tl-bulk button')].find((e) => e.textContent.trim() === name);
+    if (!b) return { found: false };
+    const r = b.getBoundingClientRect();
+    const x = r.left + r.width / 2, y = r.top + r.height / 2;
+    const inWindow = y >= 0 && y <= innerHeight;
+    const at = inWindow ? document.elementFromPoint(x, y) : null;
+    const desc = at ? `${at.tagName.toLowerCase()}${at.className ? '.' + String(at.className).split(' ').join('.') : ''}` : 'nothing';
+    const env = b.closest('.envelope');
+    const stuck = getComputedStyle(env).position === 'sticky' && Math.abs(env.getBoundingClientRect().top - parseFloat(getComputedStyle(env).top)) < 1;
+    return { found: true, inWindow, stuck, clear: !!at && (at === b || b.contains(at)), at: desc, y: Math.round(y), scrollY: Math.round(scrollY) };
+  }, name);
+  for (const name of ['Select all', 'Unselect all']) {
+    await page.evaluate(() => window.scrollTo(0, 0));
+    await page.getByRole('button', { name, exact: true }).focus();
+    await page.waitForTimeout(100);
+    const h = await hit(name);
+    check(h.found && h.clear, 'serious', run, 'review', `"${name}" not under the bottom bar after focus (2.4.11, UX1): centre y ${h.y} at scroll ${h.scrollY} hits ${h.at}`);
+    for (const y of [0, 200, 400, 2000, 100_000]) {
+      await page.evaluate((y) => window.scrollTo(0, y), y);
+      await page.waitForTimeout(100);
+      const s = await hit(name);
+      if (!s.inWindow) continue;
+      if (s.stuck) check(s.clear, 'serious', run, 'review', `"${name}" not under the bottom bar while the envelope is stuck, scroll ${s.scrollY} (UX1): centre y ${s.y} hits ${s.at}`);
+      else if (!s.clear) add('info', run, 'review', `"${name}" under the bottom bar before the page is scrolled (scroll ${s.scrollY}, envelope not stuck, scrolling or Tab brings it clear): centre y ${s.y} hits ${s.at}`);
+    }
+  }
+  await page.screenshot({ path: `${out}/${run}-review.png` });
+  await page.context().close();
+}
+
 // ---------------------------------------------------------------------------------------------
 
 // Start the server and the browser inside try/finally, so a failed launch never leaves the port held.
@@ -703,6 +750,8 @@ try {
   await narrow(browser, 'zoom200', { width: 640, height: 450 }, { deviceScaleFactor: 2, hasTouch: false, isMobile: false });
   await narrow(browser, 'reflow320', { width: 320, height: 640 }, { hasTouch: false, isMobile: false });
   await forced(browser);
+  await shortReview(browser, 720);
+  await shortReview(browser, 800);
 } finally {
   await browser?.close();
   stopServer();

@@ -31,6 +31,8 @@ type Props = {
   onBack: () => void;
   /** The header says "Done" on the receipt. */
   onDone: (done: boolean) => void;
+  /** UX5: whether a save is running, so the page can ask before a reload or close loses it. */
+  onSaving?: (saving: boolean) => void;
   /** "Sort another folder" on the receipt: back to the start screen, this tab's results cleared (T83). */
   onStartOver: () => void;
 };
@@ -51,7 +53,7 @@ const problemText = (problem: 'denied' | 'recovery' | 'unchecked' | 'unsupported
         : [s.unsupportedH, s.unsupportedBody(mediaOnly)];
 const split = (list: readonly Planned[]) => splitParts(list, (p) => entryCost(zipPath(p), p.size), END_COST);
 
-export function Save({ records, files, scanId, ids, recoveryRoot, onBack, onDone, onStartOver }: Props) {
+export function Save({ records, files, scanId, ids, recoveryRoot, onBack, onDone, onSaving, onStartOver }: Props) {
   // Zip downloads where the browser can't save into a folder safely (no folder picker, or no
   // move()); also if move() turns out not to work for the chosen folder.
   const [folderMode, setFolderMode] = useState(() => canSaveToFolder());
@@ -117,6 +119,11 @@ export function Save({ records, files, scanId, ids, recoveryRoot, onBack, onDone
   useEffect(() => {
     onDone(phase.k === 'done');
   }, [phase.k, onDone]);
+  useEffect(() => {
+    onSaving?.(phase.k === 'saving');
+  }, [phase.k, onSaving]);
+  // Leaving the step (Back, Sort another folder) ends the guard for this save.
+  useEffect(() => () => onSaving?.(false), [onSaving]);
   // Focus goes to the new view's heading; when a problem comes up, to the problem's own heading,
   // so it's read first and can't be missed (T83).
   const problem = phase.k === 'choose' ? phase.problem : undefined;

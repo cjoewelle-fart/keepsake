@@ -211,6 +211,10 @@ export class Selection {
   toggle(ids: readonly number[]): void {
     this.set(ids, this.state(ids) !== 'all');
   }
+  /** Whether anything is unticked, i.e. the selection differs from the default (all selected). */
+  changed(): boolean {
+    return this.off.includes(1);
+  }
   /** A frozen copy, for the "Not selected" filter. */
   snapshot(): (id: number) => boolean {
     const copy = this.off.slice();

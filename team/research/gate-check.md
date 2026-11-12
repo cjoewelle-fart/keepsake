@@ -330,3 +330,29 @@ Early warning only, not the formal gate run (T96 runs on the release build). Chr
   - **Gap:** no HEIC in this folder (`pillow_heif` not installed). Install it before T96 so the 250 HEICs are in the mix.
 - **Freeze after picking (T52): pass.** `--handoff --runs 3`: Chromium's own folder listing takes 4.0–4.9 s before the app gets the files (the app can't change that); after that, longest freeze 170–191 ms (pass line 250 ms), first progress 0.26–0.28 s, Stop answers in 0.49–0.71 s. Worst case is close to ~200 ms on a busy 2-CPU machine; watch it.
 - **Privacy and offline: pass.** `npm run offline-check`: zero outside requests, no CSP violations, every offline request answered by the service worker, a HEIC decoded offline. `npm run e2e` twice: no console errors, no requests left the computer. `fixtures/recovery` hashed before and after (2,818 entries: content, size, mtime, permissions): identical.
+
+## Nov 12, 2026, QA, commit `b9380d1` (T96 prep: HEIC in the perf folder)
+
+Early evidence only, not the formal T96 run. Closes the Nov 11 gap (no HEIC in the 40,000-file folder). Chromium 153 (Chrome for Testing, /opt/pw-browsers), 2 CPUs, 7 GB RAM; load average 3–7 during runs (busy machine).
+
+- **Setup:** `pip install pillow-heif --break-system-packages` (1.8.1, libheif 1.23.6); `import pillow_heif` OK. `python3 scripts/make_perf_folder.py <scratch>/recovery` (defaults: `--files 40000 --big 900 --heic 250`) → 40,000 files, 5.92 GB, 262 `.heic` (250 kept + 12 exact copies), all 4032×3024. With HEIC on, the generator's random sequence shifts, so this is not the Nov 11 folder plus 250 files; it is a new folder.
+- **Builds:** the main checkout had uncommitted work in `src/` (leave guard: `App.tsx`, `Save.tsx`, `app.css`, `timeline.ts`, `leaveGuard.ts`). Measured twice: "working tree" = `npm run build` in the checkout; "clean" = `git archive b9380d1` into a scratch folder, `npm run build` there. Both 30 precached files. `npm test`: 388 passed, 3 expected fail.
+- **Commands:** `node scripts/perf-browser.mjs <chromium> <dir>/recovery --runs 3` (working tree), `--runs 1` (clean); `--handoff --runs 3` (both).
+
+| Check | Working tree | Clean `b9380d1` | Pass line |
+|---|---|---|---|
+| Scan time, 40,000 files | 50.4 s, 50.3 s, 46.3 s (median 50.3 s) | 46.3 s (1 run) | under 5 min: **pass** |
+| Results ledger | 40,000 / 2,800 / 37,200 (all runs) | same | |
+| Peak memory (all processes) | 1,352–1,396 MB | 1,395 MB | |
+| Freeze after picking, longest | 207, 185, 261 ms (**FAIL**, one run over) | 200, 161, 203 ms (pass) | 250 ms |
+| Browser's own listing before the app gets files | 4.9–5.3 s | 3.9–5.0 s | (app can't change) |
+| First progress / Stop answered | 0.29–0.37 s / 0.91–0.97 s | 0.29–0.33 s / 0.81–0.95 s | |
+| Screens with HEIC, of 15 jumps | 7 in every run; settle 1.3–6.5 s on those screens, 0.3–1.2 s without | 7; 1.7–4.9 s with, 0.5–2.2 s without | |
+| Tiles left without a preview | only 12 MP4 (no HEIC) | same | |
+| Preview load errors, console errors, outside requests | 0, none, 0 | 0, none, 0 | 0 |
+
+- **HEIC outcome (engine in Node on the same folder, scored against `perf-labels.json`):** all 262 read as HEIC with a date and size. 250 kept, 12 set aside as exact copies. 2 of the "copy" ones are the other file of an identical pair (the label marks the first in the folder as the keeper; the engine kept the other one, same bytes). Whole folder: 2,800 in Keep = the 2,800 real photos/videos; 14 swapped pairs of that kind (12 JPEG, 2 HEIC), no real photo set aside, no junk in Keep. Scan in Node 4.9 s.
+- **HEIC decoded in the browser:** yes. Every HEIC tile on the 7 jump screens painted a preview (no HEIC label left after settling); a HEIC screen takes 2–5 s longer to settle than a JPEG one.
+- **Offline:** `npm run offline-check` (working-tree build): passed, zero outside requests, no CSP violations, HEIC decoded offline, every request answered by the service worker.
+- **Folder unchanged:** the folder's listing (path, size, mtime, mode) had the same hash before and after all runs.
+- **Watch:** freeze after picking is at the line (200–207 ms medians; one 261 ms on the working-tree build). n=3 on a loaded 2-CPU machine can't tell whether the leave-guard change is the cause or it's noise. T96 should run it on an idle machine, 5+ runs. Scan is ~10–14 s slower than Nov 11 (36 s); the folder is bigger (5.92 GB vs 5.33 GB, plus HEIC) and the load was higher.

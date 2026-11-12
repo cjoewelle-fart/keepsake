@@ -20,6 +20,14 @@ Owner rule (Nov 11): anything that would change the approved Quiet Prints look i
 | 7 | UX9, UX10 (hover gating), UX11, UX12 | P3 | No |
 | 8 | UX7, UX8, UX10 (:active states) | P3 | LOOK → you if done |
 
+## Fixed Nov 12 (ahead of your beta notes; QA accepted)
+
+- **UX1 (P1):** between 720 and 799 px high the review envelope scrolls with the page instead of sticking, so Tab and scrolling bring "Select all" / "Unselect all" clear of the bottom bar. From 800 px nothing changes. New a11y check at 1280x720 and 1280x800 (it fails with 8 serious when the fix is removed).
+- **UX2 (D40):** tile focus ring keeps the teal outline with a 2 px white inner edge; only visible with keyboard focus.
+- **UX6 (D40):** chip gap 8 px on touch screens only (mouse stays 4 px); 8 px between the "Good to know" links.
+- **UX5, reload guard only:** the browser asks before leaving while a save is running, or when you've changed the selection and not saved yet. No new dialog or control for "Sort a different folder" (that confirm step stays a flow call for you).
+- Still open, your call: at about 800–865 px high, before you scroll, the two buttons start under the bottom bar (they clear after ~100 px of scroll or on Tab). It was like this before; fixing it would change the layout.
+
 ## Found while recording the launch video (Nov 11)
 
 - **UX13 (P2, no look change):** on a phone (390 px wide), the scanning screen squeezes the reassurance box ("This happens on your computer. Nothing is sent anywhere…") into a narrow column with one or two words per line, next to "Your files are not deleted or changed". It is readable but looks broken. Seen in the phone capture on 7a90772. Fix: stack the two parts on narrow screens.
