@@ -152,16 +152,16 @@ def film_169():
     #hk-fade {{ position: absolute; left: 720px; top: 0; width: 260px; height: 1080px; background: linear-gradient(90deg, {GROUND}, rgba(236,241,240,0)); }}
     #hk-fade2 {{ position: absolute; left: 0; right: 0; top: 760px; height: 320px; background: linear-gradient(0deg, {GROUND} 45%, rgba(236,241,240,0)); }}
     #hk-fade3 {{ position: absolute; left: 0; right: 0; top: 0; height: 120px; background: linear-gradient(180deg, {GROUND}, rgba(236,241,240,0)); }}
-    #hk-num {{ left: 160px; top: 250px; font-size: 300px; line-height: .9; color: {ACCENT}; font-variant-numeric: tabular-nums; }}
-    #hk-word {{ left: 166px; top: 540px; font-size: 96px; line-height: 1; }}
-    #hk-sub {{ left: 168px; top: 660px; font-size: 38px; color: {MUTED}; }}''',
+    #hk-num {{ left: 160px; top: 290px; font-size: 220px; line-height: .9; color: {ACCENT}; font-variant-numeric: tabular-nums; }}
+    #hk-word {{ left: 166px; top: 520px; font-size: 96px; line-height: 1; }}
+    #hk-sub {{ left: 168px; top: 636px; font-size: 38px; color: {MUTED}; }}''',
           f'''<div id="hk-wall" data-layout-ignore>{whtml}</div>
       <div id="hk-num" class="abs disp">0</div><div id="hk-word" class="abs disp">files</div>
-      <div id="hk-sub" class="abs body">in one recovery folder</div>''',
+      <div id="hk-sub" class="abs body">and counting</div>''',
           f'''const DUR = 6.5;
     {wjs}
     tl.fromTo("#hk-wall", {{ opacity: 0 }}, {{ opacity: 1, duration: 0.8, ease: "power1.out" }}, 0);
-    {counter("#hk-num", 539, 0.3, 2.6, 'power2.inOut')}
+    {counter("#hk-num", 48213, 0.2, 5.9, 'power3.in')}
     tl.fromTo("#hk-word", {{ opacity: 0, y: 30, filter: "blur(8px)" }}, {{ opacity: 1, y: 0, filter: "blur(0px)", duration: 0.6, ease: "expo.out" }}, 0.5);
     tl.fromTo("#hk-sub", {{ opacity: 0, filter: "blur(6px)" }}, {{ opacity: 1, filter: "blur(0px)", duration: 0.5, ease: "power3.out" }}, 0.9);
     document.getElementById("hk-word").textContent = C.filesWord;
@@ -365,22 +365,22 @@ def endcard(path, sid, W, H, dur, wide, split=None):
 
 
 def captions(path, sid, W, H, caps, wide):
-    # No card and no shadow: words in ink straight on the paper, after a short accent rule.
+    # A dark caption bar (ink, white words, teal edge), so captions read apart from the light app pieces. No shadow.
     if wide:
-        pos = 'left: 160px; right: 160px; bottom: 74px;'
-        size = 50
+        pos = 'left: 160px; bottom: 64px;'
+        size = 46
     else:
-        pos = 'left: 90px; right: 90px; top: 1190px;'
-        size = 58
-    els = '\n'.join(f'    <div id="{sid}-{i}" class="cap clip" data-start="{s}" data-duration="{d}"><span class="rule"></span><div id="{sid}-{i}-t" class="t"></div></div>' for i, s, d in caps)
+        pos = 'left: 70px; top: 1180px; max-width: 940px;'
+        size = 52
+    els = '\n'.join(f'    <div id="{sid}-{i}" class="cap clip" data-start="{s}" data-duration="{d}"><div id="{sid}-{i}-bar" class="bar"><div id="{sid}-{i}-t" class="t"></div></div></div>' for i, s, d in caps)
     keys = json.dumps([[i, s, d] for i, s, d in caps])
     path.write_text(f'''<template>
   <style>
     @font-face {{ font-family: "Atkinson Hyperlegible"; src: url("assets/fonts/atkinson-hyperlegible-latin-700-normal.woff2") format("woff2"); font-weight: 700; }}
     #root {{ position: absolute; inset: 0; }}
     .cap {{ position: absolute; {pos} overflow: visible; }}
-    .cap .rule {{ display: block; width: 56px; height: 5px; border-radius: 3px; background: {ACCENT}; margin-bottom: 18px; }}
-    .cap .t {{ font: 700 {size}px/1.22 "Atkinson Hyperlegible", sans-serif; color: {INK}; letter-spacing: -0.005em; }}
+    .cap .bar {{ display: inline-block; background: {INK}; border-left: 8px solid {ACCENT}; border-radius: 10px; padding: {int(size*0.38)}px {int(size*0.62)}px; }}
+    .cap .t {{ font: 700 {size}px/1.22 "Atkinson Hyperlegible", sans-serif; color: #FFFFFF; letter-spacing: -0.005em; }}
     .cap .w {{ display: inline-block; white-space: pre; }}
   </style>
   <div id="root" data-composition-id="{sid}" data-width="{W}" data-height="{H}">
@@ -394,8 +394,8 @@ def captions(path, sid, W, H, caps, wide):
       const box = document.getElementById("{sid}-" + k + "-t");
       const words = C[k].replace("{{APP}}", APP).split(" ");
       words.forEach((w, i) => {{ if (i) box.appendChild(document.createTextNode(" ")); const sp = document.createElement("span"); sp.className = "w"; sp.textContent = w; box.appendChild(sp); }});
-      tl.fromTo("#{sid}-" + k + " .rule", {{ scaleX: 0, transformOrigin: "0 50%" }}, {{ scaleX: 1, duration: 0.35, ease: "power3.out" }}, s);
-      tl.fromTo(box.querySelectorAll(".w"), {{ opacity: 0, filter: "blur(6px)" }}, {{ opacity: 1, filter: "blur(0px)", duration: 0.16, ease: "power4.out", stagger: 0.06 }}, s + 0.05);
+      tl.fromTo("#{sid}-" + k + "-bar", {{ clipPath: "inset(0 100% 0 0 round 10px)" }}, {{ clipPath: "inset(0 0% 0 0 round 10px)", duration: 0.45, ease: "power3.inOut" }}, s);
+      tl.fromTo(box.querySelectorAll(".w"), {{ opacity: 0, filter: "blur(6px)" }}, {{ opacity: 1, filter: "blur(0px)", duration: 0.16, ease: "power4.out", stagger: 0.05 }}, s + 0.2);
       tl.to("#{sid}-" + k, {{ opacity: 0, filter: "blur(6px)", duration: 0.2, ease: "power2.in" }}, Math.round((s + d - 0.2) * 100) / 100);
     }});
     window.__timelines["{sid}"] = tl;
@@ -448,14 +448,14 @@ def film_916():
       -webkit-mask-image: linear-gradient(180deg, transparent 0, #000 120px, #000 340px, transparent 100%); mask-image: linear-gradient(180deg, transparent 0, #000 120px, #000 340px, transparent 100%); }}
     #vh-fade {{ position: absolute; left: 0; right: 0; top: 660px; height: 140px; background: linear-gradient(180deg, {GROUND}, rgba(236,241,240,0)); }}
     #vh-fade2 {{ position: absolute; left: 0; right: 0; top: 1000px; height: 140px; background: linear-gradient(0deg, {GROUND}, rgba(236,241,240,0)); }}
-    #vh-num {{ left: 84px; top: 210px; font-size: 270px; line-height: .9; color: {ACCENT}; font-variant-numeric: tabular-nums; }}
+    #vh-num {{ left: 84px; top: 250px; font-size: 200px; line-height: .9; color: {ACCENT}; font-variant-numeric: tabular-nums; }}
     #vh-word {{ left: 92px; top: 460px; font-size: 84px; line-height: 1; }}
     #vh-sub {{ left: 96px; top: 560px; font-size: 40px; color: {MUTED}; }}''',
           f'''<div id="vh-wall" data-layout-ignore>{whtml}</div>
-      <div id="vh-num" class="abs disp">0</div><div id="vh-word" class="abs disp">files</div><div id="vh-sub" class="abs body">in one recovery folder</div>''',
+      <div id="vh-num" class="abs disp">0</div><div id="vh-word" class="abs disp">files</div><div id="vh-sub" class="abs body">and counting</div>''',
           f'''const DUR = 2.8;
     {wjs}
-    {counter("#vh-num", 539, 0.0, 2.0, 'power2.inOut')}
+    {counter("#vh-num", 23947, 0.0, 2.45, 'power3.in')}
     tl.fromTo("#vh-word", {{ opacity: 0, y: 24 }}, {{ opacity: 1, y: 0, duration: 0.5, ease: "expo.out" }}, 0.2);
     tl.fromTo("#vh-sub", {{ opacity: 0 }}, {{ opacity: 1, duration: 0.4 }}, 0.5);
     document.getElementById("vh-word").textContent = C.filesWord;''', exit_at=2.45)

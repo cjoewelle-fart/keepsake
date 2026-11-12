@@ -2,16 +2,16 @@
   <style>
     @font-face { font-family: "Atkinson Hyperlegible"; src: url("assets/fonts/atkinson-hyperlegible-latin-700-normal.woff2") format("woff2"); font-weight: 700; }
     #root { position: absolute; inset: 0; }
-    .cap { position: absolute; left: 90px; right: 90px; top: 1190px; overflow: visible; }
-    .cap .rule { display: block; width: 56px; height: 5px; border-radius: 3px; background: #23596B; margin-bottom: 18px; }
-    .cap .t { font: 700 58px/1.22 "Atkinson Hyperlegible", sans-serif; color: #1F2427; letter-spacing: -0.005em; }
+    .cap { position: absolute; left: 70px; top: 1180px; max-width: 940px; overflow: visible; }
+    .cap .bar { display: inline-block; background: #1F2427; border-left: 8px solid #23596B; border-radius: 10px; padding: 19px 32px; }
+    .cap .t { font: 700 52px/1.22 "Atkinson Hyperlegible", sans-serif; color: #FFFFFF; letter-spacing: -0.005em; }
     .cap .w { display: inline-block; white-space: pre; }
   </style>
   <div id="root" data-composition-id="vcaps" data-width="1080" data-height="1920">
-    <div id="vcaps-v1" class="cap clip" data-start="0.2" data-duration="2.4"><span class="rule"></span><div id="vcaps-v1-t" class="t"></div></div>
-    <div id="vcaps-v2" class="cap clip" data-start="3.0" data-duration="3.0"><span class="rule"></span><div id="vcaps-v2-t" class="t"></div></div>
-    <div id="vcaps-v3" class="cap clip" data-start="6.4" data-duration="2.3"><span class="rule"></span><div id="vcaps-v3-t" class="t"></div></div>
-    <div id="vcaps-v4" class="cap clip" data-start="9.0" data-duration="2.3"><span class="rule"></span><div id="vcaps-v4-t" class="t"></div></div>
+    <div id="vcaps-v1" class="cap clip" data-start="0.2" data-duration="2.4"><div id="vcaps-v1-bar" class="bar"><div id="vcaps-v1-t" class="t"></div></div></div>
+    <div id="vcaps-v2" class="cap clip" data-start="3.0" data-duration="3.0"><div id="vcaps-v2-bar" class="bar"><div id="vcaps-v2-t" class="t"></div></div></div>
+    <div id="vcaps-v3" class="cap clip" data-start="6.4" data-duration="2.3"><div id="vcaps-v3-bar" class="bar"><div id="vcaps-v3-t" class="t"></div></div></div>
+    <div id="vcaps-v4" class="cap clip" data-start="9.0" data-duration="2.3"><div id="vcaps-v4-bar" class="bar"><div id="vcaps-v4-t" class="t"></div></div></div>
   </div>
   <script>
     const C = window.CAPTIONS[window.CAPTION_LANG] || window.CAPTIONS.en;
@@ -21,8 +21,8 @@
       const box = document.getElementById("vcaps-" + k + "-t");
       const words = C[k].replace("{APP}", APP).split(" ");
       words.forEach((w, i) => { if (i) box.appendChild(document.createTextNode(" ")); const sp = document.createElement("span"); sp.className = "w"; sp.textContent = w; box.appendChild(sp); });
-      tl.fromTo("#vcaps-" + k + " .rule", { scaleX: 0, transformOrigin: "0 50%" }, { scaleX: 1, duration: 0.35, ease: "power3.out" }, s);
-      tl.fromTo(box.querySelectorAll(".w"), { opacity: 0, filter: "blur(6px)" }, { opacity: 1, filter: "blur(0px)", duration: 0.16, ease: "power4.out", stagger: 0.06 }, s + 0.05);
+      tl.fromTo("#vcaps-" + k + "-bar", { clipPath: "inset(0 100% 0 0 round 10px)" }, { clipPath: "inset(0 0% 0 0 round 10px)", duration: 0.45, ease: "power3.inOut" }, s);
+      tl.fromTo(box.querySelectorAll(".w"), { opacity: 0, filter: "blur(6px)" }, { opacity: 1, filter: "blur(0px)", duration: 0.16, ease: "power4.out", stagger: 0.05 }, s + 0.2);
       tl.to("#vcaps-" + k, { opacity: 0, filter: "blur(6px)", duration: 0.2, ease: "power2.in" }, Math.round((s + d - 0.2) * 100) / 100);
     });
     window.__timelines["vcaps"] = tl;
