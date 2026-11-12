@@ -55,10 +55,7 @@ export function GroupFiles({ records, files }: { records: readonly FileRecord[];
                 {b.map((x) => (
                   <div key={x.index} className="gf-item" data-id={x.index}>
                     {viewable(x) ? (
-                      <button type="button" className="gf-open" data-view={x.index} onClick={() => setViewing(x.index)}>
-                        <span className="sr-only">{copy.viewer.open(label(x.index))}</span>
-                        <span aria-hidden="true"><Preview file={files[x.index]} record={x} size="sm" /></span>
-                      </button>
+                      <OpenRow rec={x} file={files[x.index]} name={label(x.index)} onOpen={() => setViewing(x.index)} />
                     ) : (
                       <Preview file={files[x.index]} record={x} size="sm" />
                     )}
@@ -86,5 +83,16 @@ export function GroupFiles({ records, files }: { records: readonly FileRecord[];
         />
       )}
     </>
+  );
+}
+
+/** A row's "view larger" button; its name says when the file has no preview (UX11). */
+function OpenRow({ rec, file, name, onOpen }: { rec: FileRecord; file: File; name: string; onOpen: () => void }) {
+  const [noPreview, setNoPreview] = useState(false);
+  return (
+    <button type="button" className="gf-open" data-view={rec.index} onClick={onOpen}>
+      <span className="sr-only">{copy.viewer.open(noPreview ? r.noPreviewName(name) : name)}</span>
+      <span aria-hidden="true"><Preview file={file} record={rec} size="sm" onNoPreview={setNoPreview} /></span>
+    </button>
   );
 }

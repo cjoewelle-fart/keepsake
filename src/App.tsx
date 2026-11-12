@@ -56,7 +56,7 @@ const isOsClutter = (name: string) => name.startsWith('.') || /^(thumbs\.db|desk
 const APP_TITLE = typeof document !== 'undefined' && document.title.endsWith('(test)') ? `${copy.appName} (test)` : copy.appName;
 /** The title the page loaded with: the launch title on the start screen (D41), kept there. */
 const PAGE_TITLE = (typeof document !== 'undefined' && document.title) || copy.appName;
-/** D43: the launch video, or null (production: off until the video exists). */
+/** D43: the launch video (src/brand.ts), or null. */
 const LAUNCH = launchVideo();
 const pathOf = (f: File) => (f as File & { webkitRelativePath?: string }).webkitRelativePath || f.name;
 
@@ -411,8 +411,8 @@ function WatchVideo({ video }: { video: LaunchVideo }) {
           ) : (
             <>
               <span className="watch-poster" aria-hidden="true"><Prints /></span>
-              <button ref={playRef} type="button" className="btn btn-secondary btn-icon watch-play" onClick={() => { setFailed(false); setPlaying(true); }}>
-                <PlayIcon />{copy.start.video.play(video.minutes)}
+              <button ref={playRef} type="button" className="btn btn-secondary btn-icon watch-play" aria-label={copy.start.video.playName(video.seconds)} onClick={() => { setFailed(false); setPlaying(true); }}>
+                <PlayIcon />{copy.start.video.play(video.seconds)}
               </button>
             </>
           )}

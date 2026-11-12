@@ -16,6 +16,11 @@ const TEST_BUILD = 'testbuild'
 // and "(test)" in the title, checked the same way as the test build.
 const ARTIFACT_TEST = 'artifact-test'
 const isArtifact = (mode: string) => mode === 'artifact' || mode === ARTIFACT_TEST
+// `npm run build:launch` (vite build --mode launch): the public launch build, in dist-launch/ (so it
+// can't be uploaded to the beta address by mistake). The default build plus deployFiles({ launch }):
+// indexable (no X-Robots-Tag, robots.txt allows), and it fails while SITE_URL is unset (D42).
+// No other mode passes `launch`. Release checklist §5.
+const LAUNCH = 'launch'
 
 // The app's name, install name and home-screen label come from src/brand.ts (one setting).
 // Test builds keep a short, marked title ("<name> (test)") so sessions can be told apart.
@@ -103,6 +108,7 @@ export default defineConfig(({ mode }) => ({
   plugins: mode === 'artifact' ? [brandHead(), react()]
     : mode === ARTIFACT_TEST ? [brandHead(TEST_TITLE), react(), testBuild()]
     : mode === TEST_BUILD ? [brandHead(TEST_TITLE), react(), csp(), offline(), installTags(), testBuild(), deployFiles(), precacheGuard()]
+    : mode === LAUNCH ? [brandHead(), react(), csp(), offline(), installTags(), deployFiles({ launch: true }), precacheGuard()]
     : [brandHead(), react(), csp(), offline(), installTags(), deployFiles(), precacheGuard()],
   // Test builds never show the example-files button, whatever the environment says.
   define: mode === TEST_BUILD || mode === ARTIFACT_TEST ? { 'import.meta.env.VITE_SAMPLES': JSON.stringify('0') } : {},
@@ -115,5 +121,6 @@ export default defineConfig(({ mode }) => ({
         assetsInlineLimit: 100_000_000, cssCodeSplit: false, modulePreload: false,
         rolldownOptions: { output: { codeSplitting: false } }, // one script (the HEIC decoder is loaded lazily otherwise)
       }
-    : mode === TEST_BUILD ? { outDir: 'dist-test' } : {},
+    : mode === TEST_BUILD ? { outDir: 'dist-test' }
+    : mode === LAUNCH ? { outDir: 'dist-launch' } : {},
 }))

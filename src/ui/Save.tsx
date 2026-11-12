@@ -184,27 +184,46 @@ export function Save({ records, files, scanId, ids, recoveryRoot, onBack, onDone
     await finish(end);
   }
 
+  // UX9: one picker at a time. While the picker or the browser's permission question is open, the
+  // folder buttons are aria-disabled (still focusable) and a second press does nothing.
+  const picking = useRef(false);
+  const [checking, setChecking] = useState(false);
   async function chooseFolder() {
+    if (picking.current) return;
+    picking.current = true;
+    setChecking(true);
+    let chosen: DirHandle | null = null;
+    try {
+      chosen = await pickChecked();
+      if (chosen) sess.setFolder(newFolderSession(chosen), await hasRoot(chosen));
+    } finally {
+      picking.current = false;
+      setChecking(false);
+    }
+    if (chosen) await runFolder();
+  }
+  /** The picker, then the checks on the folder; null (with the problem shown) if it can't be used. */
+  async function pickChecked(): Promise<DirHandle | null> {
     let chosen: DirHandle;
     try {
       chosen = await pickFolder();
     } catch (e) {
-      if ((e as Error).name === 'AbortError') return; // closed the picker: stay here, no message
+      if ((e as Error).name === 'AbortError') return null; // closed the picker: stay here, no message
       showProblem('denied');
-      return;
+      return null;
     }
     const where = await checkFolder(chosen);
     if (where !== 'outside') {
       showProblem(where === 'inside' ? 'recovery' : 'unchecked');
-      return;
+      return null;
     }
     if (!(await ensureWritable(chosen))) {
       showProblem('denied');
-      return;
+      return null;
     }
-    sess.setFolder(newFolderSession(chosen), await hasRoot(chosen));
-    await runFolder();
+    return chosen;
   }
+  const busy = checking ? { 'aria-disabled': true as const } : {};
 
   async function runZip() {
     const rest = new Set(remaining().map((r) => r.index));
@@ -287,9 +306,9 @@ export function Save({ records, files, scanId, ids, recoveryRoot, onBack, onDone
         {failedN > 0 && <p className="sub-sm">{s.failedLine(failedN)}</p>}
         <div className="actions">
           {buttons === 'rest' && <button type="button" className="btn btn-primary" onClick={saveRest}>{s.saveRest}</button>}
-          {buttons === 'again' && <button type="button" className="btn btn-primary" onClick={chooseFolder}>{s.chooseAgain}</button>}
+          {buttons === 'again' && <button type="button" className="btn btn-primary" {...busy} onClick={chooseFolder}>{checking ? s.checkingFolder : s.chooseAgain}</button>}
           {folderMode && buttons === 'rest' && phase.end !== 'stopped' && (
-            <button type="button" className="btn btn-secondary" onClick={chooseFolder}>{s.chooseDifferent}</button>
+            <button type="button" className="btn btn-secondary" {...busy} onClick={chooseFolder}>{checking ? s.checkingFolder : s.chooseDifferent}</button>
           )}
           {phase.end === 'stopped' && <button type="button" className="btn btn-secondary" onClick={onBack}>{s.backToReview}</button>}
         </div>
@@ -358,7 +377,7 @@ export function Save({ records, files, scanId, ids, recoveryRoot, onBack, onDone
             <p className="card-body">{s.folderBody}</p>
             <p className="card-body">{s.notTheCard}</p>
             <div>
-              <button type="button" className="btn btn-primary btn-icon" onClick={chooseFolder}><FolderOpenIcon />{phase.problem ? s.chooseDifferent : s.chooseFolder}</button>
+              <button type="button" className="btn btn-primary btn-icon" {...busy} onClick={chooseFolder}><FolderOpenIcon />{checking ? s.checkingFolder : phase.problem ? s.chooseDifferent : s.chooseFolder}</button>
             </div>
             <p className="sub-sm">{s.browserNote(partCount, bigFile)}</p>
           </section>

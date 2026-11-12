@@ -356,3 +356,28 @@ Early evidence only, not the formal T96 run. Closes the Nov 11 gap (no HEIC in t
 - **Offline:** `npm run offline-check` (working-tree build): passed, zero outside requests, no CSP violations, HEIC decoded offline, every request answered by the service worker.
 - **Folder unchanged:** the folder's listing (path, size, mtime, mode) had the same hash before and after all runs.
 - **Watch:** freeze after picking is at the line (200–207 ms medians; one 261 ms on the working-tree build). n=3 on a loaded 2-CPU machine can't tell whether the leave-guard change is the cause or it's noise. T96 should run it on an idle machine, 5+ runs. Scan is ~10–14 s slower than Nov 11 (36 s); the folder is bigger (5.92 GB vs 5.33 GB, plus HEIC) and the load was higher.
+
+## Phase 4 gate rerun, release candidate, Nov 12
+
+T96, formal run. QA, on `84e7d1e` plus the uncommitted release-candidate work (launch video on in `src/brand.ts` with `public/launch/upsort-launch.mp4` and `.en.vtt`; UX3, UX9–UX13; launch-build switch in `vite.config.ts` / `vite.deploy.ts`). Chromium 153 (Chrome for Testing, /opt/pw-browsers), 2 CPUs, 7 GB RAM; load average 2.7–3.8 during runs.
+
+- **Build:** `npm run build` in the checkout (production build, 30 precached files; no `launch/`, `.mp4` or `.vtt` in `dist/sw.js`). `npm test`: 408 passed, 3 expected fail.
+- **Folder:** `python3 scripts/make_perf_folder.py <scratch>/recovery` (defaults, pillow-heif 1.8.1) → 40,000 files, 5.92 GB, 262 `.heic` (`small` 31,238, `system` 5,500, `keep` 2,800, `damaged` 330, `duplicate` 132). Deleted after the runs.
+- **Commands:** `node scripts/perf-browser.mjs <chromium> <dir>/recovery --runs 3`; `--handoff --runs 5`.
+
+| Check | Result | Pass line |
+|---|---|---|
+| Scan time, 40,000 files with HEIC | 36.8 s, 41.7 s, 37.7 s (median 37.7 s) | under 5 min: **pass** |
+| Results ledger | 40,000 / 2,800 / 37,200 (all runs) | |
+| Peak memory (all processes) | 1,435–1,469 MB (median 1,443) | |
+| Screens with HEIC, of 15 jumps | 7 in every run; slowest screen settles in 3.9–4.2 s; 0 timed out | |
+| Tiles left without a preview | only MP4 (12, 12, 11); no HEIC | |
+| Review scroll, frame p95 / max | 36–42 ms / 52–70 ms | |
+| Freeze after picking, longest (5 runs) | 194, 184, 153, 153, 161 ms (median 161) | 250 ms: **pass** |
+| Browser's own listing before the app gets files | 3.5–4.8 s | (app can't change) |
+| First progress / Stop answered | 0.23–0.29 s / 0.55–0.80 s | |
+| Preview load errors, console errors, outside requests | 0, none, 0 | 0 |
+
+- **Offline:** `node scripts/offline-check.mjs <chromium>` on the same build: passed (zero outside requests, no CSP violations, HEIC decoded offline, every offline request answered by the service worker, all 30 precached files load offline). Also passed against `scripts/serve-dist.mjs` (real `_headers`).
+- **Folder unchanged:** listing hash (path, size, mtime, mode) identical before and after all 8 runs.
+- **Result: phase 4 speed gate passes on the release candidate.** The Nov 12 freeze-after-picking worry (one 261 ms run) did not repeat: worst 194 ms in 5 runs.

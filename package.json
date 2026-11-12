@@ -7,6 +7,7 @@
     "dev": "vite",
     "build": "tsc -b && vite build",
     "build:test": "tsc -b && vite build --mode testbuild",
+    "build:launch": "tsc -b && vite build --mode launch",
     "build:artifact-test": "tsc -b && vite build --mode artifact-test && node scripts/make-artifact.mjs --test dist-artifact-test/page",
     "lint": "oxlint",
     "preview": "vite preview",

@@ -36,9 +36,9 @@
   /* Type rule (T20, owner-approved 2026-10-19): bold only for things you read (big numbers,
      headings, day labels, ledger numbers). Controls are regular weight at 15px; the primary
      button is 16px bold, 48px tall, fully rounded and the only filled teal control. */
-  --text-small: 15px;       /* small grey text */
-  --control-text: 15px;     /* pills, filters, text links, secondary buttons */
-  --primary-text: 16px;
+  --text-small: 0.9375rem;       /* small grey text */
+  --control-text: 0.9375rem;     /* pills, filters, text links, secondary buttons */
+  --primary-text: 1rem;
   --primary-h: 48px;
   --control-h: 44px;
   --pill-h: 36px;           /* filters and month pills on desktop; 44px on phones and touch */
@@ -52,15 +52,15 @@
 
 * { box-sizing: border-box; }
 html { background: var(--bg); }
-body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 17px; line-height: 1.6; overflow-wrap: break-word; }
+body { margin: 0; background: var(--bg); color: var(--ink); font-family: var(--body); font-size: 1.0625rem; line-height: 1.6; overflow-wrap: break-word; }
 h1, h2, .sheet h3 { font-family: var(--display); margin: 0; }
-h1 { font-weight: 800; font-size: clamp(30px, 4.6vw, 40px); line-height: 1.12; letter-spacing: -0.02em; font-variation-settings: 'opsz' 60; max-width: 720px; }
+h1 { font-weight: 800; font-size: clamp(1.875rem, 4.6vw, 2.5rem); line-height: 1.12; letter-spacing: -0.02em; font-variation-settings: 'opsz' 60; max-width: 720px; }
 h1:focus, h2:focus, .sheet h3:focus { outline: none; }
-h2, .sheet h3 { font-weight: 800; font-size: 22px; line-height: 1.25; letter-spacing: -0.01em; font-variation-settings: 'opsz' 36; }
+h2, .sheet h3 { font-weight: 800; font-size: 1.375rem; line-height: 1.25; letter-spacing: -0.01em; font-variation-settings: 'opsz' 36; }
 p { margin: 0; }
 button { font: inherit; }
 a { color: var(--accent); }
-a:hover { color: var(--accent-hover); }
+@media (hover: hover) { a:hover { color: var(--accent-hover); } }
 :focus-visible { outline: 3px solid var(--accent); outline-offset: 2px; }
 
 .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0 0 0 0); clip-path: inset(50%); white-space: nowrap; }
@@ -70,8 +70,8 @@ a:hover { color: var(--accent-hover); }
 
 /* Header */
 .topbar { max-width: 1180px; margin: 0 auto; padding: 22px 24px; display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 12px 24px; }
-.brand { display: flex; align-items: center; gap: 10px; font-family: var(--display); font-variation-settings: 'opsz' 36; font-weight: 800; font-size: 21px; letter-spacing: -0.01em; }
-.step-line { font-size: 15px; color: var(--muted); }
+.brand { display: flex; align-items: center; gap: 10px; font-family: var(--display); font-variation-settings: 'opsz' 36; font-weight: 800; font-size: 1.3125rem; letter-spacing: -0.01em; }
+.step-line { font-size: 0.9375rem; color: var(--muted); }
 /* Step indicator (warmth spec §1): dots, the current one a pill. Not links. */
 .stepper { display: flex; align-items: center; gap: 14px; }
 .steps { list-style: none; margin: 0; padding: 0; display: flex; align-items: center; gap: 20px; }
@@ -79,7 +79,7 @@ a:hover { color: var(--accent-hover); }
 .step-dot { display: block; width: 8px; height: 8px; border-radius: 999px; background: var(--accent); transition: width var(--dur-slow) var(--ease-out); }
 .step-current .step-dot { width: 24px; }
 .step-todo .step-dot { background: transparent; box-shadow: inset 0 0 0 1.5px var(--control-edge); }
-.step-name { font-size: 14px; line-height: 1.2; color: var(--muted); }
+.step-name { font-size: 0.875rem; line-height: 1.2; color: var(--muted); }
 .step-current .step-name { color: var(--ink); font-weight: 700; }
 /* Wide: each name under its dot, and no separate line (except "Done" on the receipt). */
 @media (min-width: 640.02px) {
@@ -87,7 +87,7 @@ a:hover { color: var(--accent-hover); }
   .step-dot { margin-top: 2px; }
   .stepper:not(.stepper-done) .step-line { display: none; }
   .stepper-done { align-items: flex-start; }
-  .stepper-done .step-line { margin-top: 16px; font-size: 14px; line-height: 1.2; font-weight: 700; color: var(--ink); }
+  .stepper-done .step-line { margin-top: 16px; font-size: 0.875rem; line-height: 1.2; font-weight: 700; color: var(--ink); }
 }
 /* Phones and 200% zoom: the dots and the line only (the names stay for screen readers). */
 @media (max-width: 640px) {
@@ -98,11 +98,11 @@ a:hover { color: var(--accent-hover); }
 /* Page */
 .page { max-width: 1180px; margin: 0 auto; padding: 24px 24px 72px; }
 .page.narrow { max-width: 680px; display: flex; flex-direction: column; gap: 22px; }
-.lede { font-size: 18px; color: var(--muted); max-width: 640px; }
+.lede { font-size: 1.125rem; color: var(--muted); max-width: 640px; }
 .sub { color: var(--muted); font-size: var(--text-small); }
 .sub-sm { color: var(--muted); font-size: var(--text-small); }
 .actions { display: flex; flex-wrap: wrap; gap: 12px; }
-.note-box { background: var(--tint-2); color: var(--accent-deep); border-radius: 12px; padding: 12px 16px; font-size: 16px; }
+.note-box { background: var(--tint-2); color: var(--accent-deep); border-radius: 12px; padding: 12px 16px; font-size: 1rem; }
 /* Each new screen fades in and rises 8px. No fill-mode, so no transform is left behind on the sticky bars. */
 @keyframes page-in { from { opacity: 0; transform: translateY(8px); } }
 .page { animation: page-in var(--dur-slow) var(--ease-out); }
@@ -114,27 +114,28 @@ a:hover { color: var(--accent-hover); }
 /* Buttons: pills, 44px and up. Controls are regular weight; only the primary is bold and filled. */
 .btn { min-height: var(--control-h); padding: 0 18px; border-radius: 999px; font-size: var(--control-text); font-weight: 400; cursor: pointer; border: 1px solid transparent; }
 /* The start and scanning screens keep their larger buttons (not part of the T20 revision). */
-.btn-lg { min-height: 54px; padding: 0 28px; font-size: 17px; font-weight: 700; }
+.btn-lg { min-height: 54px; padding: 0 28px; font-size: 1.0625rem; font-weight: 700; }
 .btn-sm { min-height: var(--control-h); padding: 0 18px; font-size: var(--control-text); align-self: flex-start; }
 .btn-block { width: 100%; }
 .btn-primary { min-height: var(--primary-h); padding: 0 24px; font-size: var(--primary-text); font-weight: 700; background: var(--cta); color: #FFFFFF; border: 0; }
-.btn-primary:hover { background: var(--cta-hover); }
+@media (hover: hover) { .btn-primary:hover { background: var(--cta-hover); } }
 .btn-secondary { background: var(--surface); color: var(--ink); border-color: var(--control-edge); }
-.btn-secondary:hover { background: var(--surface-2); border-color: var(--ink); }
+@media (hover: hover) { .btn-secondary:hover { background: var(--surface-2); border-color: var(--ink); } }
 .btn-secondary:disabled, .btn-secondary[aria-disabled='true'] { cursor: default; color: var(--muted); }
 .btn-link { min-height: var(--control-h); padding: 0; background: transparent; color: var(--accent); font-weight: 400; font-size: var(--control-text); text-decoration: underline; text-underline-offset: 3px; border-radius: 4px; }
-.btn-link:hover { color: var(--accent-hover); }
+@media (hover: hover) { .btn-link:hover { color: var(--accent-hover); } }
 /* A button with an icon: 8px between icon and words. */
 .btn-icon { display: inline-flex; align-items: center; justify-content: center; gap: 8px; }
 .btn-link.btn-icon { justify-content: flex-start; text-align: left; }
-/* Hover and press (warmth spec §4). The primary lifts a little; secondary controls and pills only
+/* Hover and press (warmth spec §4). Every :hover rule sits in @media (hover: hover), so it
+   doesn't stick after a tap on a touch screen (UX10). The primary lifts a little; secondary controls and pills only
    change colour (thousands of pills shouldn't bounce). Focus rings appear at once, never animated. */
 .btn-primary { transition: transform var(--dur-fast) var(--ease-out), box-shadow var(--dur-fast) var(--ease-out), background-color var(--dur-fast) var(--ease-std); }
-.btn-primary:not([aria-disabled='true']):hover { transform: translateY(-1px); box-shadow: 0 2px 4px rgba(154, 52, 18, 0.22), 0 6px 14px rgba(154, 52, 18, 0.22); }
+@media (hover: hover) { .btn-primary:not([aria-disabled='true']):hover { transform: translateY(-1px); box-shadow: 0 2px 4px rgba(154, 52, 18, 0.22), 0 6px 14px rgba(154, 52, 18, 0.22); } }
 .btn-primary:not([aria-disabled='true']):active { transform: translateY(0) scale(0.98); box-shadow: none; }
 .btn-secondary, .chip, .print-more, .btn-link { transition: background-color var(--dur-fast) var(--ease-std), border-color var(--dur-fast) var(--ease-std), color var(--dur-fast) var(--ease-std); }
 .btn .arrow { transition: transform var(--dur-fast) var(--ease-out); }
-.btn:hover .arrow { transform: translateX(2px); }
+@media (hover: hover) { .btn:hover .arrow { transform: translateX(2px); } }
 /* Peek / Hide and See all: the chevron turns; the panel itself opens at once. */
 .chev { transition: transform var(--dur-base) var(--ease-std); }
 [aria-expanded='true'] .chev { transform: rotate(180deg); }
@@ -168,14 +169,14 @@ progress { width: 100%; height: 10px; appearance: none; border: 0; border-radius
 progress::-webkit-progress-bar { background: var(--rule-soft); border-radius: 999px; }
 progress::-webkit-progress-value { background: var(--accent); border-radius: 999px; transition: width 200ms ease; }
 progress::-moz-progress-bar { background: var(--accent); border-radius: 999px; }
-.progress-text { display: flex; justify-content: space-between; gap: 8px; font-size: 15px; color: var(--muted); font-variant-numeric: tabular-nums; }
-.stages { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; font-size: 16px; }
+.progress-text { display: flex; justify-content: space-between; gap: 8px; font-size: 0.9375rem; color: var(--muted); font-variant-numeric: tabular-nums; }
+.stages { list-style: none; margin: 0; padding: 0; display: flex; flex-direction: column; gap: 8px; font-size: 1rem; }
 .stage { display: flex; gap: 10px; align-items: center; color: var(--muted); }
 .stage.current { color: var(--ink); font-weight: 700; }
 .stage-done, .stage-current { color: var(--accent); }
 .stage-todo { color: var(--control-edge); }
 .scan-foot { display: flex; flex-direction: column; gap: 12px; margin-top: 8px; }
-.safe-box { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 12px; background: var(--tint-2); color: var(--accent); font-size: 15px; }
+.safe-box { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 12px; background: var(--tint-2); color: var(--accent); font-size: 0.9375rem; }
 .safe-box b { flex: none; }
 
 /* Review by year */
@@ -185,9 +186,9 @@ progress::-moz-progress-bar { background: var(--accent); border-radius: 999px; }
 /* Results: contact sheet with a ledger */
 .results { display: flex; flex-direction: column; gap: 48px; }
 .envelope { display: flex; flex-direction: column; gap: 22px; min-width: 0; max-width: 520px; }
-.envelope h1 { font-weight: 700; font-size: 34px; }
-.bignum { display: block; font-weight: 800; font-size: clamp(56px, 12vw, 76px); line-height: 0.95; letter-spacing: -0.035em; font-variation-settings: 'opsz' 96; color: var(--accent); margin: 4px 0; overflow-wrap: anywhere; }
-.ledger { margin: 0; font-variant-numeric: tabular-nums; font-size: 16px; }
+.envelope h1 { font-weight: 700; font-size: 2.125rem; }
+.bignum { display: block; font-weight: 800; font-size: clamp(3.5rem, 12vw, 4.75rem); line-height: 0.95; letter-spacing: -0.035em; font-variation-settings: 'opsz' 96; color: var(--accent); margin: 4px 0; overflow-wrap: anywhere; }
+.ledger { margin: 0; font-variant-numeric: tabular-nums; font-size: 1rem; }
 .ledger > div { display: flex; justify-content: space-between; gap: 12px; padding: 10px 0; border-top: 1px solid var(--rule); }
 .ledger dd { margin: 0; font-weight: 700; }
 .ledger .ledger-total { border-bottom: 2px solid var(--ink); }
@@ -206,11 +207,11 @@ progress::-moz-progress-bar { background: var(--accent); border-radius: 999px; }
 .count-ghost, .count-live { grid-area: 1 / 1; }
 .count-ghost { visibility: hidden; }
 /* A tinted ledger-style note with an icon (T83). The start screen's own promise is a plain line since round 6. */
-.promise { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 12px; background: var(--tint); color: var(--accent-deep); font-weight: 700; font-size: 17px; max-width: 560px; }
+.promise { display: flex; align-items: center; gap: 12px; padding: 12px 16px; border-radius: 12px; background: var(--tint); color: var(--accent-deep); font-weight: 700; font-size: 1.0625rem; max-width: 560px; }
 /* Nothing deleted, nothing sent: one note under the ledger on Sort, Choose and Save. */
-.promise.promise-safe { align-items: flex-start; font-weight: 400; font-size: 16px; line-height: 1.5; }
+.promise.promise-safe { align-items: flex-start; font-weight: 400; font-size: 1rem; line-height: 1.5; }
 .promise.promise-safe .icon { margin-top: 0; }
-.promise.promise-safe strong { display: block; font-weight: 700; font-size: 17px; margin-bottom: 2px; }
+.promise.promise-safe strong { display: block; font-weight: 700; font-size: 1.0625rem; margin-bottom: 2px; }
 .cta { display: flex; flex-direction: column; gap: 10px; align-items: flex-start; }
 .cta .btn-link { margin-top: 4px; }
 
@@ -221,17 +222,17 @@ progress::-moz-progress-bar { background: var(--accent); border-radius: 999px; }
 .sheet .chip { border-color: var(--control-edge); }
 .sheet .chip[aria-pressed='true'] { border-color: var(--accent); }
 .sheet .print-more { background: var(--tint-2); }
-.sheet .print-more:hover { background: var(--tint); }
+@media (hover: hover) { .sheet .print-more:hover { background: var(--tint); } }
 .chips { display: flex; flex-wrap: wrap; gap: 8px; }
 .chip { min-height: var(--control-h); padding: 0 16px; border-radius: 999px; border: 1px solid transparent; background: var(--surface); color: var(--ink); font-weight: 400; font-size: var(--control-text); cursor: pointer; }
-.chip:hover { border-color: var(--control-edge); }
+@media (hover: hover) { .chip:hover { border-color: var(--control-edge); } }
 /* The chosen pill is tinted with a teal edge, not filled: the primary button is the only filled teal control. */
 .chip[aria-pressed='true'], .chip[aria-current='true'] { background: var(--pill-on-bg); color: var(--pill-on-ink); border-color: var(--accent); }
 .chip-sm { min-height: var(--pill-h); padding: 0 12px; }
 .months { display: flex; flex-direction: column; gap: 22px; }
 .month { display: flex; flex-direction: column; gap: 12px; }
 .month-h { display: flex; flex-wrap: wrap; align-items: baseline; gap: 2px 10px; scroll-margin-top: 16px; }
-.month-count { font-family: var(--body); font-weight: 400; font-size: 15px; color: var(--muted); letter-spacing: 0; }
+.month-count { font-family: var(--body); font-weight: 400; font-size: 0.9375rem; color: var(--muted); letter-spacing: 0; }
 .prints { display: grid; grid-template-columns: repeat(5, minmax(0, 1fr)); gap: 12px; grid-auto-flow: dense; }
 .print { margin: 0; position: relative; aspect-ratio: 1; border-radius: 12px; overflow: hidden; box-shadow: var(--shadow); background: var(--blank); }
 .print-big { grid-column: span 2; grid-row: span 2; }
@@ -240,11 +241,11 @@ progress::-moz-progress-bar { background: var(--accent); border-radius: 999px; }
 @keyframes print-in { from { opacity: 0; transform: translateY(6px) scale(0.97); } }
 .months.stagger .print { animation: print-in 240ms var(--ease-out) backwards; animation-delay: calc(min(var(--i, 0), 10) * 45ms); }
 .months.stagger .month-h { animation: rise-in 160ms var(--ease-out) backwards; }
-.tag { position: absolute; left: 8px; bottom: 8px; margin: 0; padding: 2px 9px; border-radius: 999px; background: #FFFFFF; font-size: 13px; font-weight: 700; line-height: 1.5; color: var(--date); max-width: calc(100% - 16px); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.tag { position: absolute; left: 8px; bottom: 8px; margin: 0; padding: 2px 9px; border-radius: 999px; background: #FFFFFF; font-size: 0.8125rem; font-weight: 700; line-height: 1.5; color: var(--date); max-width: calc(100% - 16px); white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
 .tag-n { color: var(--ink-soft); }
 .print-more { display: flex; flex-direction: column; align-items: center; justify-content: center; gap: 2px; min-height: 44px; padding: 8px; border: 0; background: var(--surface); color: var(--accent); text-align: center; cursor: pointer; box-shadow: none; }
-.print-more:hover { background: var(--tint-2); }
-.print-more b { font-size: 20px; line-height: 1.2; }
+@media (hover: hover) { .print-more:hover { background: var(--tint-2); } }
+.print-more b { font-size: 1.25rem; line-height: 1.2; }
 .print-more span { font-size: var(--control-text); line-height: 1.3; }
 
 /* Previews (shared) */
@@ -257,12 +258,12 @@ progress::-moz-progress-bar { background: var(--accent); border-radius: 999px; }
 /* A preview fades in as it finishes decoding, like a print developing. Opacity only. */
 @keyframes develop { from { opacity: 0; } }
 .tile canvas, .tile img { animation: develop var(--dur-base) var(--ease-std); }
-.tile-label { font-size: 11px; font-weight: 700; color: var(--ink-soft); letter-spacing: 0.04em; }
-.tile-xs .tile-label { font-size: 9px; letter-spacing: 0; }
+.tile-label { font-size: 0.6875rem; font-weight: 700; color: var(--ink-soft); letter-spacing: 0.04em; }
+.tile-xs .tile-label { font-size: 0.5625rem; letter-spacing: 0; }
 /* A short note in the middle of a tile with no picture, e.g. a video this browser can't play (T61). The file type moves to the free top-left corner; the note stays clear of the tick (top right) and the length (bottom) on tiles 120 px and wider. */
 .tile:has(.tile-note) { padding: 28px 8px 32px; }
 .tile:has(.tile-note) .tile-label { position: absolute; top: 10px; left: 10px; }
-.tile-note { font-size: 11px; line-height: 1.25; text-align: center; color: var(--ink-soft); max-width: 100%; overflow-wrap: anywhere; }
+.tile-note { font-size: 0.6875rem; line-height: 1.25; text-align: center; color: var(--ink-soft); max-width: 100%; overflow-wrap: anywhere; }
 /* T69: a note can come in two lengths (.tile-note-long, .tile-note-short); the short one is for small timeline tiles. */
 .tile-note-short { display: none; }
 /* T64: narrower timeline tiles have no room for the file type, the note, the tick and the length.
@@ -281,7 +282,7 @@ progress::-moz-progress-bar { background: var(--accent); border-radius: 999px; }
 }
 @container (max-width: 109.98px) {
   .tile:has(.tile-note) { padding-top: 4px; }
-  .tile-note:not(:has(.tile-note-short)) { font-size: 9px; line-height: 11px; }
+  .tile-note:not(:has(.tile-note-short)) { font-size: 0.5625rem; line-height: 0.6875rem; }
   .tile-note::before { height: 24px; }
   .tl-tile:has(.tile-note) .vid-row { left: 6px; right: 6px; bottom: 6px; height: 22px; }
   .tl-tile:has(.tile-note) .vid-row .vid, .tl-tile:has(.tile-note) .vid-row .tag { height: 22px; }
@@ -296,14 +297,14 @@ progress::-moz-progress-bar { background: var(--accent); border-radius: 999px; }
 .groups { list-style: none; margin: 0; padding: 0; }
 .group { border-top: 1px solid var(--rule-row); }
 .group-head { width: calc(100% + 24px); min-height: 64px; display: flex; align-items: center; gap: 14px; margin: 0 -12px; padding: 10px 12px; background: transparent; border: 0; color: var(--ink); text-align: left; cursor: pointer; border-radius: 12px; }
-.group-head:hover .group-toggle { text-decoration: underline; text-underline-offset: 3px; }
+@media (hover: hover) { .group-head:hover .group-toggle { text-decoration: underline; text-underline-offset: 3px; } }
 .swatch { width: 12px; height: 12px; border-radius: 3px; flex: none; }
 .samples { display: flex; gap: 4px; flex: none; }
 .group-text { flex: 1; min-width: 0; display: flex; flex-direction: column; }
 .kept-note { font-size: var(--text-small); font-weight: 700; color: var(--accent); }
 .group-count { color: var(--muted); font-variant-numeric: tabular-nums; }
 .group-toggle { display: inline-flex; align-items: center; justify-content: flex-end; gap: 4px; color: var(--accent); font-weight: 400; font-size: var(--control-text); min-width: 40px; text-align: right; }
-.group-body { padding: 0 0 16px 26px; display: flex; flex-direction: column; gap: 10px; color: var(--ink-soft); font-size: 16px; }
+.group-body { padding: 0 0 16px 26px; display: flex; flex-direction: column; gap: 10px; color: var(--ink-soft); font-size: 1rem; }
 .group-body[hidden] { display: none; }
 
 /* D23: every file in a set-aside group, one row each (drawn only near the screen). */
@@ -314,7 +315,7 @@ progress::-moz-progress-bar { background: var(--accent); border-radius: 999px; }
 .gf-item { display: flex; align-items: center; gap: 12px; min-height: 56px; min-width: 0; }
 .gf-open { flex: none; padding: 0; border: 0; background: transparent; border-radius: 8px; cursor: zoom-in; }
 .gf-text { display: flex; flex-direction: column; min-width: 0; line-height: 1.35; }
-.gf-name { color: var(--ink); font-size: 15px; overflow-wrap: anywhere; }
+.gf-name { color: var(--ink); font-size: 0.9375rem; overflow-wrap: anywhere; }
 
 /* Two columns once there's room; the ledger stays in view only when the window is tall enough. */
 @media (min-width: 960px) {
@@ -332,7 +333,7 @@ progress::-moz-progress-bar { background: var(--accent); border-radius: 999px; }
 
 /* Review timeline, "Choose what to save" (T24). Source: team/brand/quiet-prints/TL-*.dc.html.
    Text sizes follow the 2026-10-19 type hierarchy; final polish waits for the T20 revision. */
-.tl-selected-word { display: block; font-size: 20px; font-weight: 700; color: var(--accent); }
+.tl-selected-word { display: block; font-size: 1.25rem; font-weight: 700; color: var(--accent); }
 .ledger .ledger-plain { border-top: 0; }
 .tl-save[aria-disabled='true'] { background: var(--rule); color: var(--ink-soft); cursor: not-allowed; }
 .tl-bulk { display: flex; flex-wrap: wrap; gap: 4px 18px; }
@@ -349,11 +350,11 @@ progress::-moz-progress-bar { background: var(--accent); border-radius: 999px; }
 /* Six chips can take two lines: its own row, with corners that suit a box, not one long pill. */
 .tl-filter-show { align-self: flex-start; max-width: 100%; border-radius: 26px; }
 .tl-showing p { margin: 0; }
-.tl-month-select { display: none; flex-direction: column; gap: 4px; font-size: 15px; color: var(--muted); width: 100%; }
-.tl-month-select select { min-height: 44px; padding: 0 12px; border-radius: 12px; border: 1px solid var(--control-edge); background: var(--surface); color: var(--ink); font: inherit; font-size: var(--control-text); }
+.tl-month-select { display: none; flex-direction: column; gap: 4px; font-size: 0.9375rem; color: var(--muted); width: 100%; }
+.tl-month-select select { min-height: 44px; padding: 0 12px; border-radius: 12px; border: 1px solid var(--control-edge); background: var(--surface); color: var(--ink); font: inherit; font-size: var(--control-text); cursor: pointer; }
 .tl-month { gap: 18px; }
 .tl-month-head { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 10px; }
-.tl-month .month-h { font-size: 24px; scroll-margin-top: 16px; }
+.tl-month .month-h { font-size: 1.5rem; scroll-margin-top: 16px; }
 .tl-days { display: flex; flex-direction: column; gap: 18px; }
 .tl-day { display: flex; flex-direction: column; gap: 10px; }
 .tl-day-h { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 10px; min-height: 44px; font-weight: 700; cursor: pointer; }
@@ -388,10 +389,10 @@ progress::-moz-progress-bar { background: var(--accent); border-radius: 999px; }
 .tl-tile[data-just] .dot path { animation: tick-draw var(--dur-base) var(--ease-out); }
 /* Review tiles open the viewer: on hover the shadow deepens, nothing moves. */
 .tl-tile { transition: box-shadow var(--dur-fast) var(--ease-std); }
-.tl-tile:not(.off):hover { box-shadow: var(--shadow-lift); }
+@media (hover: hover) { .tl-tile:not(.off):hover { box-shadow: var(--shadow-lift); } }
 .vid { position: absolute; right: 8px; bottom: 8px; display: flex; align-items: center; gap: 4px; padding: 5px 8px; border-radius: 999px; background: #FFFFFF; color: var(--ink); }
 /* Video length beside the play mark (TL mockups: "▶ 0:42"). */
-.vid-len { font-size: 13px; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; }
+.vid-len { font-size: 0.8125rem; font-weight: 700; line-height: 1; font-variant-numeric: tabular-nums; }
 /* T63: on a video tile the length and the time share one row along the bottom, length on the right.
    The row is one pill tall and clips, and neither pill shrinks: when both don't fit (desktop tiles are
    ~90-110 px) the time wraps onto a second, hidden line and drops out whole, never cut to "10:".
@@ -417,7 +418,7 @@ progress::-moz-progress-bar { background: var(--accent); border-radius: 999px; }
 .tl-aside .btn-sm { align-self: center; }
 .tl-empty { display: flex; flex-direction: column; gap: 12px; align-items: flex-start; }
 .tl-footer { display: none; }
-.tl-footer-line { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 0 12px; font-size: 15px; color: var(--muted); font-variant-numeric: tabular-nums; }
+.tl-footer-line { display: flex; flex-wrap: wrap; justify-content: space-between; align-items: center; gap: 0 12px; font-size: 0.9375rem; color: var(--muted); font-variant-numeric: tabular-nums; }
 .tl-footer-count, .tl-tally-count { font-weight: 700; color: var(--ink); font-variant-numeric: tabular-nums; }
 .tl-footer .tl-top { margin-left: auto; }
 .tl-tally { display: none; }
@@ -430,7 +431,7 @@ progress::-moz-progress-bar { background: var(--accent); border-radius: 999px; }
   .tl-tools { position: sticky; top: 0; }
   /* QA m1: one compact line, so the whole bar stays under about 30% of the window. */
   .tl-tools { gap: 8px; padding: 8px 0; }
-  .tl-tally { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 0 14px; background: var(--surface); border: 1px solid var(--rule-soft); border-radius: 12px; font-size: 15px; white-space: nowrap; }
+  .tl-tally { display: flex; justify-content: space-between; align-items: center; gap: 12px; padding: 0 14px; background: var(--surface); border: 1px solid var(--rule-soft); border-radius: 12px; font-size: 0.9375rem; white-space: nowrap; }
   .tl-tally .tl-top { min-height: 40px; }
 }
 /* Wide but short windows: the jump bar doesn't stick, so the count and Save stay at the bottom, in one row. */
@@ -452,9 +453,9 @@ progress::-moz-progress-bar { background: var(--accent); border-radius: 999px; }
   .topbar { padding: 18px 16px; }
   .page { padding: 16px 16px 48px; }
   .results { gap: 40px; }
-  .envelope h1 { font-size: 30px; }
+  .envelope h1 { font-size: 1.875rem; }
   .prints { grid-template-columns: repeat(3, minmax(0, 1fr)); gap: 10px; }
-  .tag { left: 6px; bottom: 6px; padding: 1px 7px; font-size: 12px; max-width: calc(100% - 12px); }
+  .tag { left: 6px; bottom: 6px; padding: 1px 7px; font-size: 0.75rem; max-width: calc(100% - 12px); }
   .aside { padding: 20px 16px 10px; border-radius: 16px; }
   .sheet { padding: 20px 16px; border-radius: 16px; }
   .group-head { gap: 10px; flex-wrap: wrap; }
@@ -485,8 +486,8 @@ progress::-moz-progress-bar { background: var(--accent); border-radius: 999px; }
   transition: background-color var(--dur-fast) var(--ease-std), border-color var(--dur-fast) var(--ease-std);
 }
 .tl-day-h input { margin-right: 4px; }
-.tl-day-h input:hover, .tl-row-chk input:hover, .viewer-chk input:hover,
-.tl-day-h:hover input, .tl-row-chk:hover input, .viewer-chk:hover input { border-color: var(--ink); background-color: #F4F7F6; }
+@media (hover: hover) { .tl-day-h input:hover, .tl-row-chk input:hover, .viewer-chk input:hover,
+.tl-day-h:hover input, .tl-row-chk:hover input, .viewer-chk:hover input { border-color: var(--ink); background-color: #F4F7F6; } }
 .tl-day-h input:is(:checked, :indeterminate), .tl-row-chk input:checked, .viewer-chk input:checked { background-color: var(--accent); border-color: var(--accent); }
 .tl-day-h input::before, .tl-row-chk input::before, .viewer-chk input::before { content: ''; display: block; width: 16px; height: 16px; background: #FFFFFF; visibility: hidden; -webkit-mask: var(--tick) center / 16px 16px no-repeat; mask: var(--tick) center / 16px 16px no-repeat; }
 .tl-day-h input:checked::before, .tl-row-chk input:checked::before, .viewer-chk input:checked::before { visibility: visible; }
@@ -517,19 +518,19 @@ progress::-moz-progress-bar { background: var(--accent); border-radius: 999px; }
 
 /* Save (T25). Source: team/brand/quiet-prints/EX-choose.dc.html and EX-done.dc.html. */
 .accent-num { color: var(--accent); }
-.save .envelope h1 { font-weight: 800; font-size: clamp(30px, 4.6vw, 36px); line-height: 1.1; }
+.save .envelope h1 { font-weight: 800; font-size: clamp(1.875rem, 4.6vw, 2.25rem); line-height: 1.1; }
 .save-col { gap: 24px; }
 .card { background: var(--surface); border-radius: 20px; padding: 28px; display: flex; flex-direction: column; gap: 14px; box-shadow: 0 1px 2px rgba(31, 36, 39, 0.08); }
-.card h2 { font-size: 24px; }
+.card h2 { font-size: 1.5rem; }
 .card-body { color: var(--ink-soft); }
 .card-quiet { background: var(--surface-2); border: 1px solid var(--rule-soft); box-shadow: none; }
-.card-quiet h2 { font-size: 22px; }
+.card-quiet h2 { font-size: 1.375rem; }
 .card-problem { flex-direction: row; align-items: flex-start; gap: 14px; background: var(--caution-bg); border: 1px solid var(--caution-edge); border-left: 6px solid var(--date); box-shadow: none; }
 .card-problem .problem-icon { color: var(--date); margin-top: 3px; }
 .problem-text { display: flex; flex-direction: column; gap: 8px; min-width: 0; }
-.card-problem h2 { color: var(--ink); font-size: 22px; }
+.card-problem h2 { color: var(--ink); font-size: 1.375rem; }
 .card-problem p { color: var(--ink); }
-.tree { list-style: none; margin: 0; padding: 0; font-size: 16px; font-variant-numeric: tabular-nums; display: flex; flex-direction: column; gap: 6px; }
+.tree { list-style: none; margin: 0; padding: 0; font-size: 1rem; font-variant-numeric: tabular-nums; display: flex; flex-direction: column; gap: 6px; }
 .tree li { display: flex; align-items: center; gap: 10px; min-width: 0; overflow-wrap: anywhere; }
 .tree-root { font-weight: 700; }
 .tree-file { color: var(--ink-soft); }
@@ -537,7 +538,7 @@ progress::-moz-progress-bar { background: var(--accent); border-radius: 999px; }
 .tree-photo { color: var(--date); }
 .save-progress .note-box { margin-top: -6px; }
 /* Round 2: what's being kept, in days and years (Save and Done). */
-.span-line { font-size: 17px; color: var(--ink); }
+.span-line { font-size: 1.0625rem; color: var(--ink); }
 .zip-again { display: flex; flex-direction: column; gap: 10px; }
 
 .done { display: flex; flex-wrap: wrap; gap: 56px; align-items: flex-start; }
@@ -553,12 +554,12 @@ progress::-moz-progress-bar { background: var(--accent); border-radius: 999px; }
 .stage-done .stage-tick { animation: draw 260ms var(--ease-out) backwards; }
 /* "Nothing worth keeping" and "couldn't open": an empty print with a folder on it. */
 .blank-print { width: 120px; height: 92px; display: flex; align-items: center; justify-content: center; border: 2px dashed var(--control-edge); border-radius: 14px; background: var(--surface); color: var(--accent); transform: rotate(-3deg); }
-.done-side h1 { font-size: clamp(30px, 4.6vw, 40px); line-height: 1.08; }
-.find { font-size: 17px; font-weight: 700; overflow-wrap: anywhere; }
+.done-side h1 { font-size: clamp(1.875rem, 4.6vw, 2.5rem); line-height: 1.08; }
+.find { font-size: 1.0625rem; font-weight: 700; overflow-wrap: anywhere; }
 .find .zip-names { margin: 6px 0 0; padding-left: 1.2em; display: flex; flex-direction: column; gap: 2px; }
 .receipt { flex: 999 1 520px; min-width: 0; background: var(--surface); border-radius: 20px; padding: 30px; display: flex; flex-direction: column; gap: 16px; box-shadow: 0 1px 2px rgba(31, 36, 39, 0.08), 0 10px 30px rgba(31, 36, 39, 0.06); }
 .receipt-head { display: flex; justify-content: space-between; align-items: baseline; gap: 12px; flex-wrap: wrap; }
-.receipt-head h2 { font-size: 24px; }
+.receipt-head h2 { font-size: 1.5rem; }
 .receipt-head .sub-sm { font-variant-numeric: tabular-nums; }
 .receipt-rows > div { gap: 16px; padding: 11px 0; }
 .receipt-rows dd { text-align: right; min-width: 0; overflow-wrap: anywhere; }
@@ -670,14 +671,14 @@ progress::-moz-progress-bar { background: var(--accent); border-radius: 999px; }
    joined by an arrow; panel 2 is tinted as the sorted result. */
 .how { --cap: 28px; margin-top: var(--s-9); background: var(--surface); border: 1px solid transparent; border-radius: 20px;
   padding: var(--s-7); box-shadow: 0 1px 2px rgba(31, 36, 39, 0.08), 0 10px 30px rgba(31, 36, 39, 0.06); }
-.how h2 { font-size: 32px; }
+.how h2 { font-size: 2rem; }
 .how-steps { list-style: none; margin: var(--s-6) 0 0; padding: 0; display: grid; gap: var(--s-7);
   grid-template-columns: repeat(3, minmax(0, 1fr)); }
 .how-step { position: relative; }
 /* "Before" / "After" above panels 1 and 2. Every step has the slot (step 3's is empty) so the panels line up. */
-.how-cap { display: block; height: 20px; margin-bottom: var(--s-2); font: 700 14px/20px var(--body); color: var(--ink-soft); }
+.how-cap { display: block; height: 20px; margin-bottom: var(--s-2); font: 700 0.875rem/1.25rem var(--body); color: var(--ink-soft); }
 .how-panel { height: 160px; overflow: hidden; border: 0; border-radius: 12px; padding: var(--s-3) var(--s-4);
-  background: var(--bg); color: var(--ink-soft); font: 14px/1.6 ui-monospace, 'SF Mono', Menlo, Consolas, monospace; }
+  background: var(--bg); color: var(--ink-soft); font: 0.875rem/1.6 ui-monospace, 'SF Mono', Menlo, Consolas, monospace; }
 .how-panel.p2 { background: var(--tint-2); }            /* the sorted result; --ink-soft on it is about 7.5:1 */
 /* The listing is one block, centred in the panel; its lines stay left-aligned to each other. */
 .how-list { display: grid; justify-content: center; align-content: center; }
@@ -700,14 +701,14 @@ progress::-moz-progress-bar { background: var(--accent); border-radius: 999px; }
 .how-arrow { position: absolute; left: calc(100% + var(--s-2)); top: calc(var(--cap) + 64px); width: 32px; height: 32px;
   display: grid; place-items: center; border-radius: 999px; background: var(--surface);
   border: 1px solid var(--rule); color: var(--accent); }
-.how-step h3 { margin: var(--s-4) 0 var(--s-1); display: flex; align-items: center; gap: var(--s-2); font: 700 19px/1.35 var(--body); }
+.how-step h3 { margin: var(--s-4) 0 var(--s-1); display: flex; align-items: center; gap: var(--s-2); font: 700 1.1875rem/1.35 var(--body); }
 .how-num { flex: none; display: inline-grid; place-items: center; width: 32px; height: 32px; border-radius: 999px;
-  background: var(--tint); color: var(--accent-deep); font: 700 16px/1 var(--body); }
-.how-step p { margin: 0; font-size: 16px; color: var(--muted); }
+  background: var(--tint); color: var(--accent-deep); font: 700 1rem/1 var(--body); }
+.how-step p { margin: 0; font-size: 1rem; color: var(--muted); }
 
 @media (max-width: 1199px) {                             /* 1024, 960 */
   .how { padding: var(--s-6); }
-  .how-panel { font-size: 13px; }
+  .how-panel { font-size: 0.8125rem; }
   .how-line.d1 { padding-left: 16px; }
   .how-line.d2 { padding-left: 32px; }
   .how-line.d3 { padding-left: 48px; }
@@ -717,7 +718,7 @@ progress::-moz-progress-bar { background: var(--accent); border-radius: 999px; }
 }
 @media (max-width: 959px) {
   .how { margin-top: var(--s-8); }
-  .how h2 { font-size: 28px; }
+  .how h2 { font-size: 1.75rem; }
   .how-steps { grid-template-columns: 1fr; gap: var(--s-5); }
   .how-step { display: grid; grid-template-columns: 256px minmax(0, 1fr); column-gap: var(--s-5); align-items: start; }
   .how-cap:empty { display: none; }
@@ -738,11 +739,11 @@ progress::-moz-progress-bar { background: var(--accent); border-radius: 999px; }
    The DOM order stays heading, list, links; only the grid areas move the links under the heading. */
 .know { margin-top: var(--s-8); display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr);
   grid-template-areas: 'h list' 'links list'; grid-template-rows: auto 1fr; column-gap: var(--s-7); align-items: start; }
-.know h2 { grid-area: h; font-size: 20px; }
+.know h2 { grid-area: h; font-size: 1.25rem; }
 .know dl { grid-area: list; margin: 0; }
 .faq-row { padding: var(--s-3) 0; border-top: 1px solid var(--rule-row); }
 .faq-row:last-child { border-bottom: 1px solid var(--rule-row); }
-.know dt { font-size: 16px; font-weight: 700; }
+.know dt { font-size: 1rem; font-weight: 700; }
 .know dd { margin: 0; font-size: var(--text-small); color: var(--muted); }   /* about 6.2:1 on --bg */
 /* The quiet links to the privacy page and the PhotoRec guide (T67). */
 .know-links { grid-area: links; list-style: none; margin: var(--s-4) 0 0; padding: 0; display: flex; flex-direction: column; gap: 8px; } /* UX6 (D40): 8px between the links */
@@ -759,7 +760,7 @@ progress::-moz-progress-bar { background: var(--accent); border-radius: 999px; }
    the right, as in Good to know; one column below 960px. Until the button is pressed the frame shows
    the page's own prints and nothing loads. */
 .watch { margin-top: var(--s-8); display: grid; grid-template-columns: minmax(0, 1fr) minmax(0, 2fr); column-gap: var(--s-7); align-items: start; }
-.watch h2 { font-size: 20px; }
+.watch h2 { font-size: 1.25rem; }
 .watch-text p { margin-top: var(--s-2); }
 .watch-frame { position: relative; aspect-ratio: 16 / 9; overflow: hidden; border-radius: 20px; background: var(--tint-2);
   display: flex; flex-direction: column; align-items: center; justify-content: center; gap: var(--s-4);
@@ -781,7 +782,7 @@ progress::-moz-progress-bar { background: var(--accent); border-radius: 999px; }
    the name and the tagline. */
 .start-foot { margin-top: var(--s-8); display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-2) var(--s-3); font-size: var(--text-small); color: var(--muted); }
 .start-foot .logo-mono { flex: none; color: var(--ink); }
-.start-foot-name { font-family: var(--display); font-variation-settings: 'opsz' 36; font-weight: 800; font-size: 17px; letter-spacing: -0.01em; color: var(--ink); }
+.start-foot-name { font-family: var(--display); font-variation-settings: 'opsz' 36; font-weight: 800; font-size: 1.0625rem; letter-spacing: -0.01em; color: var(--ink); }
 @media (max-width: 640px) { .start-foot { margin-top: var(--s-7); } }
 /* T83: "Sort another folder" on the receipt screen. */
 .start-over { display: flex; flex-direction: column; gap: 10px; padding-top: 18px; border-top: 1px solid var(--rule); }
@@ -792,7 +793,7 @@ progress::-moz-progress-bar { background: var(--accent); border-radius: 999px; }
 .doc > * + * { margin-top: 14px; }
 .doc h1 { margin-bottom: 22px; }
 .doc h2 { margin-top: 40px; }
-.doc h3 { margin-top: 28px; font-family: var(--display); font-weight: 800; font-size: 19px; line-height: 1.3; font-variation-settings: 'opsz' 30; }
+.doc h3 { margin-top: 28px; font-family: var(--display); font-weight: 800; font-size: 1.1875rem; line-height: 1.3; font-variation-settings: 'opsz' 30; }
 .doc h2 + *, .doc h3 + * { margin-top: 10px; }
 .doc h3:focus { outline: none; }
 .doc h2, .doc h3 { scroll-margin-top: 16px; }
@@ -816,13 +817,13 @@ progress::-moz-progress-bar { background: var(--accent); border-radius: 999px; }
 .viewer::backdrop { background: rgba(31, 36, 39, 0.78); }
 .viewer-top { display: flex; flex-wrap: wrap; align-items: center; gap: 4px 16px; padding: 10px 12px 10px 20px; border-bottom: 1px solid var(--rule-soft); }
 .viewer-title { flex: 1 1 220px; min-width: 0; }
-.viewer h2 { font-size: 20px; }
-.viewer-pos { color: var(--muted); font-size: 15px; font-variant-numeric: tabular-nums; }
+.viewer h2 { font-size: 1.25rem; }
+.viewer-pos { color: var(--muted); font-size: 0.9375rem; font-variant-numeric: tabular-nums; }
 .viewer-stage { position: relative; flex: 1 1 auto; min-height: 220px; display: flex; align-items: center; justify-content: center; padding: 12px; background: var(--bg); }
 .viewer-media { position: absolute; inset: 12px; width: calc(100% - 24px); height: calc(100% - 24px); object-fit: contain; display: block; }
 video.viewer-media { background: #000000; }
 .viewer-msg { display: flex; flex-direction: column; align-items: center; gap: 10px; max-width: 380px; text-align: center; color: var(--ink-soft); }
-.viewer-msg .tile-label { font-size: 15px; }
+.viewer-msg .tile-label { font-size: 0.9375rem; }
 .viewer-bottom { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: 8px 12px; padding: 10px 12px; border-top: 1px solid var(--rule-soft); }
 .viewer-step { display: inline-flex; align-items: center; gap: 8px; }
 .viewer-step[aria-disabled='true'] { color: var(--muted); border-color: var(--rule); cursor: default; }

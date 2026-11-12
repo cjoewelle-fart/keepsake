@@ -28,6 +28,17 @@ Owner rule (Nov 11): anything that would change the approved Quiet Prints look i
 - **UX5, reload guard only:** the browser asks before leaving while a save is running, or when you've changed the selection and not saved yet. No new dialog or control for "Sort a different folder" (that confirm step stays a flow call for you).
 - Still open, your call: at about 800–865 px high, before you scroll, the two buttons start under the bottom bar (they clear after ~100 px of scroll or on Tab). It was like this before; fixing it would change the layout.
 
+## Fixed Nov 12 (second batch)
+
+None of these change the Quiet Prints look at default settings.
+
+- **UX3:** every font size in app.css is now in rem (control heights stay in px). At the default 16 px setting, nothing changes: in Chromium, the computed font size and line height match before and after on all 17,617 elements across 55 screens of the a11y walk, plus 441 on the start and scanning screens at 1280 and 390 px. With the browser's text size at 24 px, body text goes from 17 to 25.5 px (before, it stayed at 17).
+- **UX9:** "Choose a folder" opens one picker at a time. While the picker or the permission question is open, the button says "Checking the folder…" and is aria-disabled. A new a11y check presses it twice and expects one picker.
+- **UX10 (gating only):** every :hover rule is inside `@media (hover: hover)`, so hover styles no longer stick after a tap. No new :active styles.
+- **UX11:** tiles and rows without a preview add "No preview" to their accessible name. Nothing visible changes.
+- **UX12:** the month picker has `cursor: pointer`.
+- **UX13: not applied, waiting on you (D46).** Stacking the reassurance box on phones changes the look at 390 px, so under your Quiet Prints rule it is your call. The one-line CSS fix is ready.
+
 ## Found while recording the launch video (Nov 11)
 
 - **UX13 (P2, no look change):** on a phone (390 px wide), the scanning screen squeezes the reassurance box ("This happens on your computer. Nothing is sent anywhere…") into a narrow column with one or two words per line, next to "Your files are not deleted or changed". It is readable but looks broken. Seen in the phone capture on 7a90772. Fix: stack the two parts on narrow screens.

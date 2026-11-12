@@ -92,7 +92,11 @@ function fakeFolder() {
     async resolve() { return null; }
   }
   window.__pick = 'ok'; // 'ok' | 'denied' | 'abort'
+  window.__pickDelay = 0; // ms the picker stays open (like Chrome's "Let site edit files?" wait)
+  window.__picks = 0; // pickers opened
   window.showDirectoryPicker = async () => {
+    window.__picks++;
+    await sleep(window.__pickDelay);
     if (window.__pick === 'denied') throw new DOMException('stub', 'NotAllowedError');
     if (window.__pick === 'abort') throw new DOMException('stub', 'AbortError');
     return new FDir('Pictures');
@@ -411,9 +415,16 @@ async function desktop(browser) {
   await h1(page, /Where should we save/).waitFor();
   await focusOnHeading(page, run, 'save: choose');
   await axe(page, run, 'save: choose');
-  await page.evaluate(() => { window.__pick = 'denied'; });
+  // UX9: while the picker is open the button says so, is aria-disabled, and a second press opens no second picker.
+  await page.evaluate(() => { window.__pick = 'denied'; window.__pickDelay = 800; window.__picks = 0; });
   await page.getByRole('button', { name: 'Choose a folder' }).click();
+  const checking = page.getByRole('button', { name: 'Checking the folder…' });
+  await checking.waitFor();
+  const busy = { dis: await checking.getAttribute('aria-disabled'), focus: await checking.evaluate((b) => document.activeElement === b) };
+  await checking.click({ force: true });
   await page.getByRole('alert').waitFor();
+  const picks = await page.evaluate(() => { window.__pickDelay = 0; return window.__picks; });
+  check(busy.dis === 'true' && busy.focus && picks === 1, 'serious', run, 'save: choose', `one picker at a time (UX9): "Checking the folder…" aria-disabled=${busy.dis}, focus kept ${busy.focus}, ${picks} picker(s) after 2 presses`);
   await axe(page, run, 'save: folder refused');
   // T83: the problem is hard to miss: focus goes to its heading, at the top of the choose column.
   await page.waitForTimeout(150);

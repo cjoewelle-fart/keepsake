@@ -55,9 +55,9 @@ describe('the product name is one setting (src/brand.ts)', () => {
     expect(copy.start.tagline).toBe(TAGLINE);
   });
 
-  it('ships with the launch settings off (D42: no address yet, D43: no video yet)', () => {
+  it('ships with no address yet (D42) and the launch video on (D43, Nov 12)', () => {
     expect(SITE_URL).toBe('');
-    expect(LAUNCH_VIDEO).toBeNull();
+    expect(LAUNCH_VIDEO?.src).toMatch(/^launch\//);
   });
 
   it('strips comments without eating addresses', () => {

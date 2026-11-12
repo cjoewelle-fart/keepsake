@@ -479,12 +479,14 @@ export const copy = {
     guideLink: 'Read the step-by-step PhotoRec guide',
     /**
      * D43: the launch video section, shown only when a video is set (src/brand.ts LAUNCH_VIDEO).
-     * Nothing loads until the button is pressed.
+     * Nothing loads until the button is pressed. `play` is the visible label ("40 sec"); `playName`
+     * is the button's accessible name, with the length in words ("40 seconds").
      */
     video: {
       h: `Watch ${APP} sort a recovery folder`,
-      line: 'One minute, with captions. It loads only when you press play.',
-      play: (minutes: number) => `Play the video (${minutes} min)`,
+      line: 'Forty seconds, with captions. It loads only when you press play.',
+      play: (seconds: number) => `Play the video (${Math.round(seconds)} sec)`,
+      playName: (seconds: number) => `Play the video, ${runTimeWords(seconds)}`,
       offline: 'The video needs an internet connection. Everything else here works offline.',
     },
     /** D41: the quiet footer under Good to know (logo, name, tagline). */
@@ -579,6 +581,10 @@ export const copy = {
     undo: 'Set these aside again',
     movedBack: 'Keeping these',
     previewUnavailable: 'No preview',
+    /** UX11: added to a tile's accessible name (not shown) when it has no preview. */
+    noPreviewName: (name: string) => `${name}. No preview`,
+    /** UX11: read after the file type on a tile with no preview and no name of its own (not shown). */
+    noPreviewAfterType: ', no preview',
     /** D23: under a set-aside group's reason, a list of every file in it. Needs UX writer review. */
     seeAll: (x: number) => `See all ${n(x)} ${plural(x, 'file', 'files')}`,
     hideAll: 'Hide the list',
@@ -830,6 +836,8 @@ export const copy = {
     folderBody: `Choose a folder or make a new one, for example in Pictures. We’ll put a folder called ${ROOT_FOLDER} inside it. Anything already there stays as it is.`,
     notTheCard: 'Choose a place on this computer or on another drive. Don’t save onto the memory card your photos came from.',
     chooseFolder: 'Choose a folder',
+    /** UX9: on the folder button while the picker or the browser's permission question is open. */
+    checkingFolder: 'Checking the folder…',
     /** `bigFile`: a file over 2 GB makes its zip over 2 GB too, so "under 2 GB" isn't promised. */
     browserNote: (parts: number, bigFile = false) =>
       parts === 1

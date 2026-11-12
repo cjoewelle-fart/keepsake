@@ -1,9 +1,10 @@
-// The public launch page (D41–D43): head tags from the one name setting, the launch video off by
-// default, and the guard that keeps launch files out of the offline cache.
-import { readFileSync } from 'node:fs';
+// The public launch page (D41–D43): head tags from the one name setting, the launch video (on since
+// Nov 12), and the guard that keeps launch files out of the offline cache.
+import { existsSync, readFileSync } from 'node:fs';
 import { join } from 'node:path';
 import { describe, expect, it } from 'vitest';
-import { APP_NAME, DESCRIPTION, SITE_TITLE } from '../src/brand';
+import { APP_NAME, DESCRIPTION, LAUNCH_VIDEO, SITE_TITLE } from '../src/brand';
+import { copy } from '../src/ui/copy';
 import { launchVideo } from '../src/ui/launchVideo';
 import { HEAD_MARKER, brandHead, headTags, precacheProblems, precacheUrls } from '../vite.launch';
 
@@ -63,10 +64,23 @@ describe('head tags', () => {
 });
 
 describe('launch video (D43)', () => {
-  it('is off unless a build sets both the video and its captions', () => {
-    expect(launchVideo({})).toBeNull();
-    expect(launchVideo({ VITE_LAUNCH_VIDEO: 'launch/standin.webm' })).toBeNull();
+  it('is the real 40-second film with captions, from public/launch/', () => {
+    expect(LAUNCH_VIDEO).toEqual({ src: 'launch/upsort-launch.mp4', captions: 'launch/upsort-launch.en.vtt', seconds: 40 });
+    for (const f of [LAUNCH_VIDEO!.src, LAUNCH_VIDEO!.captions]) expect(existsSync(join(__dirname, '..', 'public', f))).toBe(true);
+    expect(readFileSync(join(__dirname, '..', 'public', LAUNCH_VIDEO!.captions), 'utf8')).toMatch(/^WEBVTT/);
+  });
+  it('uses the brand setting unless a build sets both a stand-in video and its captions', () => {
+    expect(launchVideo({})).toBe(LAUNCH_VIDEO);
+    expect(launchVideo({ VITE_LAUNCH_VIDEO: 'launch/standin.webm' })).toBe(LAUNCH_VIDEO);
     expect(launchVideo({ VITE_LAUNCH_VIDEO: 'launch/standin.webm', VITE_LAUNCH_CAPTIONS: 'launch/standin.en.vtt' }))
-      .toEqual({ src: 'launch/standin.webm', captions: 'launch/standin.en.vtt', minutes: 1 });
+      .toEqual({ src: 'launch/standin.webm', captions: 'launch/standin.en.vtt', seconds: 40 });
+    expect(launchVideo({ VITE_LAUNCH_VIDEO: 'a.webm', VITE_LAUNCH_CAPTIONS: 'a.vtt', VITE_LAUNCH_SECONDS: '75' })?.seconds).toBe(75);
+    expect(launchVideo({ VITE_LAUNCH_VIDEO: 'a.webm', VITE_LAUNCH_CAPTIONS: 'a.vtt', VITE_LAUNCH_SECONDS: 'x' })?.seconds).toBe(40);
+  });
+  it('says its real length: 40 sec on the button, 40 seconds in its name and the line', () => {
+    expect(copy.start.video.play(40)).toBe('Play the video (40 sec)');
+    expect(copy.start.video.playName(40)).toBe('Play the video, 40 seconds');
+    expect(copy.start.video.line).toMatch(/^Forty seconds, with captions\./);
+    expect(copy.start.video.line).not.toMatch(/minute/i);
   });
 });

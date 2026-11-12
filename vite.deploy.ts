@@ -5,6 +5,7 @@
 // Pages and Netlify read to set response headers. Change the policy here, nowhere else.
 import { existsSync } from 'node:fs'
 import type { Plugin } from 'vite'
+import { SHARE_IMAGE, SITE_URL } from './src/brand.ts'
 
 // The privacy lock-down: the built app may only load its own files and may not
 // send data to any other address. Added at build time only, because the dev
@@ -102,12 +103,15 @@ export function uncoveredWorkers(text: string, workers: { locked: string[]; wasm
   })
 }
 
-/** The `_headers` file (Cloudflare Pages and Netlify share this format). */
-export function headersFile(workers: { locked: string[]; wasm: string[] }, csp: string = CSP): string {
+/**
+ * The `_headers` file (Cloudflare Pages and Netlify share this format). `indexable` (the launch
+ * build only, release checklist §5) leaves out the no-index header; everything else is the same.
+ */
+export function headersFile(workers: { locked: string[]; wasm: string[] }, csp: string = CSP, { indexable = false }: { indexable?: boolean } = {}): string {
   // One block per path, in first-seen order.
   const rules = new Map<string, [string, string][]>()
   const add = (path: string, name: string, value: string) => rules.set(path, [...(rules.get(path) ?? []), [name, value]])
-  add('/*', 'X-Robots-Tag', 'noindex, nofollow')
+  if (!indexable) add('/*', 'X-Robots-Tag', 'noindex, nofollow')
   add('/*', 'Referrer-Policy', 'no-referrer')
   add('/*', 'X-Content-Type-Options', 'nosniff')
   add('/*', 'Permissions-Policy', 'camera=(), microphone=(), geolocation=()')
@@ -124,6 +128,34 @@ export function headersFile(workers: { locked: string[]; wasm: string[] }, csp: 
 }
 
 export const ROBOTS_TXT = 'User-agent: *\nDisallow: /\n'
+/** robots.txt for the launch build (`npm run build:launch`): search engines may index the app. */
+export const ROBOTS_TXT_LAUNCH = 'User-agent: *\nAllow: /\n'
+
+/** The launch build's message when the address isn't set (D42). */
+export const LAUNCH_NEEDS_SITE_URL = "launch build needs SITE_URL in src/brand.ts (D42): an https:// address ending in '/', e.g. 'https://example.org/'"
+
+/**
+ * What stops a launch build before it starts (empty = fine): the public address must be set
+ * (https, with the trailing slash the head tags rely on), a hand-made public/robots.txt would
+ * silently replace the generated one, and the share image the og:image tag names must exist.
+ */
+export function launchProblems({ siteUrl = SITE_URL, publicRobots = existsSync('public/robots.txt'), shareImage = existsSync(`public/${SHARE_IMAGE}`) }: { siteUrl?: string; publicRobots?: boolean; shareImage?: boolean } = {}): string[] {
+  const problems: string[] = []
+  let ok = /^https:\/\/[^/\s]+\/(?:\S*\/)?$/.test(siteUrl)
+  if (ok) try { new URL(siteUrl) } catch { ok = false }
+  if (!ok) problems.push(`${LAUNCH_NEEDS_SITE_URL}; it is ${JSON.stringify(siteUrl)}`)
+  if (publicRobots) problems.push('public/robots.txt found: the launch build generates robots.txt, remove it')
+  if (!shareImage) problems.push(`public/${SHARE_IMAGE} missing: the og:image tag points at it`)
+  return problems
+}
+
+/** What the built launch page must carry (empty = fine): its canonical address and share image. */
+export function launchHtmlProblems(html: string, siteUrl: string = SITE_URL): string[] {
+  const problems: string[] = []
+  if (!html.includes(`<link rel="canonical" href="${siteUrl}"`)) problems.push(`index.html lacks <link rel="canonical" href="${siteUrl}">`)
+  if (!html.includes(`<meta property="og:image" content="${siteUrl}${SHARE_IMAGE}"`)) problems.push(`index.html lacks og:image ${siteUrl}${SHARE_IMAGE}`)
+  return problems
+}
 
 /** Every Content-Security-Policy value set for `path` in a `_headers` file. */
 export function cspFromHeaders(text: string, path: string): string[] {
@@ -147,11 +179,22 @@ export function cspFromHtml(html: string): string[] {
  * Emits `_headers` and `robots.txt` into the build output, then checks that the header CSP
  * matches the <meta> CSP actually written into index.html. A `public/_headers` file would be
  * a second, hand-kept copy of the policy, so the build refuses it; a `public/robots.txt` that
- * already exists wins over the generated one.
+ * already exists wins over the generated one (beta builds only: the launch build refuses it).
+ *
+ * `launch` (only `vite build --mode launch`, release checklist §5): no X-Robots-Tag, robots.txt
+ * allows indexing, and the build fails unless SITE_URL is set and the page carries its canonical
+ * and og:image tags. Every other build is the no-index beta build, unchanged.
  */
-export const deployFiles = (): Plugin => ({
+export const deployFiles = ({ launch = false }: { launch?: boolean } = {}): Plugin => ({
   name: 'keepsake-deploy-files',
   apply: 'build',
+  // Checked while the config loads, before any plugin runs: a failed build then leaves no
+  // dist-launch/ behind (the service worker plugin writes sw.js even after a failed bundle).
+  config() {
+    if (!launch) return
+    const problems = launchProblems()
+    if (problems.length) throw new Error(`launch build: ${problems.join('; ')}`)
+  },
   generateBundle(_, bundle) {
     if (existsSync('public/_headers')) throw new Error('public/_headers found: headers are generated from vite.deploy.ts, remove it')
     const files: Record<string, string> = {}
@@ -160,16 +203,21 @@ export const deployFiles = (): Plugin => ({
     if (!workers.locked.length && !workers.wasm.length) throw new Error('deploy files: no worker files found in the build')
     const problems = workerSplitProblems(workers)
     if (problems.length) throw new Error(`deploy files: ${problems.join('; ')}`)
-    const headers = headersFile(workers)
+    const headers = headersFile(workers, CSP, { indexable: launch })
     const uncovered = uncoveredWorkers(headers, workers)
     if (uncovered.length) throw new Error(`deploy files: no CSP header for ${uncovered.join(', ')}`)
     this.emitFile({ type: 'asset', fileName: '_headers', source: headers })
-    if (!existsSync('public/robots.txt')) this.emitFile({ type: 'asset', fileName: 'robots.txt', source: ROBOTS_TXT })
+    if (launch) this.emitFile({ type: 'asset', fileName: 'robots.txt', source: ROBOTS_TXT_LAUNCH })
+    else if (!existsSync('public/robots.txt')) this.emitFile({ type: 'asset', fileName: 'robots.txt', source: ROBOTS_TXT })
   },
   writeBundle(_, bundle) {
     const html = bundle['index.html']
     const headers = bundle['_headers']
     if (html?.type !== 'asset' || headers?.type !== 'asset') throw new Error('deploy files: index.html or _headers missing from the build')
+    if (launch) {
+      const problems = launchHtmlProblems(String(html.source))
+      if (problems.length) throw new Error(`launch build: ${problems.join('; ')}`)
+    }
     const meta = cspFromHtml(String(html.source))
     for (const path of CSP_PAGE_PATHS) {
       const header = cspFromHeaders(String(headers.source), path)

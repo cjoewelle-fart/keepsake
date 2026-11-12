@@ -20,11 +20,16 @@ export const TAGLINE = 'Made for recovered files.'
 export const SITE_URL: string = ''
 
 /**
- * The launch video on the start screen (D43: made later). null = the "Watch" section isn't shown.
+ * The launch video on the start screen (D43, on since Nov 12). null = the "Watch" section isn't shown.
  * Paths are relative to the page and live under public/launch/, which the offline cache skips.
- * A build can turn it on with VITE_LAUNCH_VIDEO and VITE_LAUNCH_CAPTIONS (see src/ui/launchVideo.ts).
+ * `seconds` is the film's length, shown on the Play button. A build can swap in a stand-in with
+ * VITE_LAUNCH_VIDEO and VITE_LAUNCH_CAPTIONS (see src/ui/launchVideo.ts).
  */
-export const LAUNCH_VIDEO: { src: string; captions: string; minutes: number } | null = null
+export const LAUNCH_VIDEO: { src: string; captions: string; seconds: number } | null = {
+  src: 'launch/upsort-launch.mp4',
+  captions: 'launch/upsort-launch.en.vtt',
+  seconds: 40,
+}
 
 // The <head> text (D41), built from the name so a rename carries through.
 export const SITE_TITLE = `${APP_NAME}: sort recovered photos by date`

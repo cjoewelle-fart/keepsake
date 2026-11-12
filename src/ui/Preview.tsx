@@ -47,14 +47,18 @@ function watch(el: Element, cb: (near: boolean, tilePx: number) => void) {
  * is given back (to a capped cache) when the tile goes away. The full-size photo is never kept
  * in the page. HEIC photos the browser can't read are decoded by our own worker instead.
  */
-export function Preview({ file, record, size = 'md', note, noteShort }: {
+export function Preview({ file, record, size = 'md', note, noteShort, onNoPreview }: {
   file: File; record: FileRecord; size?: 'md' | 'sm' | 'xs' | 'fill';
+  /** UX11: told whether the tile ended up with no preview, so its owner can say so in the tile's name. */
+  onNoPreview?: (none: boolean) => void;
   /** A short line under the file type when there's no picture (e.g. "Can’t play in this browser"). Hidden from screen readers: say it in the tile's name too. */
   note?: string;
   /** A shorter `note` for small timeline tiles (under 120 px wide), switched in by CSS (T69). */
   noteShort?: string;
 }) {
   const [stage, setStage] = useState<Stage>(() => firstStage(record));
+  // Callers pass a state setter, which keeps its identity, so this runs when the stage changes.
+  useEffect(() => { onNoPreview?.(stage === 'none'); }, [stage, onNoPreview]);
   const [url, setUrl] = useState<string>();
   /** A small copy has been drawn into the canvas. */
   const [drawn, setDrawn] = useState(false);
@@ -138,7 +142,7 @@ export function Preview({ file, record, size = 'md', note, noteShort }: {
     <div className={`tile tile-${size}`} ref={tile}>
       {small && <canvas ref={canvas} aria-hidden="true" style={drawn ? undefined : { display: 'none' }} />}
       {stage === 'native' && url && <img src={url} alt="" loading="lazy" decoding="async" onError={onError} />}
-      {!showing && <span className="tile-label" title={stage === 'none' ? copy.results.previewUnavailable : undefined}>{ext || '—'}</span>}
+      {!showing && <span className="tile-label" title={stage === 'none' ? copy.results.previewUnavailable : undefined}>{ext || '—'}{stage === 'none' && <span className="sr-only">{copy.results.noPreviewAfterType}</span>}</span>}
       {!showing && note && (noteShort
         ? <span className="tile-note" aria-hidden="true"><span className="tile-note-long">{note}</span><span className="tile-note-short">{noteShort}</span></span>
         : <span className="tile-note" aria-hidden="true">{note}</span>)}

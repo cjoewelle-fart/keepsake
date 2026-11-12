@@ -559,7 +559,8 @@ function Tile({ r, file, pos, of, on, onChange, onOpen }: TileProps) {
   }, [just]);
   // Only a label: a video this browser can't play is selected and saved like any other (T61).
   const cantPlay = type === 'video' && playableHere(r) === false;
-  const name = tileName(r, pos, of);
+  const [noPreview, setNoPreview] = useState(false);
+  const name = noPreview ? copy.results.noPreviewName(tileName(r, pos, of)) : tileName(r, pos, of);
   return (
     <figure className={`print tl-tile${on ? '' : ' off'}`} data-just={just ? '' : undefined}>
       {/* D24: the whole tile opens the viewer; the checkbox sits on top of it (and comes after it in Tab order). */}
@@ -567,7 +568,7 @@ function Tile({ r, file, pos, of, on, onChange, onOpen }: TileProps) {
       <button type="button" className="tile-open" data-view={r.index} onClick={onOpen}>
         <span className="sr-only">{copy.viewer.open(name)}</span>
         <span className="tile-open-pic" aria-hidden="true">
-          <Preview file={file} record={r} size="fill" note={cantPlay ? t.cantPlay : undefined} noteShort={cantPlay ? t.cantPlayShort : undefined} />
+          <Preview file={file} record={r} size="fill" note={cantPlay ? t.cantPlay : undefined} noteShort={cantPlay ? t.cantPlayShort : undefined} onNoPreview={setNoPreview} />
         </span>
       </button>
       <label className="chk">
@@ -606,8 +607,10 @@ type RowProps = { r: FileRecord; file: File; name: string; on: boolean; onChange
  * T60: one file in the Largest first list: its checkbox, a small preview (which opens the viewer,
  * like a tile), its size and its date. The checkbox's name has all of it, size first.
  */
-function SizeRow({ r, file, name, on, onChange, onOpen }: RowProps) {
+function SizeRow({ r, file, name: ownName, on, onChange, onOpen }: RowProps) {
   const type = mediaType(r);
+  const [noPreview, setNoPreview] = useState(false);
+  const name = noPreview ? copy.results.noPreviewName(ownName) : ownName;
   const cantPlay = type === 'video' && playableHere(r) === false;
   const size = bytes(r.size);
   const own = shortFileName(r.path);
@@ -618,7 +621,7 @@ function SizeRow({ r, file, name, on, onChange, onOpen }: RowProps) {
       </label>
       <button type="button" className="gf-open" data-view={r.index} onClick={onOpen}>
         <span className="sr-only">{copy.viewer.open(t.sizeRowOpen(name, own))}</span>
-        <span aria-hidden="true"><Preview file={file} record={r} size="sm" /></span>
+        <span aria-hidden="true"><Preview file={file} record={r} size="sm" onNoPreview={setNoPreview} /></span>
       </button>
       <div className="gf-text" aria-hidden="true">
         <span className="tl-row-size">{size}</span>
