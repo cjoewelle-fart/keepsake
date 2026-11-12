@@ -124,7 +124,7 @@ Role definitions for AI assistants working on this project are in `.claude/agent
 
 ## License
 
-GPL-3.0 (planned; add the LICENSE file before publishing).
+Upsort is free software under the GNU General Public License, version 3 or (at your option) any later version (GPL-3.0-or-later). See [`LICENSE`](LICENSE).
 
 Third-party code shipped in the app: libheif-js 1.23.2 (libheif and libde265, LGPL-3.0), used unmodified for HEIC previews, plus React, Comlink, exifr, browser-fs-access and the two bundled fonts. Their full licence texts (including zlib's) are in [`public/THIRD_PARTY_NOTICES.txt`](public/THIRD_PARTY_NOTICES.txt), which the build copies to `dist/THIRD_PARTY_NOTICES.txt`. Regenerate it with `npm run notices` after changing runtime dependencies (a test fails if it's out of date). libde265 and zlib texts come from upstream and are kept in `licenses/`. The offline service worker also bundles Workbox 7.4 (MIT), added at build time by vite-plugin-pwa 2.0.0 (MIT).
 
