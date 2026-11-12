@@ -303,7 +303,7 @@ def film_169():
     captions(C / 'captions.html', 'captions', W, H, [('c1', 0.4, 2.8), ('c2', 3.4, 2.8), ('c3', 6.8, 3.4), ('c4', 10.9, 4.2),
                                                      ('c5', 15.9, 4.8), ('c6', 21.4, 6.2), ('c7', 28.4, 4.8)], wide=True)
     index(FILM, W, H, 40, [('hook', 0, 6.5), ('choose', 6.5, 4.0), ('scan', 10.5, 5.0), ('setaside', 15.5, 5.5),
-                           ('bydate', 21, 7.0), ('save', 28, 5.5), ('endcard', 33.5, 6.5)], 'captions')
+                           ('bydate', 21, 7.0), ('save', 28, 5.5), ('endcard', 33.5, 6.5)], 'captions', music=(1.135, 0.68, 2.5))
 
 
 # ---------------------------------------------------------------- end card and captions (both)
@@ -404,7 +404,7 @@ def captions(path, sid, W, H, caps, wide):
 ''')
 
 
-def index(folder, W, H, dur, scenes, caps_id):
+def index(folder, W, H, dur, scenes, caps_id, music=None):
     hosts = ''.join(f'      <div id="{i}" data-composition-id="{i}" data-composition-src="compositions/{i}.html" data-start="{a}" data-duration="{d}" data-track-index="1" data-track-kind="graphics" data-width="{W}" data-height="{H}"></div>\n' for i, a, d in scenes)
     (folder / 'index.html').write_text(f'''<!doctype html>
 <html lang="en">
@@ -424,7 +424,7 @@ def index(folder, W, H, dur, scenes, caps_id):
   <body>
     <div id="root" data-composition-id="main" data-start="0" data-duration="{dur}" data-width="{W}" data-height="{H}">
       <div id="paper" class="clip" data-start="0" data-duration="{dur}" data-track-index="0"><div id="paper-grain"></div></div>
-{hosts}      <div id="{caps_id}" data-composition-id="{caps_id}" data-composition-src="compositions/{caps_id}.html" data-start="0" data-duration="{dur}" data-track-index="2" data-track-kind="captions" data-width="{W}" data-height="{H}"></div>
+{hosts}{music_tag(dur, music)}      <div id="{caps_id}" data-composition-id="{caps_id}" data-composition-src="compositions/{caps_id}.html" data-start="0" data-duration="{dur}" data-track-index="2" data-track-kind="captions" data-width="{W}" data-height="{H}"></div>
     </div>
     <script>
       window.__timelines["main"] = gsap.timeline({{ paused: true }});
@@ -432,6 +432,15 @@ def index(folder, W, H, dur, scenes, caps_id):
   </body>
 </html>
 ''')
+
+
+def music_tag(dur, music):
+    """The music bed (assets/audio/music.mp3, owner's pick, not committed: see video/README.md)."""
+    if not music:
+        return ''
+    start, vol, fade_out = music
+    return (f'      <audio id="music" class="clip" src="assets/audio/music.mp3" data-start="0" data-duration="{dur}" '
+            f'data-media-start="{start}" data-volume="{vol}" data-fade-in="0.4" data-fade-out="{fade_out}" data-track-index="3"></audio>\n')
 
 
 # ---------------------------------------------------------------- 9:16 cut
@@ -517,7 +526,7 @@ def film_916():
           ''.join(rows_html), '\n    '.join(rjs), exit_at=2.25)
     endcard(C / 'vend.html', 'vend', W, H, 3.6, wide=False, split=1.9)
     captions(C / 'vcaps.html', 'vcaps', W, H, [('v1', 0.2, 2.4), ('v2', 3.0, 3.0), ('v3', 6.4, 2.3), ('v4', 9.0, 2.3)], wide=False)
-    index(VERT, W, H, 15, [('vhook', 0, 2.8), ('vscan', 2.8, 3.4), ('vfound', 6.2, 2.6), ('vdate', 8.8, 2.6), ('vend', 11.4, 3.6)], 'vcaps')
+    index(VERT, W, H, 15, [('vhook', 0, 2.8), ('vscan', 2.8, 3.4), ('vfound', 6.2, 2.6), ('vdate', 8.8, 2.6), ('vend', 11.4, 3.6)], 'vcaps', music=(5.495, 0.72, 1.5))
 
 
 if __name__ == '__main__':

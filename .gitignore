@@ -36,3 +36,5 @@ dist-artifact-test/
 video/capture/out/
 video/**/renders/
 video/**/.hyperframes/
+# Music bed: the owner's licensed track, used in renders only (not redistributed in the repo).
+video/launch-film/assets/audio/
