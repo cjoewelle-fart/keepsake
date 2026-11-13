@@ -521,6 +521,8 @@ export const copy = {
     },
     /** D41: the quiet footer under Good to know (logo, name, tagline). */
     tagline: TAGLINE,
+    /** Owner, Nov 13: the footer's link to the public code (REPO_URL). Plain text, no logo or badge. */
+    sourceCode: 'Source code',
     browserNote: `${APP} works best in Chrome or Edge on a computer. You can still scan your folder in this browser.`,
     stopped: 'Scan stopped. Nothing was changed, and you can start again any time.',
     /** Inside the claude.ai preview the folder is chosen with the browser's upload dialog. */

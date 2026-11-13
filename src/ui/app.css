@@ -785,7 +785,9 @@ progress::-moz-progress-bar { background: var(--accent); border-radius: 999px; }
 .start-foot { margin-top: var(--s-8); display: flex; flex-wrap: wrap; align-items: center; gap: var(--s-2) var(--s-3); font-size: var(--text-small); color: var(--muted); }
 .start-foot .logo-mono { flex: none; color: var(--ink); }
 .start-foot-name { font-family: var(--display); font-variation-settings: 'opsz' 36; font-weight: 800; font-size: 1.0625rem; letter-spacing: -0.01em; color: var(--ink); }
-@media (max-width: 640px) { .start-foot { margin-top: var(--s-7); } }
+/* Owner, Nov 13: "Source code" sits at the right end of the footer; on phones, at the left with a 44px tap height. */
+.start-foot-code { margin-left: auto; }
+@media (max-width: 640px) { .start-foot { margin-top: var(--s-7); } .start-foot-code { margin-left: 0; display: inline-flex; align-items: center; min-height: 44px; } }
 /* T83: "Sort another folder" on the receipt screen. */
 .start-over { display: flex; flex-direction: column; gap: 10px; padding-top: 18px; border-top: 1px solid var(--rule); }
 

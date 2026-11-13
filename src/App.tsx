@@ -16,6 +16,7 @@ import { Save } from './ui/Save';
 import { InfoPage } from './ui/InfoPage';
 import { Selection } from './ui/timeline';
 import { copy } from './ui/copy';
+import { REPO_URL } from './brand';
 import { withPickedFolder } from './ui/recoveryFolder';
 import { progressFor, type ScanRun } from './ui/scanRun';
 import type { RecoveryRoot } from './ui/recoveryFolder';
@@ -377,6 +378,8 @@ function Start({ note, noteKey, onChoose, onSamples, onInfo }: { note?: string; 
         <LogoMark mono size={24} />
         <span className="start-foot-name">{copy.appName}</span>
         <span className="start-foot-line">{copy.start.tagline}</span>
+        {/* Owner, Nov 13: a plain "Source code" link to the public repo. Shown only when REPO_URL is set. */}
+        {REPO_URL && <a className="start-foot-code" href={REPO_URL} target="_blank" rel="noopener noreferrer">{copy.start.sourceCode}</a>}
       </footer>
     </main>
   );
