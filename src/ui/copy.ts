@@ -65,7 +65,25 @@ const ROOT_FOLDER_RE = ROOT_FOLDER.replace(/[.*+?^${}()|[\]\\]/g, '\\$&');
  * D48: "Nothing is hidden" and its "See the code" link appear only once the repository is public
  * (`repoUrl` = REPO_URL in src/brand.ts, empty until then). The open-source notices link is always there.
  */
-export const privacyMd = (repoUrl: string) => `# Your privacy
+/**
+ * D49 (owner, Nov 13): the launch build is hosted on Cloudflare Pages, the beta on Netlify. The three
+ * host lines below name the real host; nothing else on the page changes.
+ */
+export type Host = 'netlify' | 'cloudflare';
+export const HOST: Host = import.meta.env.MODE === 'launch' ? 'cloudflare' : 'netlify';
+const hostLines = (host: Host) =>
+  host === 'cloudflare'
+    ? {
+        noTracking: 'The app is also built so the page can’t send data to other websites. It doesn’t use ads or tracking.',
+        devtools: `You’ll see ${APP} loading its own files when the page opens. You won’t see your photos being sent anywhere.`,
+        visits: `${APP} is hosted by Cloudflare. Like most hosts, Cloudflare may keep basic visit records, such as your internet address (IP address) and the time you opened the page. Those records never include your photos.`,
+      }
+    : {
+        noTracking: 'The app is also built so the page can’t send data to other websites. It doesn’t use ads or tracking. One small part is from another company: our host, Netlify, adds a small piece of code for its “Powered by Netlify” badge. It comes from the same address as the app, and it can’t send anything to other websites.',
+        devtools: `You’ll see ${APP} loading its own files when the page opens, plus one small file from Netlify for its badge. You won’t see your photos being sent anywhere.`,
+        visits: `${APP} is hosted by Netlify. Like most hosts, Netlify may keep basic visit records, such as your internet address (IP address) and the time you opened the page. Those records never include your photos.`,
+      };
+export const privacyMd = (repoUrl: string, host: Host = HOST) => `# Your privacy
 
 **Your photos never leave this computer, and ${APP} never changes or deletes your files.**
 
@@ -75,7 +93,7 @@ ${APP} runs inside your web browser, on your computer. When you choose your reco
 
 There is no ${APP} server that stores photos. The app is a set of files your browser loads once, like a page in a book. After that, all the sorting happens on your computer.
 
-The app is also built so the page can’t send data to other websites. It doesn’t use ads or tracking. One small part is from another company: our host, Netlify, adds a small piece of code for its “Powered by Netlify” badge. It comes from the same address as the app, and it can’t send anything to other websites.
+${hostLines(host).noTracking}
 
 Photos on the start screen are from Unsplash, by Chris Flexen, averie woodard and Derek Thomson. They come with ${APP}, so nothing is loaded from Unsplash.
 
@@ -111,7 +129,7 @@ Browsers have a tool that lists everything a page sends and receives. On a compu
 2. Click the **Network** tab.
 3. Use ${APP} as normal.
 
-You’ll see ${APP} loading its own files when the page opens, plus one small file from Netlify for its badge. You won’t see your photos being sent anywhere.
+${hostLines(host).devtools}
 
 ## What we can’t control
 
@@ -120,7 +138,7 @@ We’re honest about the limits.
 - **Your browser.** ${APP} runs inside your browser, so it can only be as private as the browser is. Use a browser you trust, kept up to date.
 - **Browser extensions.** Add-ons you’ve installed in your browser (like ad blockers, shopping or translation tools) may be able to see pages you open. If you’re worried, turn them off while you use ${APP}.
 - **Your computer’s own backups.** Photos you save may be copied by backup or sync tools you already use, like OneDrive, iCloud, Google Drive or Dropbox. That’s set up on your computer, not by ${APP}.
-- **The website that sends you the app.** ${APP} is hosted by Netlify. Like most hosts, Netlify may keep basic visit records, such as your internet address (IP address) and the time you opened the page. Those records never include your photos.
+- **The website that sends you the app.** ${hostLines(host).visits}
 
 ## What ${APP} stores
 
