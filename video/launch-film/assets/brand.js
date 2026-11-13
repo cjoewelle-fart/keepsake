@@ -4,5 +4,5 @@ window.BRAND = {
   tagline: "Made for recovered files.",
   freeLine: 'Free, and it runs in your browser.',
   // Empty until the domain is bought (D42): the end card then leaves the address line out.
-  siteUrl: "",
+  siteUrl: "upsort.app",
 };

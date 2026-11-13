@@ -55,8 +55,8 @@ describe('the product name is one setting (src/brand.ts)', () => {
     expect(copy.start.tagline).toBe(TAGLINE);
   });
 
-  it('ships with no address yet (D42) and the launch video on (D43, Nov 12)', () => {
-    expect(SITE_URL).toBe('');
+  it('ships with the launch address (D42, upsort.app, Nov 13) and the launch video on (D43, Nov 12)', () => {
+    expect(SITE_URL).toBe('https://upsort.app/');
     expect(LAUNCH_VIDEO?.src).toMatch(/^launch\//);
   });
 

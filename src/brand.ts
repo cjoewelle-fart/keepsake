@@ -17,7 +17,7 @@ export const TAGLINE = 'Made for recovered files.'
  * domain is bought (D42): while it's empty, the address-dependent head tags (canonical, og:url,
  * og:image) are left out.
  */
-export const SITE_URL: string = ''
+export const SITE_URL: string = 'https://upsort.app/'
 
 /**
  * The public code repository (e.g. 'https://github.com/<owner>/<repo>'). Empty until the repo is

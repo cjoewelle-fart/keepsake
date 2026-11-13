@@ -33,11 +33,12 @@ def main():
     brand = (FILM / 'assets' / 'brand.js').read_text()
     caps = (FILM / 'assets' / 'captions.js').read_text()
     app, tagline, free = js_string(brand, 'appName'), js_string(brand, 'tagline'), js_string(brand, 'freeLine')
+    url = js_string(brand, 'siteUrl') if re.search(r"siteUrl:\s*(['\"])(.+?)\1", brand) else ''
     lines = ['WEBVTT', '']
     for i, (k, s, d) in enumerate(CAPS, 1):
         lines += [str(i), f'{ts(s)} --> {ts(s + d)}', js_string(caps, k).replace('{APP}', app), '']
     lines += ['8', f'{ts(34.0)} --> {ts(37.0)}', f"{js_string(caps, 'promiseA')} {js_string(caps, 'promiseB')}", '',
-              '9', f'{ts(37.1)} --> {ts(40.0)}', f'{app}. {tagline} {free}', '']
+              '9', f'{ts(37.1)} --> {ts(40.0)}', f'{app}. {tagline} {free}' + (f' {url}' if url else ''), '']
     OUT.mkdir(parents=True, exist_ok=True)
     (OUT / 'upsort-launch.en.vtt').write_text('\n'.join(lines))
     subprocess.run(['ffmpeg', '-v', 'error', '-y', '-i', str(FILM / 'renders' / 'upsort-launch-16x9.mp4'),

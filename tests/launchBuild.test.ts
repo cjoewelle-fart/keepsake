@@ -33,9 +33,9 @@ describe('launch headers', () => {
 });
 
 describe('launch guards', () => {
-  it('ships with no address, so a launch build fails today (D42)', () => {
-    expect(SITE_URL).toBe('');
-    expect(launchProblems()[0]).toContain(LAUNCH_NEEDS_SITE_URL);
+  it('ships with the launch address (D42, upsort.app), so a launch build is allowed', () => {
+    expect(SITE_URL).toBe('https://upsort.app/');
+    expect(launchProblems({ siteUrl: '', ...ok })[0]).toContain(LAUNCH_NEEDS_SITE_URL);
   });
   it('need an https address with the trailing slash', () => {
     for (const bad of ['', 'example.org/', 'http://example.org/', 'https://example.org', 'https:///', 'https://exa mple.org/', 'https://example.org/app']) {
@@ -52,9 +52,9 @@ describe('launch guards', () => {
     expect(launchHtmlProblems(`<head>${headTags(site)}</head>`, site)).toEqual([]);
     expect(launchHtmlProblems(`<head>${headTags('')}</head>`, site)).toHaveLength(2);
   });
-  it('the beta plugin has no launch step; the launch plugin fails before building while SITE_URL is empty', () => {
+  it('the beta plugin has no launch step; the launch plugin accepts the launch address', () => {
     expect(() => (deployFiles().config as () => void).call({})).not.toThrow();
-    expect(() => (deployFiles({ launch: true }).config as () => void).call({})).toThrow(/^launch build: launch build needs SITE_URL in src\/brand\.ts \(D42\)/);
+    expect(() => (deployFiles({ launch: true }).config as () => void).call({})).not.toThrow();
   });
 });
 
