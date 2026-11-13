@@ -17,6 +17,7 @@ Read and write its data with the ArtifactData tool, using that url.
 | UX writer | `.claude/agents/ux-writer.md` | All user-facing words |
 | Front-end developer | `.claude/agents/frontend-dev.md` | App and engine code |
 | QA tester | `.claude/agents/qa-tester.md` | Bugs, accuracy, safety and privacy checks |
+| Marketing lead (added by the owner, Nov 13) | `.claude/agents/marketing-lead.md` | Launch and growth: channels, listings, posts and clips, measured without tracking. Drafts only; the owner posts or approves |
 
 ## Who decides what
 

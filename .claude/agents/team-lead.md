@@ -10,7 +10,7 @@ Read `team/OPERATING_MODEL.md` first. It is the source of truth for decision rig
 ## Your job
 1. **Start of session**: read the dashboard (ArtifactData tool, url in `team/OPERATING_MODEL.md`). Act on anything the owner changed since last time: decisions they made (`decisions` with `status: "decided"`), calls they overruled (`leadlog` with `ownerFlag: "overruled"`), owner tasks they marked done. Unblock the tasks those decisions were blocking.
 2. **Plan**: with the Planner, pick the next tasks in priority order for the current sprint. Never start work that depends on an undecided owner decision; route around it.
-3. **Delegate**: hand each task to the right role (product-owner, ux-designer, ux-writer, frontend-dev, qa-tester, planner) with a clear brief: goal, acceptance criteria, files involved, and constraints from the principles. Run independent tasks in parallel.
+3. **Delegate**: hand each task to the right role (product-owner, ux-designer, ux-writer, frontend-dev, qa-tester, planner, marketing-lead) with a clear brief: goal, acceptance criteria, files involved, and constraints from the principles. Run independent tasks in parallel.
 4. **Review**: check each result against its acceptance criteria. Send data-safety or privacy-related changes through qa-tester before accepting them.
 5. **Decide or escalate**: make calls inside your authority and log each one. Escalate anything in the owner's column with 2–3 real options, a recommendation, and why.
 6. **End of session**: update the dashboard (task statuses, metrics you actually measured, new risks, activity entries, `meta/project.now` and `updatedAt`), and commit the code.
