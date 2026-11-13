@@ -4,6 +4,8 @@
 // page titles, headings, reflow at 200% / 320px, reduced motion and forced colours.
 //
 // Usage: npm run build && node scripts/a11y-check.mjs [chromiumPath] [--fixture fixtures/recovery] [--port 4176] [--shots e2e-shots/a11y]
+// Against a hosted or already-served copy instead of a local preview server: set BASE_URL, or pass --base-url.
+//   BASE_URL=http://localhost:4180/ npm run a11y   (after `node scripts/serve-dist.mjs dist --port 4180`)
 // Exits 1 when anything serious is found (axe "serious"/"critical", or a scripted check marked serious).
 // The folder picker and the save folder are stubbed in the page (see fakeFolder); nothing is written to disk.
 import { spawn } from 'node:child_process';
@@ -20,7 +22,11 @@ const fixture = resolve(opt('--fixture', 'fixtures/recovery'));
 const port = Number(opt('--port', '4176'));
 const out = opt('--shots', 'e2e-shots/a11y');
 const exe = args[0] || process.env.CHROMIUM_PATH;
-const base = `http://localhost:${port}/`;
+const baseUrl = opt('--base-url', process.env.BASE_URL);
+const base = baseUrl ? new URL(baseUrl).href : `http://localhost:${port}/`;
+// Requests are judged by origin: anything not from the app's own origin "left this computer".
+const baseOrigin = new URL(base).origin;
+const outside = [];
 const axeSource = readFileSync(createRequire(import.meta.url).resolve('axe-core/axe.min.js'), 'utf8');
 mkdirSync(out, { recursive: true });
 
@@ -291,6 +297,11 @@ async function newPage(browser, run, ctx) {
   const context = await browser.newContext({ bypassCSP: true, ...ctx });
   const page = await context.newPage();
   page.on('pageerror', (e) => add('minor', run, 'any', `page error: ${e.message}`));
+  page.on('request', (r) => {
+    const url = r.url();
+    if (url.startsWith('blob:') || url.startsWith('data:')) return; // the user's own files, in memory
+    if (new URL(url).origin !== baseOrigin) outside.push(`[${run}] ${url}`);
+  });
   // The scan uses the file-input fallback (a real picker can't be automated); saving gets fakeFolder.
   await page.addInitScript(() => {
     for (const k of ['showDirectoryPicker', 'showOpenFilePicker', 'showSaveFilePicker']) { delete window[k]; delete Window.prototype[k]; }
@@ -747,12 +758,13 @@ async function shortReview(browser, height) {
 // ---------------------------------------------------------------------------------------------
 
 // Start the server and the browser inside try/finally, so a failed launch never leaves the port held.
-const server = spawn('npx', ['vite', 'preview', '--port', String(port), '--strictPort'], { stdio: 'pipe', detached: true });
-const stopServer = () => { try { process.kill(-server.pid); } catch { /* already gone */ } }; // the server and its children
+// With BASE_URL there is no local server: the hosted copy is used as it is.
+const server = baseUrl ? null : spawn('npx', ['vite', 'preview', '--port', String(port), '--strictPort'], { stdio: 'pipe', detached: true });
+const stopServer = () => { if (server) try { process.kill(-server.pid); } catch { /* already gone */ } }; // the server and its children
 process.once('SIGINT', () => { stopServer(); rmSync(tmp, { recursive: true, force: true }); process.exit(130); });
 let browser;
 try {
-  await new Promise((r, j) => { server.stdout.on('data', (d) => String(d).includes(String(port)) && r()); server.on('exit', () => j(new Error(`preview server exited (port ${port} in use?)`))); });
+  if (server) await new Promise((r, j) => { server.stdout.on('data', (d) => String(d).includes(String(port)) && r()); server.on('exit', () => j(new Error(`preview server exited (port ${port} in use?)`))); });
   browser = await chromium.launch({ executablePath: exe });
   await desktop(browser);
   await keyboard(browser);
@@ -784,5 +796,6 @@ for (const f of findings) {
 for (const f of merged.values()) console.log(`${f.severity.toUpperCase().padEnd(7)} [${[...f.runs].join(',')}] ${f.screen}: ${f.what}`);
 if (process.env.A11Y_PASSES) for (const p of passes) console.log(`PASS    ${p}`);
 const count = (s) => [...merged.values()].filter((f) => f.severity === s).length;
+console.log(outside.length ? `OUTSIDE REQUESTS (${outside.length}):\n${outside.join('\n')}` : 'No requests left this computer (0 outside requests).');
 console.log(`\n${count('serious')} serious, ${count('minor')} minor, ${count('info')} info; ${passes.length} checks passed.`);
-process.exit(count('serious') ? 1 : 0);
+process.exit(count('serious') || outside.length ? 1 : 0);

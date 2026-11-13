@@ -59,6 +59,23 @@ sections.push([
   read('licenses/zlib-LICENSE'),
 ].join('\n'));
 
+// Vite's preload and runtime helpers (Vite/Rolldown) are bundled into the built output. Vite's
+// LICENSE.md also carries the licences of packages bundled into Vite itself (build-time only), so
+// only its own MIT notice, the part before "# Licenses of bundled dependencies", is copied.
+const vite = meta('vite');
+const viteLicense = read('node_modules/vite/LICENSE.md');
+const viteMit = viteLicense.slice(viteLicense.indexOf('MIT License'), viteLicense.indexOf('# Licenses of bundled dependencies')).trimEnd();
+if (!viteMit.startsWith('MIT License') || !viteMit.includes('VoidZero')) throw new Error('vite/LICENSE.md layout changed: check the Vite notice by hand');
+sections.push([
+  RULE,
+  `vite ${vite.version}`,
+  `License: ${vite.license}`,
+  'Vite/Rolldown module preload and runtime helpers, bundled into the built app by the build.',
+  'Source: https://github.com/vitejs/vite (Vite\'s own notice from vite/LICENSE.md, copied below unchanged)',
+  RULE,
+  viteMit,
+].join('\n'));
+
 const out = `${APP_NAME}: third-party notices
 
 ${APP_NAME} ships the following third-party software in the app. Each is listed with its version,
@@ -67,4 +84,4 @@ licence and full licence text. Nothing here is fetched at runtime.
 ${sections.join('\n\n\n')}
 `;
 writeFileSync('public/THIRD_PARTY_NOTICES.txt', out);
-console.log(`wrote public/THIRD_PARTY_NOTICES.txt: ${names.size} packages + libde265 + zlib, ${out.length} bytes`);
+console.log(`wrote public/THIRD_PARTY_NOTICES.txt: ${names.size} packages + libde265 + zlib + vite, ${out.length} bytes`);
