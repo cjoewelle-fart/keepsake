@@ -83,6 +83,8 @@ Everything below is tracked today and would be public. None of it holds secrets 
 
 Note: moving files out of the tree doesn't remove them from **history**. If the owner wants any of them truly unpublished, the options are (a) rewrite history (`git filter-repo`, can't be undone, Tier 1) or (b) publish a fresh repo from a squashed snapshot. Recommendation: keep history as is and move only what the owner marks. Nothing found makes a rewrite necessary.
 
+**Done Nov 13 (D47, owner approved):** 37 internal files were taken out of this repo and handed to the owner as `upsort-team-files.zip` for the private repo `cjoewelle-fart/upsort-team`. They are the naming rounds, the launch-page mockups, `plan-phase4.md`, `dashboard/`, `beta-feedback-form.md`, the tester kit, the launch-page proposal, and the competitor, PHOTO home, pilot debrief, pilot kit and usability-plan research. Kept here because the app, tests or the team's daily work use them: the operating model, agent briefs, voice and Quiet Prints, the privacy page, guide, launch message and captions, beta notes, gate check, accessibility evidence, the pilot folder key, this checklist and the marketing plan. The `heic-support` branch was deleted. History is unchanged, as chosen.
+
 ## 5. Launch build switch (ready to build, off)
 
 **Today** every production build is a no-index beta build:
