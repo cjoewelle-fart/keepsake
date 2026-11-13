@@ -18,14 +18,13 @@ const links = (doc: Block[]) => {
 const headings = (doc: Block[]) => doc.filter((b) => b.t === 'h').map((b) => (b as Extract<Block, { t: 'h' }>).id);
 
 describe('privacy page links', () => {
-  it('ships with no repository yet: no "Nothing is hidden", no repository link', () => {
-    expect(REPO_URL).toBe('');
-    expect(OUTSIDE_LINKS).toEqual([]);
+  it('ships with the public repository (Nov 13): "Nothing is hidden" and "See the code" link to it', () => {
+    expect(REPO_URL).toBe('https://github.com/cjoewelle-fart/keepsake');
+    expect(OUTSIDE_LINKS).toEqual([REPO_URL]);
     const doc = parse(copy.info.privacy.md);
-    expect(copy.info.privacy.md).toBe(privacyMd(''));
-    expect(headings(doc)).not.toContain('nothing-is-hidden');
-    expect(copy.info.privacy.md).not.toMatch(/See the code|open source\b/);
-    expect(links(doc).filter((l) => l.away).map((l) => l.href)).toEqual(['THIRD_PARTY_NOTICES.txt']);
+    expect(copy.info.privacy.md).toBe(privacyMd(REPO_URL));
+    expect(headings(doc)).toContain('nothing-is-hidden');
+    expect(links(doc).filter((l) => l.away).map((l) => l.href).sort()).toEqual(['THIRD_PARTY_NOTICES.txt', REPO_URL].sort());
   });
 
   it('always links the open-source notices, the app\'s own file', () => {
@@ -51,7 +50,7 @@ describe('privacy page links', () => {
   });
 
   it('only links the repository that REPO_URL names; any other outside address stays plain words', () => {
-    // REPO_URL is empty, so even a repository-looking address is not a link.
+    // Only REPO_URL itself is a link; any other repository-looking address is not.
     expect(inline('[See the code](https://github.com/example/app)')).toEqual([{ t: 'text', v: 'See the code' }]);
     expect(inline('[x](https://example.com/THIRD_PARTY_NOTICES.txt)')).toEqual([{ t: 'text', v: 'x' }]);
     expect(inline('[x](../THIRD_PARTY_NOTICES.txt)')).toEqual([{ t: 'text', v: 'x' }]);

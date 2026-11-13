@@ -2,6 +2,7 @@ import { describe, expect, it } from 'vitest';
 import { anchors, inline, parse, plain, slug } from '../src/ui/markdown';
 import type { Block, Inline } from '../src/ui/markdown';
 import { copy } from '../src/ui/copy';
+import { REPO_URL } from '../src/brand';
 
 describe('the small Markdown of the in-app pages', () => {
   it('reads bold, code and same-page links; other links stay plain words', () => {
@@ -63,13 +64,15 @@ describe('privacy page and PhotoRec guide (T67)', () => {
   });
 
   it.each(Object.entries(pages))('%s: no team notes, placeholders or outside addresses', (_, md) => {
-    for (const bad of ['[Name]', 'CONFIRM', '<!--', '-->', 'PLACEHOLDER', 'http://', 'https://', 'For the team']) expect(md).not.toContain(bad);
+    // The only outside address allowed is the public repository (REPO_URL), on the privacy page.
+    const rest = REPO_URL ? md.split(REPO_URL).join('') : md;
+    for (const bad of ['[Name]', 'CONFIRM', '<!--', '-->', 'PLACEHOLDER', 'http://', 'https://', 'For the team']) expect(rest).not.toContain(bad);
     expect(md).toContain(copy.appName);
   });
 
   it('privacy page leaves out what isn’t true yet', () => {
     const md = pages.privacy;
-    expect(md).not.toMatch(/open source|See the code|Turn off the internet|private window|Is it free/);
+    expect(md).not.toMatch(/Turn off the internet|private window|Is it free/); // "open source" and "See the code" are true since the repo went public (Nov 13)
     expect(md).toContain('Watch what your browser sends.');
   });
 

@@ -11,6 +11,7 @@ import {
 import type { ResolvingDir } from '../src/ui/savePlan';
 import { END_COST, ZipWriter, crc32, dosDateTime, dosFrom, entryCost } from '../src/ui/zip';
 import { copy } from '../src/ui/copy';
+import { REPO_URL } from '../src/brand';
 
 let i = 0;
 const rec = (takenAt: string | undefined, path?: string, kind: FileRecord['kind'] = 'jpeg', size = 1000): FileRecord =>
@@ -280,7 +281,7 @@ describe('receipt', () => {
     expect(copy.save.existsNote).toMatch(/^There’s already an Upsort photos folder here/);
     expect(copy.save.rSavedToFolder('Pictures')).toBe('Pictures › Upsort photos');
     expect(copy.save.doneLine).toContain('They’re in Upsort photos,');
-    expect(JSON.stringify(copy)).not.toMatch(/keepsake/i);
+    expect(JSON.stringify(copy).split(REPO_URL).join('')).not.toMatch(/keepsake/i); // the old codename only in the repository address
     const L ='In your Downloads folder, look for';
     const parts = (a: number, b: number) => Array.from({ length: b - a + 1 }, (_, k) => `Upsort photos part ${a + k}.zip`);
     expect(copy.save.findZip(parts(1, 5))).toEqual({ text: `${L} these 5 zip files: Upsort photos part 1.zip to Upsort photos part 5.zip.` });

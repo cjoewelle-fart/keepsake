@@ -659,6 +659,10 @@ License: LGPL-3.0
 Used unmodified. Contains libheif (LGPL-3.0) compiled to WebAssembly; libheif-js/LICENSE is the
 LGPL-3.0 text, libheif-wasm/LICENSE is libheif's own licence file (LGPL-3.0, GPL-3.0, MIT).
 Source: https://github.com/catdad-experiments/libheif-js and https://github.com/strukturag/libheif
+
+Source code for the LGPL parts: the exact source of libheif 1.23.2, libde265 1.0.15 and libheif-js
+1.23.2 (with its build scripts) is attached to this app's v1.0.0 release, so it stays available:
+https://github.com/cjoewelle-fart/keepsake/releases/tag/v1.0.0
 ==============================================================================
 --- libheif-js/LICENSE ---
 

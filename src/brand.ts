@@ -24,7 +24,7 @@ export const SITE_URL: string = 'https://upsort.app/'
  * public: while it's empty, the privacy page leaves out "Nothing is hidden" and its "See the code"
  * link (D48). When set, it must be an https:// address.
  */
-export const REPO_URL: string = ''
+export const REPO_URL: string = 'https://github.com/cjoewelle-fart/keepsake'
 
 /**
  * The launch video on the start screen (D43, on since Nov 12). null = the "Watch" section isn't shown.
