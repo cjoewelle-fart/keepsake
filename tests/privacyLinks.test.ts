@@ -18,8 +18,8 @@ const links = (doc: Block[]) => {
 const headings = (doc: Block[]) => doc.filter((b) => b.t === 'h').map((b) => (b as Extract<Block, { t: 'h' }>).id);
 
 describe('privacy page links', () => {
-  it('ships with the public repository (Nov 13): "Nothing is hidden" and "See the code" link to it', () => {
-    expect(REPO_URL).toBe('https://github.com/cjoewelle-fart/keepsake');
+  it('ships with the public repository (Nov 13, renamed to upsort): "Nothing is hidden" and "See the code" link to it', () => {
+    expect(REPO_URL).toBe('https://github.com/cjoewelle-fart/upsort');
     expect(OUTSIDE_LINKS).toEqual([REPO_URL]);
     const doc = parse(copy.info.privacy.md);
     expect(copy.info.privacy.md).toBe(privacyMd(REPO_URL));

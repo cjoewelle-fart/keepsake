@@ -4,7 +4,7 @@
 // files: their upstream texts are kept in licenses/ (see the source URLs below).
 // Usage: npm run notices   (re-run after adding or upgrading a runtime dependency)
 import { existsSync, readFileSync, writeFileSync } from 'node:fs';
-import { APP_NAME } from '../src/brand.ts';
+import { APP_NAME, REPO_URL } from '../src/brand.ts';
 
 const pkg = JSON.parse(readFileSync('package.json', 'utf8'));
 const read = (p) => readFileSync(p, 'utf8').replace(/\r\n/g, '\n').trimEnd();
@@ -28,7 +28,7 @@ for (const name of [...names].sort()) {
   // Apache-2.0 §4(d): a package's NOTICE file goes along with it.
   const files = name === 'libheif-js' ? ['LICENSE', 'libheif-wasm/LICENSE'] : existsSync(`node_modules/${name}/NOTICE`) ? ['LICENSE', 'NOTICE'] : ['LICENSE'];
   const note = name === 'libheif-js'
-    ? 'Used unmodified. Contains libheif (LGPL-3.0) compiled to WebAssembly; libheif-js/LICENSE is the\nLGPL-3.0 text, libheif-wasm/LICENSE is libheif\'s own licence file (LGPL-3.0, GPL-3.0, MIT).\nSource: https://github.com/catdad-experiments/libheif-js and https://github.com/strukturag/libheif\n\nSource code for the LGPL parts: the exact source of libheif 1.23.2, libde265 1.0.15 and libheif-js\n1.23.2 (with its build scripts) is attached to this app\'s v1.0.0 release, so it stays available:\nhttps://github.com/cjoewelle-fart/keepsake/releases/tag/v1.0.0'
+    ? 'Used unmodified. Contains libheif (LGPL-3.0) compiled to WebAssembly; libheif-js/LICENSE is the\nLGPL-3.0 text, libheif-wasm/LICENSE is libheif\'s own licence file (LGPL-3.0, GPL-3.0, MIT).\nSource: https://github.com/catdad-experiments/libheif-js and https://github.com/strukturag/libheif\n\nSource code for the LGPL parts: the exact source of libheif 1.23.2, libde265 1.0.15 and libheif-js\n1.23.2 (with its build scripts) is attached to each of this app\'s releases from v1.0.1 on, so it stays available:\n' + `${REPO_URL}/releases`
     : undefined;
   sections.push([
     RULE,
